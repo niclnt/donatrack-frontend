@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<!--  Llamamos al fragmento del head y le pasamos el título -->
+<head th:replace="~{fragments/base :: head('Mis donaciones')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+    <!--  Llamo a la barra de navegacion y le aviso que estoy en 'mis-donaciones' -->
+    <header th:replace="~{fragments/base :: topbar('mis-donaciones')}"></header>
+
+    <main id="main" class="page-body">
+        <div class="container">
+            <div class="page-head" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Mis donaciones</h1>
+                    <span class="muted">Lista estática (por ahora)</span>
+                </div>
+                <a th:href="@{/donante/nueva-donacion}" class="btn btn-primary">+ Nueva Donación</a>
+            </div>
+
+            <!-- aca puedo pegar la tabla y el HTML de los filtros que ya tengo armado -->
+            <div class="card">
+                <!-- 1. Manejo de Errores (Si el backend está apagado) -->
+                <div th:if="${error != null}" class="alert alert-danger">
+                    <p th:text="${error}">Mensaje de error</p>
+                </div>
+
+                <!-- 2. Estado Vacío (Si el usuario no tiene donaciones) -->
+                <div th:if="${donaciones != null and donaciones.isEmpty()}" class="empty-state">
+                    <div class="empty-state__icon">📦</div>
+                    <h3>Aún no realizaste aportes</h3>
+                    <p>Tus donaciones aparecerán aquí una vez que las registres en el depósito.</p>
+                </div>
+
+                <!-- 3. La Tabla Dinámica (Solo se muestra si hay donaciones en la lista) -->
+                <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
+                    <thead>
+                    <tr>
+                        <th>ID Donación</th>
+                        <th>Descripción</th>
+                        <th>Bienes Donados</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Recorremos la lista de DonacionResponse -->
+                    <tr th:each="donacion : ${donaciones}">
+
+                        <td th:text="'#' + ${donacion.id}">#1</td>
+                        <td th:text="${donacion.descripcion}">Caja de alimentos</td>
+
+                        <!-- Como los bienes son una lista, hacemos otro mini-bucle (th:each) adentro de esta celda -->
+                        <td>
+                            <ul style="padding-left: 15px; margin: 0;">
+                                <li th:each="bien : ${donacion.bienes}">
+                                    <strong th:text="${bien.descripcion}">Fideos</strong>
+                                    (<span th:text="${bien.cantidad} + ' ' + ${bien.unidad}">10 un.</span>)
+                                    - <small class="muted" th:text="${bien.categoria}">Alimentos</small>
+                                </li>
+                            </ul>
+                        </td>
+
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!--  Ruta dinamica al JS -->
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>

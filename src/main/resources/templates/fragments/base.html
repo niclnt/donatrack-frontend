@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<!-- Fragmento del Head: Recibe el título dinamicamente -->
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${titulo} + ' — DonaTrack'"></title>
+    <!-- Ruta dinamica al CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+
+<!-- Fragmento de la Barra de Navegacion -->
+<header th:fragment="topbar(paginaActual)" class="topbar">
+    <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+    <button class="nav-toggle" data-nav-toggle aria-controls="donornav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+
+    <nav class="topbar__nav" id="donornav" aria-label="Panel de donante">
+        <!-- Los enlaces apuntan a las futuras rutas de nuestro Controller -->
+        <a th:href="@{/donante/mis-donaciones}" th:attr="aria-current=${paginaActual == 'mis-donaciones' ? 'page' : null}">Mis donaciones</a>
+        <a th:href="@{/donante/entidades}" th:attr="aria-current=${paginaActual == 'entidades' ? 'page' : null}">Entidades</a>
+        <a th:href="@{/donante/incentivos}" th:attr="aria-current=${paginaActual == 'incentivos' ? 'page' : null}">Incentivos</a>
+        <a th:href="@{/donante/mapa}" th:attr="aria-current=${paginaActual == 'mapa' ? 'page' : null}">Mapa</a>
+        <a th:href="@{/donante/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
+    </nav>
+
+    <div class="topbar__actions">
+        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AP</button>
+    </div>
+</header>
+
+</body>
+</html>

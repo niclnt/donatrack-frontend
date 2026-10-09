@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<!-- reutilizo el head dinamico -->
+<head th:replace="~{fragments/base :: head('Nueva Donación')}"></head>
+<body>
+<div class="page">
+    <!-- Reutilizo la barra de navegacion -->
+    <header th:replace="~{fragments/base :: topbar('nueva-donacion')}"></header>
+
+    <main id="main" class="page-body">
+        <div class="container">
+
+            <div class="page-head">
+                <h1>Registrar nueva donación</h1>
+                <a th:href="@{/donante/mis-donaciones}" class="btn btn-outline">← Volver a mis donaciones</a>
+            </div>
+
+            <div class="card">
+                <!-- Este formulario envia los datos por POST -->
+                <form th:action="@{/donante/nueva-donacion}" method="post">
+
+                    <h3 style="margin-bottom: 10px;">Datos Generales</h3>
+                    <div class="form-group">
+                        <label>Descripción del lote de donación:</label><br>
+                        <input type="text" name="descripcionDonacion" class="form-control" style="width: 100%; padding: 8px;" required>
+                    </div>
+
+                    <h3 style="margin-top: 30px; margin-bottom: 10px;">Agregar un Bien (Item)</h3>
+                    <div class="form-group">
+                        <label>¿Qué vas a donar?</label><br>
+                        <input type="text" name="descripcionBien" class="form-control" placeholder="Ej: Fideos, Arroz, Ropa..." style="width: 100%; padding: 8px;" required>
+                    </div>
+
+                    <div class="form-group" style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div style="flex: 1;">
+                            <label>Cantidad:</label><br>
+                            <input type="number" name="cantidad" class="form-control" value="1" style="width: 100%; padding: 8px;" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label>Unidad:</label><br>
+                            <select name="unidad" class="form-control" style="width: 100%; padding: 8px;">
+                                <option value="UNIDADES">Unidades</option>
+                                <option value="KG">Kilogramos</option>
+                                <option value="LITROS">Litros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div style="flex: 1;">
+                            <label>Categoría:</label><br>
+                            <select name="categoria" class="form-control" style="width: 100%; padding: 8px;">
+                                <option value="ALIMENTOS">Alimentos</option>
+                                <option value="INDUMENTARIA">Indumentaria</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label>Subcategoría:</label><br>
+                            <input type="text" name="subcategoria" class="form-control" placeholder="Ej: Fideos Secos" style="width: 100%; padding: 8px;" required>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 20px; font-weight: bold;">Confirmar Donación</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>
