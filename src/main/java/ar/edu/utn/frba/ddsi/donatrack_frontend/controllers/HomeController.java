@@ -1,8 +1,8 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
-import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.BienDTO;
-import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionCreateRequest;
-import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionResponse;
 import lombok.Data;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
