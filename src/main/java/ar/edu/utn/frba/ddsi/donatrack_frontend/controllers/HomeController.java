@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
+
 @Data
 @Controller
 public class HomeController {
@@ -28,27 +30,39 @@ public class HomeController {
         return "index";
     }
     @GetMapping("/donante/mis-donaciones")
-    public String misDonaciones(Model model) {
-        //  Instancio el cliente HTTP de Spring
-        RestTemplate restTemplate = new RestTemplate();
+    public String misDonaciones(
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String categoria,
+            Model model) {
 
-        // Defino la URL del backend real (ajustar dependiendo la ruta de la API)
-        String backendUrl = "http://localhost:8080/donaciones-service/donaciones";
+        RestTemplate restTemplate = new RestTemplate();
+        StringBuilder backendUrl = new StringBuilder("http://localhost:8080/donaciones-service/donaciones/donantes/1");
+
+        boolean hasParams = false;
+        if (estado != null && !estado.isEmpty()) {
+            backendUrl.append("?estado=").append(estado);
+            hasParams = true;
+        }
+        if (categoria != null && !categoria.isEmpty()) {
+            backendUrl.append(hasParams ? "&" : "?").append("categoria=").append(categoria);
+        }
 
         try {
-            //  Hacemos la peticion GET a la API y le decimos que nos devuelva una Lista de DonacionDTO
-            ResponseEntity<List<DonacionResponse>> response = restTemplate.exchange(
-                    backendUrl,
+            // Recibimos un mapa genérico para no depender de la clase DonacionResponse
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                    backendUrl.toString(),
                     HttpMethod.GET,
                     null,
-                    new ParameterizedTypeReference<List<DonacionResponse>>() {}
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {}
             );
             model.addAttribute("donaciones", response.getBody());
-
         } catch (Exception e) {
-            // Si el backend esta apagado, mandamos un error a la vista para que no explote
-            model.addAttribute("error", "No se pudo conectar con el Servicio de Donaciones.");
+            System.out.println("Error al obtener donaciones: " + e.getMessage());
+            model.addAttribute("donaciones", java.util.List.of());
         }
+        // Le pasamos a la vista los filtros que el usuario eligio para que no se queden desactualizadas
+        model.addAttribute("estadoFiltro", estado);
+        model.addAttribute("categoriaFiltro", categoria);
 
         return "donante/mis-donaciones";
     }
@@ -67,25 +81,26 @@ public class HomeController {
             @RequestParam String categoria,
             @RequestParam String subcategoria) {
 
-        // 1. Usamos los nuevos moldes (pasando false en los booleanos de Categoría para evitar el null)
+        //  Usamos los nuevos moldes (pasando false en los booleanos de Categoría para evitar el null)
         BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria, false, false);
         BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategoria);
         BienDTO.UnidadRef uniRef = new BienDTO.UnidadRef(null, unidad, "UN");
 
-        // 2. Armamos el BienDTO
+        //  Armamos el BienDTO
         BienDTO bien = new BienDTO(
                 descripcionBien, catRef, subRef, uniRef, cantidad,
                 null, false, false, 0.0, 0.0
         );
 
-        // 3. Ensamblamos el Request
+        //  Ensamblamos el Request
         DonacionCreateRequest request = new DonacionCreateRequest(
                 descripcionDonacion,
                 java.time.LocalDate.now(),
                 java.util.List.of(bien)
         );
 
-        // 4. Enviamos al backend
+        //
+        // Enviamos al backend
         RestTemplate restTemplate = new RestTemplate();
         String backendUrl = "http://localhost:8080/donaciones-service/donaciones/donantes/1";
 

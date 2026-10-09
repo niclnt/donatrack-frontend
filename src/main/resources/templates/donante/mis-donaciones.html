@@ -14,7 +14,7 @@
             <div class="page-head" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>Mis donaciones</h1>
-                    <span class="muted">Lista estática (por ahora)</span>
+
                 </div>
                 <a th:href="@{/donante/nueva-donacion}" class="btn btn-primary">+ Nueva Donación</a>
             </div>
@@ -33,6 +33,36 @@
                     <p>Tus donaciones aparecerán aquí una vez que las registres en el depósito.</p>
                 </div>
 
+                <!-- Barra de Filtros -->
+                <form th:action="@{/donante/mis-donaciones}" method="get" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+
+                    <div style="flex: 1;">
+                        <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Estado:</label>
+                        <select name="estado" class="form-control" style="width: 100%; padding: 8px;">
+                            <option value="" th:selected="${estadoFiltro == null or estadoFiltro == ''}">Todos los estados</option>
+                            <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En Depósito</option>
+                            <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignada</option>
+                            <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En Traslado</option>
+                            <option value="ENTREGADA" th:selected="${estadoFiltro == 'ENTREGADA'}">Entregada</option>
+                        </select>
+                    </div>
+
+                    <div style="flex: 1;">
+                        <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Categoría:</label>
+                        <select name="categoria" class="form-control" style="width: 100%; padding: 8px;">
+                            <option value="" th:selected="${categoriaFiltro == null or categoriaFiltro == ''}">Todas las categorías</option>
+                            <option value="ALIMENTOS" th:selected="${categoriaFiltro == 'ALIMENTOS'}">Alimentos</option>
+                            <option value="INDUMENTARIA" th:selected="${categoriaFiltro == 'INDUMENTARIA'}">Indumentaria</option>
+                            <option value="MOBILIARIO" th:selected="${categoriaFiltro == 'MOBILIARIO'}">Mobiliario</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn btn-primary" style="padding: 9px 20px;"> Buscar</button>
+                        <a th:href="@{/donante/mis-donaciones}" class="btn btn-outline" style="padding: 9px 20px; text-decoration: none;">Limpiar</a>
+                    </div>
+                </form>
+
                 <!-- 3. La Tabla Dinámica (Solo se muestra si hay donaciones en la lista) -->
                 <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
                     <thead>
@@ -46,17 +76,18 @@
                     <!-- Recorremos la lista de DonacionResponse -->
                     <tr th:each="donacion : ${donaciones}">
 
-                        <td th:text="'#' + ${donacion.id}">#1</td>
-                        <td th:text="${donacion.descripcion}">Caja de alimentos</td>
-
-                        <!-- Como los bienes son una lista, hacemos otro mini-bucle (th:each) adentro de esta celda -->
                         <td>
                             <ul style="padding-left: 15px; margin: 0;">
-                                <li th:each="bien : ${donacion.bienes}">
-                                    <strong th:text="${bien.descripcion}">Fideos</strong>
-                                    (<span th:text="${bien.cantidad} + ' ' + ${bien.unidad}">10 un.</span>)
-                                    - <small class="muted" th:text="${bien.categoria}">Alimentos</small>
-                                </li>
+                                <!-- Abrimos cada donación segmentada -->
+                                <th:block th:each="segmento : ${donacion.donacionesSegmentadas}">
+                                    <!-- Listamos los bienes que quedaron guardados ahí adentro -->
+                                    <li th:each="bien : ${segmento.bienes}">
+                                        <strong th:text="${bien.descripcion}">Fideos</strong>
+                                        (<span th:text="${bien.cantidad} + ' ' + ${bien.unidad?.nombre}">10 un.</span>)
+                                        -
+                                        <small class="muted" th:text="${bien.categoria?.nombre}">Alimentos</small>
+                                    </li>
+                                </th:block>
                             </ul>
                         </td>
 
