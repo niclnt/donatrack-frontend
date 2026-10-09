@@ -1,50 +1,68 @@
-package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers.incentivos;
+package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.DashboardIncentivosDTO;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.MisionResponseDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.PuestoDTO;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/donante/incentivos")
 public class IncentivosViewController {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String INCENTIVOS_SERVICE_URL = "http://localhost:8082/incentivos-service"; // Ajustar si el puerto de incentivos-service es distinto
+    private final String INCENTIVOS_SERVICE_URL = "http://localhost:8082";
 
     @GetMapping
     public String verIncentivos(Model model) {
-        String usernameMock = "sebibalas11@gmail.com"; // Mock temporal hasta integrar el token/SSO de Lean
+        Long donanteIdMock = 1L; // ID de un donante existente en tu DB
 
         try {
-            // 1. Obtener misiones y progreso del donante
-            DashboardIncentivosDTO progreso = restTemplate.getForObject(
-                    INCENTIVOS_SERVICE_URL + "/incentivos/donantes/mis-misiones?username=" + usernameMock,
-                    DashboardIncentivosDTO.class
+            // 1. Llamada al endpoint real de tu backend
+            Map<String, Object> misionActualMap = restTemplate.getForObject(
+                    INCENTIVOS_SERVICE_URL + "/incentivos/donantes/" + donanteIdMock + "/mision-actual",
+                    Map.class
             );
 
-            // 2. Obtener el ranking mensual de la comunidad
-            List<PuestoDTO> ranking = restTemplate.exchange(
-                    INCENTIVOS_SERVICE_URL + "/incentivos/donantes/destacados/ranking-mensual",
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<PuestoDTO>>() {}
-            ).getBody();
+            // Construimos el DTO que espera la vista
+            List<MisionResponseDTO> misiones = new ArrayList<>();
+            if (misionActualMap != null && misionActualMap.get("nombre") != null) {
+                misiones.add(new MisionResponseDTO(
+                        (String) misionActualMap.get("nombre"),
+                        (String) misionActualMap.get("descripcion"),
+                        misionActualMap.get("puntosOtorgados") != null ? (Integer) misionActualMap.get("puntosOtorgados") : 10,
+                        false
+                ));
+            }
+
+            DashboardIncentivosDTO progreso = new DashboardIncentivosDTO(
+                    62, // Puntos acumulados mock
+                    100, // Puntos siguiente nivel
+                    62.0, // % avance
+                    misiones
+            );
+
+            // 2. Ranking simulado o vacío temporalmente mientras agregás el GET de ranking
+            List<PuestoDTO> ranking = List.of(
+                    new PuestoDTO(1, "sebibalas11@gmail.com", 5),
+                    new PuestoDTO(2, "nicolnt@gmail.com", 3)
+            );
 
             model.addAttribute("progreso", progreso);
             model.addAttribute("ranking", ranking);
 
         } catch (Exception e) {
-            model.addAttribute("error", "No se pudo conectar con el servicio de incentivos.");
+            e.printStackTrace();
+            model.addAttribute("error", "Error al conectar con el backend: " + e.getMessage());
         }
 
-        return "donante/incentivos"; // Apunta a src/main/resources/templates/donante/incentivos.html
+        return "donante/incentivos";
     }
 }
