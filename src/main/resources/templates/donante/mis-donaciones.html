@@ -21,76 +21,87 @@
 
             <!-- aca puedo pegar la tabla y el HTML de los filtros que ya tengo armado -->
             <div class="card">
-                <!-- 1. Manejo de Errores (Si el backend está apagado) -->
+                <!-- 1. Manejo de Errores -->
                 <div th:if="${error != null}" class="alert alert-danger">
                     <p th:text="${error}">Mensaje de error</p>
                 </div>
 
-                <!-- 2. Estado Vacío (Si el usuario no tiene donaciones) -->
+                <!-- 2. Estado Vacío -->
                 <div th:if="${donaciones != null and donaciones.isEmpty()}" class="empty-state">
                     <div class="empty-state__icon">📦</div>
                     <h3>Aún no realizaste aportes</h3>
                     <p>Tus donaciones aparecerán aquí una vez que las registres en el depósito.</p>
                 </div>
 
-                <!-- Barra de Filtros -->
-                <form th:action="@{/donante/mis-donaciones}" method="get" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-end; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                <!-- Barra de Filtros Completa -->
+                <form th:action="@{/donante/mis-donaciones}" method="get" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
 
-                    <div style="flex: 1;">
-                        <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Estado:</label>
-                        <select name="estado" class="form-control" style="width: 100%; padding: 8px;">
-                            <option value="" th:selected="${estadoFiltro == null or estadoFiltro == ''}">Todos los estados</option>
-                            <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En Depósito</option>
-                            <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignada</option>
-                            <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En Traslado</option>
-                            <option value="ENTREGADA" th:selected="${estadoFiltro == 'ENTREGADA'}">Entregada</option>
+                    <!-- Fila Superior: Búsqueda y Ordenamiento -->
+                    <div style="display: flex; gap: 15px;">
+                        <input type="text" name="busqueda" class="form-control" placeholder="Buscar por descripción..." th:value="${busquedaFiltro}" style="flex: 2; padding: 8px;">
+                        <select name="orden" class="form-control" style="flex: 1; padding: 8px;">
+                            <option value="recientes" th:selected="${ordenFiltro == 'recientes' or ordenFiltro == null}">Más recientes primero</option>
+                            <option value="antiguas" th:selected="${ordenFiltro == 'antiguas'}">Más antiguas primero</option>
                         </select>
                     </div>
 
-                    <div style="flex: 1;">
-                        <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Categoría:</label>
-                        <select name="categoria" class="form-control" style="width: 100%; padding: 8px;">
-                            <option value="" th:selected="${categoriaFiltro == null or categoriaFiltro == ''}">Todas las categorías</option>
-                            <option value="ALIMENTOS" th:selected="${categoriaFiltro == 'ALIMENTOS'}">Alimentos</option>
-                            <option value="INDUMENTARIA" th:selected="${categoriaFiltro == 'INDUMENTARIA'}">Indumentaria</option>
-                            <option value="MOBILIARIO" th:selected="${categoriaFiltro == 'MOBILIARIO'}">Mobiliario</option>
-                        </select>
-                    </div>
+                    <!-- Fila Inferior: Estado, Categoría y Botones -->
+                    <div style="display: flex; gap: 15px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Estado:</label>
+                            <select name="estado" class="form-control" style="width: 100%; padding: 8px;">
+                                <option value="" th:selected="${estadoFiltro == null or estadoFiltro == ''}">Todos los estados</option>
+                                <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En Depósito</option>
+                                <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignada</option>
+                                <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En Traslado</option>
+                                <option value="ENTREGADA" th:selected="${estadoFiltro == 'ENTREGADA'}">Entregada</option>
+                            </select>
+                        </div>
 
-                    <div>
-                        <button type="submit" class="btn btn-primary" style="padding: 9px 20px;"> Buscar</button>
-                        <a th:href="@{/donante/mis-donaciones}" class="btn btn-outline" style="padding: 9px 20px; text-decoration: none;">Limpiar</a>
+                        <div style="flex: 1;">
+                            <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Categoría:</label>
+                            <select name="categoria" class="form-control" style="width: 100%; padding: 8px;">
+                                <option value="" th:selected="${categoriaFiltro == null or categoriaFiltro == ''}">Todas las categorías</option>
+                                <option value="ALIMENTOS" th:selected="${categoriaFiltro == 'ALIMENTOS'}">Alimentos</option>
+                                <option value="INDUMENTARIA" th:selected="${categoriaFiltro == 'INDUMENTARIA'}">Indumentaria</option>
+                                <option value="MOBILIARIO" th:selected="${categoriaFiltro == 'MOBILIARIO'}">Mobiliario</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <button type="submit" class="btn btn-primary" style="padding: 9px 20px;"> Buscar</button>
+                            <a th:href="@{/donante/mis-donaciones}" class="btn btn-outline" style="padding: 9px 20px; text-decoration: none;">Limpiar</a>
+                        </div>
                     </div>
                 </form>
 
-                <!-- 3. La Tabla Dinámica (Solo se muestra si hay donaciones en la lista) -->
+                <!-- 3. La Nueva Tabla Dinámica Aplanada -->
                 <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
                     <thead>
                     <tr>
-                        <th>ID Donación</th>
-                        <th>Descripción</th>
-                        <th>Bienes Donados</th>
+                        <th>
+                            <a th:href="@{/donante/mis-donaciones(orden=${ordenFiltro == 'recientes' ? 'antiguas' : 'recientes'}, busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro})}"
+                               style="color: inherit; text-decoration: none;">FECHA ↕</a>
+                        </th>
+                        <th>SUBCATEGORÍA</th>
+                        <th>
+                            <a th:href="@{/donante/mis-donaciones(orden='categoria', busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro})}"
+                               style="color: inherit; text-decoration: none;">CATEGORÍA ↕</a>
+                        </th>
+                        <th>CANTIDAD</th>
+                        <th>ESTADO</th>
+                        <th>ENTIDAD ASIGNADA</th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <!-- Recorremos la lista de DonacionResponse -->
-                    <tr th:each="donacion : ${donaciones}">
-
-                        <td>
-                            <ul style="padding-left: 15px; margin: 0;">
-                                <!-- Abrimos cada donación segmentada -->
-                                <th:block th:each="segmento : ${donacion.donacionesSegmentadas}">
-                                    <!-- Listamos los bienes que quedaron guardados ahí adentro -->
-                                    <li th:each="bien : ${segmento.bienes}">
-                                        <strong th:text="${bien.descripcion}">Fideos</strong>
-                                        (<span th:text="${bien.cantidad} + ' ' + ${bien.unidad?.nombre}">10 un.</span>)
-                                        -
-                                        <small class="muted" th:text="${bien.categoria?.nombre}">Alimentos</small>
-                                    </li>
-                                </th:block>
-                            </ul>
-                        </td>
-
+                    <tbody th:each="donacion : ${donaciones}">
+                    <!-- Iteramos directamente sobre las segmentadas para hacer una fila por cada una -->
+                    <tr th:each="segmento : ${donacion.donacionesSegmentadas}">
+                        <td th:text="${segmento.fechaDonacion}">12/04/2025</td>
+                        <td th:text="${segmento.subcategoria?.nombre}">Sillas</td>
+                        <td><span class="badge" th:text="${segmento.bienes[0]?.categoria?.nombre}">Mobiliario</span></td>
+                        <td th:text="${segmento.bienes[0]?.cantidad} + ' un.'">6 un.</td>
+                        <td><span class="badge" th:text="${segmento.estadoActual}">Entregada</span></td>
+                        <td th:text="${segmento.get('entidadAsignada') != null ? segmento.get('entidadAsignada').get('razonSocial') : '—'}">Escuela Rural N°10</td>
                     </tr>
                     </tbody>
                 </table>

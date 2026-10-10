@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.Data;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -23,46 +24,45 @@ public class HomeController {
 
     @GetMapping("/")
     public String inicio(Model model) {
-        // Inyectamos un dato dinámico en el "diccionario" de la vista
-        model.addAttribute("mensaje", "¡El Cliente Liviano de DonaTrack está vivo!");
-
-        // Retornamos el nombre exacto del archivo HTML (sin la extensión .html)
-        return "index";
+        return "index"; // Carga directamente la landing page
     }
     @GetMapping("/donante/mis-donaciones")
     public String misDonaciones(
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String busqueda,
+            @RequestParam(required = false) String orden,
+            HttpSession session,
             Model model) {
 
-        RestTemplate restTemplate = new RestTemplate();
-        StringBuilder backendUrl = new StringBuilder("http://localhost:8080/donaciones-service/donaciones/donantes/1");
+        Long donanteId = (Long) session.getAttribute("donanteId");
+        if (donanteId == null) {
+            return "redirect:/login"; // Si no hay sesión, lo echamos al login
+        }
 
-        boolean hasParams = false;
-        if (estado != null && !estado.isEmpty()) {
-            backendUrl.append("?estado=").append(estado);
-            hasParams = true;
-        }
-        if (categoria != null && !categoria.isEmpty()) {
-            backendUrl.append(hasParams ? "&" : "?").append("categoria=").append(categoria);
-        }
+        RestTemplate restTemplate = new RestTemplate();
+        StringBuilder backendUrl = new StringBuilder("http://localhost:8080/donaciones-service/donaciones/donantes/")
+                .append(donanteId).append("?");
+
+        if (estado != null && !estado.isEmpty()) backendUrl.append("estado=").append(estado).append("&");
+        if (categoria != null && !categoria.isEmpty()) backendUrl.append("categoria=").append(categoria).append("&");
+        if (busqueda != null && !busqueda.isEmpty()) backendUrl.append("busqueda=").append(busqueda).append("&");
+        if (orden != null && !orden.isEmpty()) backendUrl.append("orden=").append(orden).append("&");
 
         try {
-            // Recibimos un mapa genérico para no depender de la clase DonacionResponse
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    backendUrl.toString(),
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+                    backendUrl.toString(), HttpMethod.GET, null, new ParameterizedTypeReference<List<Map<String, Object>>>() {}
             );
             model.addAttribute("donaciones", response.getBody());
         } catch (Exception e) {
-            System.out.println("Error al obtener donaciones: " + e.getMessage());
             model.addAttribute("donaciones", java.util.List.of());
         }
-        // Le pasamos a la vista los filtros que el usuario eligio para que no se queden desactualizadas
+
+        // Mantener el estado en la vista
         model.addAttribute("estadoFiltro", estado);
         model.addAttribute("categoriaFiltro", categoria);
+        model.addAttribute("busquedaFiltro", busqueda);
+        model.addAttribute("ordenFiltro", orden);
 
         return "donante/mis-donaciones";
     }
@@ -79,7 +79,13 @@ public class HomeController {
             @RequestParam Integer cantidad,
             @RequestParam String unidad,
             @RequestParam String categoria,
-            @RequestParam String subcategoria) {
+            @RequestParam String subcategoria,
+            HttpSession session){
+
+        Long donanteId = (Long) session.getAttribute("donanteId");
+        if (donanteId == null) {
+            return "redirect:/login";
+        }
 
         //  Usamos los nuevos moldes (pasando false en los booleanos de Categoría para evitar el null)
         BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria, false, false);
@@ -102,7 +108,7 @@ public class HomeController {
         //
         // Enviamos al backend
         RestTemplate restTemplate = new RestTemplate();
-        String backendUrl = "http://localhost:8080/donaciones-service/donaciones/donantes/1";
+        String backendUrl = "http://localhost:8080/donaciones-service/donaciones/donantes/" + donanteId;
 
         try {
             restTemplate.postForEntity(backendUrl, request, String.class);
