@@ -1,45 +1,44 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
+import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.NotificacionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import java.util.List;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 @Controller
 public class NotificacionesController {
 
-  private final RestTemplate restTemplate;
+  private final WebApiCallerService webApiCallerService;
   private final String notificacionesServiceBaseUrl;
 
   public NotificacionesController(
-      RestTemplate restTemplate,
+      WebApiCallerService webApiCallerService,
       @Value("${notificaciones.service.url}") String notificacionesServiceBaseUrl) {
-    this.restTemplate = restTemplate;
+    this.webApiCallerService = webApiCallerService;
     this.notificacionesServiceBaseUrl = notificacionesServiceBaseUrl;
   }
 
   @GetMapping("/donante/notificaciones")
   public String notificaciones(Model model) {
-    String backendUrl = notificacionesServiceBaseUrl + "/api/notificaciones/destinatarios/21"; //TODO: sacar hardcodeo de la id
+    Long usuarioId = (Long) SesionUsuario.actual().getAttribute(SesionUsuario.USUARIO_ID);
+
+    if(usuarioId == null){
+      return "redirect:/login?expired";
+    }
+
+    String backendUrl = notificacionesServiceBaseUrl + "/api/notificaciones/destinatarios/" + usuarioId;
     try {
-      ResponseEntity<List<NotificacionResponse>> response = restTemplate.exchange(
-          backendUrl,
-          HttpMethod.GET,
-          null,
-          new ParameterizedTypeReference<List<NotificacionResponse>>() {}
-      );
-      model.addAttribute("notificaciones", response.getBody());
+      List<NotificacionResponse> notificaciones = webApiCallerService.getList(backendUrl, NotificacionResponse[].class);
+      model.addAttribute("notificaciones", notificaciones);
     } catch (RestClientException e) {
       model.addAttribute("error", "No se pudo conectar con el Servicio de Notificaciones. Intenta de nuevo mas tarde.");
     }
+    
     return "donante/notificaciones";
   }
 }
