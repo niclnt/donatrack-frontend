@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donatrack_frontend.dtos;
+package ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones;
 
 import java.time.LocalDate;
 import java.util.List;

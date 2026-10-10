@@ -3,7 +3,6 @@ package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.Data;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -24,7 +23,11 @@ public class HomeController {
 
     @GetMapping("/")
     public String inicio(Model model) {
-        return "index"; // Carga directamente la landing page
+        // Inyectamos un dato dinámico en el "diccionario" de la vista
+        model.addAttribute("mensaje", "¡El Cliente Liviano de DonaTrack está vivo!");
+
+        // Retornamos el nombre exacto del archivo HTML (sin la extensión .html)
+        return "index";
     }
     @GetMapping("/donante/mis-donaciones")
     public String misDonaciones(
@@ -54,6 +57,7 @@ public class HomeController {
                     backendUrl.toString(), HttpMethod.GET, null, new ParameterizedTypeReference<List<Map<String, Object>>>() {}
             );
             model.addAttribute("donaciones", response.getBody());
+
         } catch (Exception e) {
             model.addAttribute("donaciones", java.util.List.of());
         }

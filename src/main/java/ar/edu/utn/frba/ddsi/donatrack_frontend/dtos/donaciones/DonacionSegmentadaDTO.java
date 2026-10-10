@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donatrack_frontend.dtos;
+package ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDate;

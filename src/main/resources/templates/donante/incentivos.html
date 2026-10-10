@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incentivos y logros — DonaTrack</title>
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+</head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<!-- REQ. 7 — INCENTIVOS (SOLO PERSONA HUMANA DONANTE) -->
+<div class="page">
+  <header class="topbar">
+    <a class="brand" th:href="@{/index}">◆ DonaTrack</a>
+    <button class="nav-toggle" data-nav-toggle aria-controls="donornav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+    <nav class="topbar__nav" id="donornav" aria-label="Panel de donante">
+      <a th:href="@{/donante/mis-donaciones}">Mis donaciones</a>
+      <a th:href="@{/donante/entidades}">Entidades</a>
+      <a th:href="@{/donante/incentivos}" aria-current="page">Incentivos</a>
+      <a th:href="@{/donante/mapa-entregas}">Mapa</a>
+      <a th:href="@{/donante/notificaciones}">Notificaciones</a>
+    </nav>
+    <div class="topbar__actions">
+      <button class="avatar" aria-label="Mi cuenta">AP</button>
+    </div>
+  </header>
+
+  <main id="main" class="page-body">
+    <div class="container">
+
+      <!-- Alerta de error si falla la comunicación REST con incentivos-service -->
+      <div th:if="${error != null}" class="alert alert-danger" style="margin-bottom: var(--sp-4);" th:text="${error}">
+        Error al conectar con el servicio.
+      </div>
+
+      <div class="page-head">
+        <div>
+          <h1>Incentivos y logros</h1>
+          <p class="page-head__sub">Tu actividad de donación te hace ganar insignias y subir de categoría.</p>
+        </div>
+      </div>
+
+      <!-- Categoría actual y Barra de progreso dinámicos -->
+      <div class="hero-card" style="margin-bottom: var(--sp-6);" th:if="${progreso != null}">
+        <div style="font-size: 2.5rem;" aria-hidden="true">🥈</div>
+        <div style="flex:1;">
+          <h2>Categoría Donante</h2>
+          <p style="color:#5b5680;">Categoría actual e hitos</p>
+          <div class="flex items-center gap-3 mt-4">
+            <div class="progress" style="flex:1; max-width:280px; background:#cfc9f2;">
+              <div class="progress__fill" th:style="'width:' + ${progreso.porcentajeAvance} + '%;'"></div>
+            </div>
+            <span style="color:#4c4470; font-weight:600; font-size: var(--fs-sm);">
+                <span th:text="${progreso.puntosTotales}">0</span> /
+                <span th:text="${progreso.puntosSiguienteNivel}">100</span> puntos para subir
+              </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ranking / Leaderboard Mensual -->
+      <h3 style="margin-bottom: var(--sp-4);">Ranking Mensual de Donantes</h3>
+      <div class="card" style="margin-bottom: var(--sp-6);">
+        <table class="table" style="width: 100%; text-align: left;">
+          <thead>
+          <tr>
+            <th>Posición</th>
+            <th>Donante</th>
+            <th>Misiones Completadas</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="puesto : ${ranking}">
+            <td th:text="'#' + ${puesto.puesto}">#1</td>
+            <td th:text="${puesto.username}">usuario@mail.com</td>
+            <td th:text="${puesto.cantidadMisionesCompletadas}">0</td>
+          </tr>
+          <tr th:if="${ranking == null || #lists.isEmpty(ranking)}">
+            <td colspan="3" class="dim text-center">No hay datos del ranking disponibles este mes.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Misiones Activas -->
+      <h3 style="margin-bottom: var(--sp-4);">Misiones</h3>
+      <div class="grid" style="gap: var(--sp-3);" th:if="${progreso != null}">
+
+        <div class="card flex items-center gap-4"
+             th:each="mision : ${progreso.misionesActivas}"
+             th:style="${mision.completada} ? 'border-color: rgba(74,222,128,.4);' : ''">
+
+          <div style="font-size:1.6rem;" aria-hidden="true" th:text="${mision.completada} ? '🏆' : '🎯'">🎯</div>
+          <div style="flex:1;">
+            <strong th:text="${mision.nombre}">Nombre de Misión</strong>
+            <p class="muted" style="font-size: var(--fs-sm);" th:text="${mision.descripcion}">Descripción de la misión.</p>
+            <div class="progress mt-4" style="max-width:360px;">
+              <div class="progress__fill"
+                   th:style="${mision.completada} ? 'width:100%; background:var(--success);' : 'width:50%;'"></div>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <p class="dim" style="font-size:var(--fs-xs);">Recompensa</p>
+            <strong th:text="'+' + ${mision.puntosOtorgados} + ' pts'">+10 pts</strong>
+          </div>
+
+          <span class="badge badge--success" th:if="${mision.completada}">✓</span>
+          <span class="badge badge--warning" th:unless="${mision.completada}">⏳</span>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>
