@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Acceso denegado')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+<header th:replace="~{fragments/base :: topbar('error')}"></header>
+
+<main id="main" class="page-body">
+  <div class="container empty-state" style="max-width: 560px;">
+    <div class="entity__icon" aria-hidden="true" style="margin-inline:auto; font-size:2rem;">🔒</div>
+    <h1 class="mt-4" th:text="${titulo}">Acceso denegado</h1>
+    <p class="muted mt-4" th:text="${mensaje}">No tenés permiso para acceder a esta sección.</p>
+    <a class="btn btn--primary mt-4" th:href="@{/panel}">Volver a mi panel</a>
+  </div>
+</main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
