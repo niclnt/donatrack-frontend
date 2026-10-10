@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Depósito y vencidas — DonaTrack</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- REQ. 16 — ACTUALIZAR DONACIONES DISPONIBLES COMO VENCIDAS -->
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html">◆ DonaTrack</a>
+      <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+      <nav class="topbar__nav" id="adminnav" aria-label="Panel administrador">
+        <a href="registrar-donacion.html">Registrar</a>
+        <a href="deposito-vencidas.html" aria-current="page">Depósito</a>
+        <a href="asignar-algoritmo.html">Asignación</a>
+        <a href="camiones.html">Camiones</a>
+        <a href="rankings.html">Rankings</a>
+        <a href="importar-csv.html">CSV</a>
+      </nav>
+      <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar" aria-label="Navegación de administración">
+        <p class="sidebar__label">Administración</p>
+        <a href="registrar-donacion.html">Registrar donación</a>
+        <a href="deposito-vencidas.html" aria-current="page">Depósito y vencidas</a>
+        <a href="asignar-algoritmo.html">Asignación por algoritmo</a>
+        <a href="camiones.html">Camiones</a>
+        <a href="rankings.html">Rankings</a>
+        <a href="importar-csv.html">Importar CSV</a>
+      </aside>
+
+      <main id="main" class="shell__main">
+        <div class="container" style="max-width: 1180px;">
+          <p class="req-tag">Req. 16 — Depósito y control de vencimientos</p>
+          <div class="page-head">
+            <div>
+              <h1>Depósito — Estado de donaciones</h1>
+              <p class="page-head__sub">Revisá las donaciones disponibles y marcá como vencidas aquellas que ya no puedan asignarse.</p>
+            </div>
+            <button class="btn btn--danger btn--sm" data-toast="Donaciones seleccionadas marcadas como vencidas">Marcar seleccionadas como vencidas</button>
+          </div>
+
+          <section class="card" aria-label="Filtros de depósito">
+            <div class="form-grid">
+              <div class="field">
+                <label class="field__label" for="buscar">Buscar</label>
+                <input class="input" id="buscar" type="search" placeholder="Buscar por ítem, donante o subcategoría">
+              </div>
+              <div class="field">
+                <label class="field__label" for="estado">Estado</label>
+                <select class="select" id="estado">
+                  <option>Todos los estados</option>
+                  <option>En depósito</option>
+                  <option>Vencida</option>
+                  <option>Asignación realizada</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="categoria">Categoría</label>
+                <select class="select" id="categoria">
+                  <option>Todas las categorías</option>
+                  <option>Alimentos</option>
+                  <option>Mobiliario</option>
+                  <option>Indumentaria</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="orden">Ordenar</label>
+                <select class="select" id="orden">
+                  <option>Vencimiento más próximo</option>
+                  <option>Fecha de recepción</option>
+                  <option>Cantidad</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section class="card mt-5" aria-labelledby="tabla-title">
+            <div class="card__header">
+              <div>
+                <h2 id="tabla-title">Donaciones disponibles en depósito</h2>
+                <p class="muted" style="font-size: var(--fs-sm);">Seleccioná las donaciones vencidas y registrá el cambio de estado con trazabilidad.</p>
+              </div>
+              <span class="badge badge--info">4 seleccionables</span>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <caption class="sr-only">Listado de donaciones en depósito</caption>
+                <thead>
+                  <tr>
+                    <th scope="col"><span class="sr-only">Seleccionar</span></th>
+                    <th scope="col">Ítem</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Donante</th>
+                    <th scope="col">Vencimiento</th>
+                    <th scope="col">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" aria-label="Seleccionar leche en polvo"></td>
+                    <td><strong>Leche en polvo</strong></td>
+                    <td>Alimentos</td>
+                    <td class="num">20 u.</td>
+                    <td>Ana Gómez</td>
+                    <td>07/09/2026</td>
+                    <td><span class="badge badge--danger">Vencida</span></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="Seleccionar fideos secos"></td>
+                    <td><strong>Fideos secos</strong></td>
+                    <td>Alimentos</td>
+                    <td class="num">15 u.</td>
+                    <td>Carlos Pérez</td>
+                    <td>10/09/2026</td>
+                    <td><span class="badge badge--warning">Por vencer</span></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="Seleccionar sillas escolares"></td>
+                    <td><strong>Sillas escolares</strong></td>
+                    <td>Mobiliario</td>
+                    <td class="num">6 u.</td>
+                    <td>Martín Rodríguez</td>
+                    <td>—</td>
+                    <td><span class="badge badge--success">Disponible</span></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" aria-label="Seleccionar mesa"></td>
+                    <td><strong>Mesa</strong></td>
+                    <td>Mobiliario</td>
+                    <td class="num">1 u.</td>
+                    <td>Lucía Fernández</td>
+                    <td>—</td>
+                    <td><span class="badge badge--info">Asignada</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="card mt-5" aria-labelledby="confirmar-title">
+            <div class="card__header">
+              <div>
+                <h2 id="confirmar-title">Confirmar marcado como vencidas</h2>
+                <p class="muted" style="font-size: var(--fs-sm);">Esta acción modifica el estado y agrega una entrada al historial de auditoría.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="motivo">Motivo del cambio de estado</label>
+              <textarea class="textarea" id="motivo" placeholder="Ej: Fecha de vencimiento superada durante control de depósito."></textarea>
+            </div>
+            <div class="flex justify-between items-center wrap gap-3">
+              <p class="chip chip--alert">Acción irreversible para las donaciones seleccionadas.</p>
+              <div class="flex gap-2 wrap">
+                <button class="btn btn--ghost">Cancelar</button>
+                <button class="btn btn--danger" data-toast="Vencimiento confirmado correctamente">Confirmar vencimiento</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
+    <div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" href="../login.html">Cerrar sesión</a></div></div>
+  </div>
+
+  <script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rankings — DonaTrack</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- REQ. 19 — RANKING MENSUAL DE DONANTES E HISTORIAL -->
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html">◆ DonaTrack</a>
+      <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+      <nav class="topbar__nav" id="adminnav" aria-label="Panel administrador">
+        <a href="registrar-donacion.html">Registrar</a>
+        <a href="deposito-vencidas.html">Depósito</a>
+        <a href="asignar-algoritmo.html">Asignación</a>
+        <a href="camiones.html">Camiones</a>
+        <a href="rankings.html" aria-current="page">Rankings</a>
+        <a href="importar-csv.html">CSV</a>
+      </nav>
+      <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar" aria-label="Navegación de administración">
+        <p class="sidebar__label">Administración</p>
+        <a href="registrar-donacion.html">Registrar donación</a>
+        <a href="deposito-vencidas.html">Depósito y vencidas</a>
+        <a href="asignar-algoritmo.html">Asignación por algoritmo</a>
+        <a href="camiones.html">Camiones</a>
+        <a href="rankings.html" aria-current="page">Rankings</a>
+        <a href="importar-csv.html">Importar CSV</a>
+      </aside>
+
+      <main id="main" class="shell__main">
+        <div class="container" style="max-width: 1180px;">
+          <p class="req-tag">Req. 19 — Ranking mensual e historial</p>
+          <div class="page-head">
+            <div>
+              <h1>Ranking mensual de donantes</h1>
+              <p class="page-head__sub">Visualizá los donantes más activos y el historial de rankings anteriores.</p>
+            </div>
+            <div class="flex gap-2 wrap">
+              <select class="select" aria-label="Mes del ranking" style="width: auto; min-width: 180px;">
+                <option>Septiembre 2026</option>
+                <option>Agosto 2026</option>
+                <option>Julio 2026</option>
+              </select>
+              <button class="btn btn--ghost btn--sm" data-toast="Ranking exportado correctamente">Exportar</button>
+            </div>
+          </div>
+
+          <section class="grid grid--stats" aria-label="Indicadores del ranking">
+            <article class="stat"><p class="stat__label">Misiones cumplidas</p><p class="stat__value">42</p></article>
+            <article class="stat"><p class="stat__label">Donantes activos</p><p class="stat__value">18</p></article>
+            <article class="stat"><p class="stat__label">Categoría más frecuente</p><p class="stat__value" style="font-size: var(--fs-lg);">Sostenedor</p></article>
+          </section>
+
+          <section class="card mt-5" aria-labelledby="ranking-title">
+            <div class="card__header">
+              <div>
+                <h2 id="ranking-title">Top donantes del mes</h2>
+                <p class="muted" style="font-size: var(--fs-sm);">Calculado por cantidad de misiones cumplidas durante el período.</p>
+              </div>
+              <span class="badge badge--success">Top 3 destacado</span>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <caption class="sr-only">Ranking mensual de donantes</caption>
+                <thead><tr><th scope="col">Puesto</th><th scope="col">Donante</th><th scope="col">Tipo</th><th scope="col">Misiones cumplidas</th><th scope="col">Categoría</th><th scope="col">Último aporte</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>#1</strong></td><td>Martín Rodríguez</td><td>Persona humana</td><td class="num">8</td><td><span class="badge badge--success">Transformador</span></td><td>06/09/2026</td></tr>
+                  <tr><td><strong>#2</strong></td><td>Arcos Plateados S.A.</td><td>Persona jurídica</td><td class="num">6</td><td><span class="badge badge--warning">Sostenedor</span></td><td>05/09/2026</td></tr>
+                  <tr><td><strong>#3</strong></td><td>Ana Pérez</td><td>Persona humana</td><td class="num">5</td><td><span class="badge badge--warning">Sostenedor</span></td><td>04/09/2026</td></tr>
+                  <tr><td>#4</td><td>Lucía Fernández</td><td>Persona humana</td><td class="num">4</td><td><span class="badge badge--info">Colaborador</span></td><td>01/09/2026</td></tr>
+                  <tr><td>#5</td><td>Cooperativa Norte</td><td>Persona jurídica</td><td class="num">3</td><td><span class="badge badge--info">Colaborador</span></td><td>29/08/2026</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="grid grid--3 mt-5" aria-label="Historial de rankings anteriores">
+            <article class="card">
+              <h2 style="font-size: var(--fs-lg);">Agosto 2026</h2>
+              <p class="muted mt-4">Primer puesto: Arcos Plateados S.A.</p>
+              <p class="stat__value mt-4" style="font-size: var(--fs-xl);">51 misiones</p>
+              <button class="btn btn--link btn--sm mt-4">Ver historial</button>
+            </article>
+            <article class="card">
+              <h2 style="font-size: var(--fs-lg);">Julio 2026</h2>
+              <p class="muted mt-4">Primer puesto: Martín Rodríguez</p>
+              <p class="stat__value mt-4" style="font-size: var(--fs-xl);">39 misiones</p>
+              <button class="btn btn--link btn--sm mt-4">Ver historial</button>
+            </article>
+            <article class="card">
+              <h2 style="font-size: var(--fs-lg);">Junio 2026</h2>
+              <p class="muted mt-4">Primer puesto: Ana Pérez</p>
+              <p class="stat__value mt-4" style="font-size: var(--fs-xl);">34 misiones</p>
+              <button class="btn btn--link btn--sm mt-4">Ver historial</button>
+            </article>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h"><div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" href="../login.html">Cerrar sesión</a></div></div></div>
+
+  <script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

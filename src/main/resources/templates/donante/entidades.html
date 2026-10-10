@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entidades beneficiarias — DonaTrack</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- REQ. 6 — ENTIDADES BENEFICIARIAS (PERSONA DONANTE) -->
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html">◆ DonaTrack</a>
+      <button class="nav-toggle" data-nav-toggle aria-controls="donornav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+      <nav class="topbar__nav" id="donornav" aria-label="Panel de donante">
+        <a href="mis-donaciones.html">Mis donaciones</a>
+        <a href="entidades.html" aria-current="page">Entidades</a>
+        <a href="incentivos.html">Incentivos</a>
+        <a href="mapa-entregas.html">Mapa</a>
+        <a href="notificaciones.html">Notificaciones</a>
+      </nav>
+      <div class="topbar__actions">
+        <button class="avatar" aria-label="Mi cuenta">AP</button>
+      </div>
+    </header>
+
+    <main id="main" class="page-body">
+      <div class="container">
+        <!-- <p class="req-tag">Req. 6 — Entidades beneficiarias (persona donante)</p> -->
+        <div class="page-head">
+          <h1>Entidades beneficiarias</h1>
+          <span class="muted">24 entidades registradas</span>
+        </div>
+
+        <!-- Filtros -->
+        <div class="form-grid" style="margin-bottom: var(--sp-5);">
+          <div class="field" style="margin:0;">
+            <label class="field__label" for="tipo">Tipo de entidad</label>
+            <select class="select" id="tipo">
+              <option>Todos los tipos</option><option>Institución educativa</option>
+              <option>Comedor comunitario</option><option>Hogar de niños</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0;">
+            <label class="field__label" for="nec">Necesidad</label>
+            <select class="select" id="nec">
+              <option>Cualquier necesidad</option><option>Alimentos</option>
+              <option>Mobiliario</option><option>Vestimenta</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Cards de entidades -->
+        <div class="grid grid--3">
+          <article class="card entity">
+            <div class="entity__top">
+              <span class="entity__icon" aria-hidden="true">🏫</span>
+              <div>
+                <p class="entity__name">Escuela Rural N°10</p>
+                <p class="entity__meta">Institución educativa · Moreno, GBA</p>
+              </div>
+            </div>
+            <p class="entity__desc">Escuela primaria en zona rural con comedor y actividades extracurriculares para 180 alumnos.</p>
+            <div class="entity__tags">
+              <span class="chip chip--alert">Sillas (urgente)</span>
+              <span class="chip">Útiles escolares</span>
+              <span class="chip">Ropa infantil</span>
+            </div>
+            <div class="entity__foot">
+              <span class="muted" style="font-size: var(--fs-sm);">Donaciones recibidas: <strong>14</strong></span>
+              <button class="btn btn--ghost btn--sm">Ver detalle</button>
+            </div>
+          </article>
+
+          <article class="card entity">
+            <div class="entity__top">
+              <span class="entity__icon" aria-hidden="true">🍲</span>
+              <div>
+                <p class="entity__name">Comedor Escobar Sonrisas</p>
+                <p class="entity__meta">Comedor comunitario · Escobar, GBA</p>
+              </div>
+            </div>
+            <p class="entity__desc">Atiende a 120 familias diariamente con almuerzo y merienda. Funciona de lunes a sábado.</p>
+            <div class="entity__tags">
+              <span class="chip chip--alert">Fideos secos (recurrente)</span>
+              <span class="chip">Aceite</span>
+              <span class="chip">Legumbres</span>
+            </div>
+            <div class="entity__foot">
+              <span class="muted" style="font-size: var(--fs-sm);">Donaciones recibidas: <strong>31</strong></span>
+              <button class="btn btn--ghost btn--sm">Ver detalle</button>
+            </div>
+          </article>
+
+          <article class="card entity">
+            <div class="entity__top">
+              <span class="entity__icon" aria-hidden="true">🏠</span>
+              <div>
+                <p class="entity__name">Hogar San Cayetano</p>
+                <p class="entity__meta">Hogar de niños · CABA</p>
+              </div>
+            </div>
+            <p class="entity__desc">Hogar para niños y adolescentes en situación de vulnerabilidad. Capacidad para 40 residentes.</p>
+            <div class="entity__tags">
+              <span class="chip">Ropa de abrigo</span>
+              <span class="chip">Colchones</span>
+              <span class="chip">Frazadas</span>
+            </div>
+            <div class="entity__foot">
+              <span class="muted" style="font-size: var(--fs-sm);">Donaciones recibidas: <strong>8</strong></span>
+              <button class="btn btn--ghost btn--sm">Ver detalle</button>
+            </div>
+          </article>
+        </div>
+
+        <!-- Paginación -->
+        <nav class="flex gap-2 mt-5" style="justify-content:center;" aria-label="Paginación">
+          <button class="btn btn--ghost btn--sm" aria-label="Anterior">‹</button>
+          <button class="btn btn--primary btn--sm" aria-current="page">1</button>
+          <button class="btn btn--ghost btn--sm">2</button>
+          <button class="btn btn--ghost btn--sm">3</button>
+          <button class="btn btn--ghost btn--sm" aria-label="Siguiente">›</button>
+        </nav>
+      </div>
+    </main>
+  </div>
+
+
+  <script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

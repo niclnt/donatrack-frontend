@@ -1,12 +1,13 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
-import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.BienDTO;
-import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionCreateRequest;
-import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.DonacionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
 import lombok.Data;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,26 +23,24 @@ import java.util.Map;
 public class HomeController {
 
     @GetMapping("/")
-    public String inicio(Model model) {
-        // Inyectamos un dato dinámico en el "diccionario" de la vista
-        model.addAttribute("mensaje", "¡El Cliente Liviano de DonaTrack está vivo!");
-
-        // Retornamos el nombre exacto del archivo HTML (sin la extensión .html)
+    public String inicio() {
         return "index";
     }
+
     @GetMapping("/donante/mis-donaciones")
     public String misDonaciones(
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) String categoria,
             @RequestParam(required = false) String busqueda,
             @RequestParam(required = false) String orden,
-            HttpSession session,
+            Authentication authentication,
             Model model) {
 
-        Long donanteId = (Long) session.getAttribute("donanteId");
-        if (donanteId == null) {
-            return "redirect:/login"; // Si no hay sesión, lo echamos al login
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
         }
+
+        Long donanteId = extraerId();
 
         RestTemplate restTemplate = new RestTemplate();
         StringBuilder backendUrl = new StringBuilder("http://localhost:8080/donaciones-service/donaciones/donantes/")
@@ -62,7 +61,6 @@ public class HomeController {
             model.addAttribute("donaciones", java.util.List.of());
         }
 
-        // Mantener el estado en la vista
         model.addAttribute("estadoFiltro", estado);
         model.addAttribute("categoriaFiltro", categoria);
         model.addAttribute("busquedaFiltro", busqueda);
@@ -72,10 +70,13 @@ public class HomeController {
     }
 
     @GetMapping("/donante/nueva-donacion")
-    public String mostrarFormularioDonacion(Model model) {
-        // Más adelante acá le pasaremos un DTO vacío para que Thymeleaf lo llene
+    public String mostrarFormularioDonacion(Authentication authentication, Model model) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
         return "donante/nueva-donacion";
     }
+
     @PostMapping("/donante/nueva-donacion")
     public String procesarNuevaDonacion(
             @RequestParam String descripcionDonacion,
@@ -84,33 +85,29 @@ public class HomeController {
             @RequestParam String unidad,
             @RequestParam String categoria,
             @RequestParam String subcategoria,
-            HttpSession session){
+            Authentication authentication){
 
-        Long donanteId = (Long) session.getAttribute("donanteId");
-        if (donanteId == null) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
         }
 
-        //  Usamos los nuevos moldes (pasando false en los booleanos de Categoría para evitar el null)
+        Long donanteId = extraerId();
+
         BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria, false, false);
         BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategoria);
         BienDTO.UnidadRef uniRef = new BienDTO.UnidadRef(null, unidad, "UN");
 
-        //  Armamos el BienDTO
         BienDTO bien = new BienDTO(
                 descripcionBien, catRef, subRef, uniRef, cantidad,
                 null, false, false, 0.0, 0.0
         );
 
-        //  Ensamblamos el Request
         DonacionCreateRequest request = new DonacionCreateRequest(
                 descripcionDonacion,
                 java.time.LocalDate.now(),
                 java.util.List.of(bien)
         );
 
-        //
-        // Enviamos al backend
         RestTemplate restTemplate = new RestTemplate();
         String backendUrl = "http://localhost:8080/donaciones-service/donaciones/donantes/" + donanteId;
 
@@ -122,5 +119,18 @@ public class HomeController {
         }
 
         return "redirect:/donante/mis-donaciones";
+    }
+
+    // Usamos la clase estática de tu compañero para leer el ID directamente de la sesión
+    private Long extraerId() {
+        try {
+            Object idObjeto = SesionUsuario.actual().getAttribute(SesionUsuario.USUARIO_ID);
+            if (idObjeto != null) {
+                return Long.valueOf(idObjeto.toString());
+            }
+        } catch (Exception e) {
+            System.out.println("Error al extraer ID de SesionUsuario: " + e.getMessage());
+        }
+        return 1L; // Fallback de seguridad
     }
 }

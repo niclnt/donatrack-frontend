@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Necesidades — DonaTrack</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- REQ. 10 — NECESIDADES MATERIALES (ENTIDAD BENEFICIARIA) -->
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html">◆ DonaTrack</a>
+      <button class="nav-toggle" data-nav-toggle aria-controls="ongnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+      <nav class="topbar__nav" id="ongnav" aria-label="Panel de entidad beneficiaria">
+        <a href="asignadas.html">Donaciones asignadas</a>
+        <a href="necesidades.html" aria-current="page">Necesidades</a>
+        <a href="mapa.html">Mapa</a>
+        <a href="notificaciones.html">Notificaciones</a>
+      </nav>
+      <div class="topbar__actions">
+        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">ER</button>
+      </div>
+    </header>
+
+    <main id="main" class="page-body">
+      <div class="container" style="max-width: 980px;">
+        <!--<p class="req-tag">Req. 10 — Registrar necesidades materiales</p>-->
+        <div class="page-head">
+          <div>
+            <h1>Necesidades materiales</h1>
+            <p class="page-head__sub">Registrá necesidades concretas para que puedan vincularse con donaciones compatibles.</p>
+          </div>
+          <button class="btn btn--primary btn--sm" data-toast="Formulario preparado para registrar una nueva necesidad">+ Nueva necesidad</button>
+        </div>
+
+        <section class="grid grid--stats" aria-label="Resumen de necesidades">
+          <article class="stat"><p class="stat__label">Necesidades activas</p><p class="stat__value">8</p></article>
+          <article class="stat"><p class="stat__label">Pendientes de cobertura</p><p class="stat__value">5</p></article>
+          <article class="stat"><p class="stat__label">Cubiertas este mes</p><p class="stat__value">12</p></article>
+        </section>
+
+        <section class="card mt-5" aria-labelledby="form-necesidad-title">
+          <div class="card__header">
+            <div>
+              <h2 id="form-necesidad-title">Registrar nueva necesidad</h2>
+              <p class="muted" style="font-size: var(--fs-sm);">Indicá subcategoría, cantidad y prioridad para que el sistema pueda buscar donaciones compatibles.</p>
+            </div>
+          </div>
+
+          <form onsubmit="event.preventDefault(); donaTrackToast('Necesidad registrada correctamente', 'success');">
+            <div class="form-grid">
+              <div class="field">
+                <label class="field__label" for="tipo-necesidad">Tipo de necesidad</label>
+                <select class="select" id="tipo-necesidad" name="tipo-necesidad" required>
+                  <option value="">Seleccionar tipo</option>
+                  <option>Recurrente</option>
+                  <option>Extraordinaria</option>
+                </select>
+                <span class="field__hint">Recurrente para consumos habituales; extraordinaria para situaciones puntuales.</span>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="categoria">Categoría</label>
+                <select class="select" id="categoria" name="categoria" required>
+                  <option value="">Seleccionar categoría</option>
+                  <option>Alimentos</option>
+                  <option>Vestimenta</option>
+                  <option>Mobiliario</option>
+                  <option>Higiene</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="subcategoria">Subcategoría</label>
+                <select class="select" id="subcategoria" name="subcategoria" required>
+                  <option value="">Seleccionar subcategoría</option>
+                  <option>Fideos secos</option>
+                  <option>Arroz</option>
+                  <option>Ropa de abrigo</option>
+                  <option>Sillas</option>
+                  <option>Mesas</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="cantidad">Cantidad requerida</label>
+                <input class="input" id="cantidad" name="cantidad" type="number" min="1" placeholder="Ej: 30" required>
+                <span class="field__hint">Usá la unidad correspondiente: unidades, paquetes, kg, etc.</span>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="frecuencia">Frecuencia</label>
+                <select class="select" id="frecuencia" name="frecuencia">
+                  <option>No aplica</option>
+                  <option>Semanal</option>
+                  <option>Mensual</option>
+                  <option>Trimestral</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="prioridad">Prioridad</label>
+                <select class="select" id="prioridad" name="prioridad" required>
+                  <option value="">Seleccionar prioridad</option>
+                  <option>Alta</option>
+                  <option>Media</option>
+                  <option>Baja</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="descripcion">Descripción</label>
+              <textarea class="textarea" id="descripcion" name="descripcion" placeholder="Ej: Necesitamos sillas para reponer mobiliario dañado por una inundación." required></textarea>
+            </div>
+
+            <div class="flex justify-between items-center wrap gap-3">
+              <p class="field__hint">Estos datos se usarán para comparar la necesidad con donaciones segmentadas compatibles.</p>
+              <button class="btn btn--primary" type="submit">Registrar necesidad</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="card mt-5" aria-labelledby="necesidades-registradas-title">
+          <div class="card__header">
+            <div>
+              <h2 id="necesidades-registradas-title">Necesidades registradas</h2>
+              <p class="muted" style="font-size: var(--fs-sm);">Estado actual de las necesidades declaradas por la entidad.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <caption class="sr-only">Listado de necesidades registradas</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Subcategoría</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Cantidad</th>
+                  <th scope="col">Prioridad</th>
+                  <th scope="col">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Fideos secos</strong></td>
+                  <td>Recurrente</td>
+                  <td class="num">100 paquetes</td>
+                  <td><span class="badge badge--warning">Alta</span></td>
+                  <td><span class="badge badge--info">En búsqueda</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Sillas</strong></td>
+                  <td>Extraordinaria</td>
+                  <td class="num">30 unidades</td>
+                  <td><span class="badge badge--warning">Alta</span></td>
+                  <td><span class="badge badge--success">Parcialmente cubierta</span></td>
+                </tr>
+                <tr>
+                  <td><strong>Ropa de abrigo</strong></td>
+                  <td>Recurrente</td>
+                  <td class="num">45 prendas</td>
+                  <td><span class="badge">Media</span></td>
+                  <td><span class="badge badge--success">Cubierta</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
+    <div class="modal__box">
+      <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Escuela Rural N°10</h2>
+      <p class="muted mt-4">Entidad beneficiaria · Mendoza, Argentina</p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+        <a class="btn btn--danger" href="../login.html">Cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmar recepción — DonaTrack</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- REQ. 12 — CONFIRMAR RECEPCIÓN CON FOTOS (ENTIDAD BENEFICIARIA) -->
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html">◆ DonaTrack</a>
+      <button class="nav-toggle" data-nav-toggle aria-controls="ongnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+      <nav class="topbar__nav" id="ongnav" aria-label="Panel de entidad beneficiaria">
+        <a href="asignadas.html">Donaciones asignadas</a>
+        <a href="necesidades.html">Necesidades</a>
+        <a href="mapa.html">Mapa</a>
+        <a href="notificaciones.html">Notificaciones</a>
+      </nav>
+      <div class="topbar__actions">
+        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">ER</button>
+      </div>
+    </header>
+
+    <main id="main" class="page-body">
+      <div class="container" style="max-width: 980px;">
+       <!--<p class="req-tag">Req. 12 — Confirmar recepción de donación</p>-->
+        <div class="page-head">
+          <div>
+            <h1>Confirmar recepción</h1>
+            <p class="page-head__sub">Registrá la recepción de la donación y adjuntá fotos como evidencia.</p>
+          </div>
+          <a class="btn btn--ghost btn--sm" href="asignadas.html">Volver al listado</a>
+        </div>
+
+        <section class="grid grid--3" aria-label="Resumen de la donación recibida">
+          <article class="stat">
+            <p class="stat__label">Necesidad cubierta</p>
+            <p class="stat__value" style="font-size: var(--fs-lg);">Ropa de abrigo</p>
+            <span class="badge badge--success mt-4">Pendiente recepción</span>
+          </article>
+          <article class="stat">
+            <p class="stat__label">Donante</p>
+            <p class="stat__value" style="font-size: var(--fs-lg);">Empresa XYZ</p>
+            <p class="dim" style="font-size: var(--fs-xs);">30 unidades</p>
+          </article>
+          <article class="stat">
+            <p class="stat__label">Camión responsable</p>
+            <p class="stat__value" style="font-size: var(--fs-lg);">ABC123</p>
+            <p class="dim" style="font-size: var(--fs-xs);">Entrega realizada 18/04/2025</p>
+          </article>
+        </section>
+
+        <section class="card mt-5" aria-labelledby="confirmacion-title">
+          <div class="card__header">
+            <div>
+              <h2 id="confirmacion-title">Datos de recepción</h2>
+              <p class="muted" style="font-size: var(--fs-sm);">Estos datos generarán el comprobante de entrega para donante y entidad beneficiaria.</p>
+            </div>
+          </div>
+
+          <form onsubmit="event.preventDefault(); donaTrackToast('Recepción confirmada correctamente', 'success');">
+            <div class="form-grid">
+              <div class="field">
+                <label class="field__label" for="responsable">Responsable de recepción</label>
+                <input class="input" id="responsable" name="responsable" type="text" value="Mariana López" required>
+              </div>
+              <div class="field">
+                <label class="field__label" for="fecha">Fecha de recepción</label>
+                <input class="input" id="fecha" name="fecha" type="date" value="2025-04-18" required>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="fotos">Fotos de la donación recibida</label>
+              <input class="input" id="fotos" name="fotos" type="file" accept="image/*" multiple>
+              <span class="field__hint">Cargá una o más fotos donde se vea el estado de los bienes recibidos.</span>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="observaciones">Observaciones</label>
+              <textarea class="textarea" id="observaciones" name="observaciones" placeholder="Ej: La entrega fue recibida en buen estado y corresponde a lo asignado."></textarea>
+            </div>
+
+            <div class="card card--flat" style="border-color: rgba(74,222,128,.35); background: rgba(34,197,94,.08); margin-bottom: var(--sp-4);">
+              <strong>Antes de confirmar:</strong>
+              <p class="muted" style="font-size: var(--fs-sm); margin-top: var(--sp-2);">Verificá que la cantidad recibida coincida con lo asignado. Esta acción notificará al donante y actualizará el estado de la entrega.</p>
+            </div>
+
+            <div class="flex justify-between items-center wrap gap-3">
+              <button class="btn btn--ghost" type="button" data-toast="Confirmación cancelada">Cancelar</button>
+              <button class="btn btn--primary" type="submit">Confirmar recepción</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
+    <div class="modal__box">
+      <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Escuela Rural N°10</h2>
+      <p class="muted mt-4">Entidad beneficiaria · Mendoza, Argentina</p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+        <a class="btn btn--danger" href="../login.html">Cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

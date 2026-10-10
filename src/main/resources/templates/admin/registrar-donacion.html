@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar donación — DonaTrack</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- REQ. 15 — REGISTRAR DONANTE Y DONACIÓN RECIBIDA EN DEPÓSITO -->
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html">◆ DonaTrack</a>
+      <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+      <nav class="topbar__nav" id="adminnav" aria-label="Panel administrador">
+        <a href="registrar-donacion.html" aria-current="page">Registrar</a>
+        <a href="deposito-vencidas.html">Depósito</a>
+        <a href="asignar-algoritmo.html">Asignación</a>
+        <a href="camiones.html">Camiones</a>
+        <a href="rankings.html">Rankings</a>
+        <a href="importar-csv.html">CSV</a>
+      </nav>
+      <div class="topbar__actions">
+        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button>
+      </div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar" aria-label="Navegación de administración">
+        <p class="sidebar__label">Administración</p>
+        <a href="registrar-donacion.html" aria-current="page">Registrar donación</a>
+        <a href="deposito-vencidas.html">Depósito y vencidas</a>
+        <a href="asignar-algoritmo.html">Asignación por algoritmo</a>
+        <a href="camiones.html">Camiones</a>
+        <a href="rankings.html">Rankings</a>
+        <a href="importar-csv.html">Importar CSV</a>
+      </aside>
+
+      <main id="main" class="shell__main">
+        <div class="container" style="max-width: 1120px;">
+          <p class="req-tag">Req. 15 — Registro de donantes y donaciones</p>
+          <div class="page-head">
+            <div>
+              <h1>Registrar donación</h1>
+              <p class="page-head__sub">Cargá una donación recibida en el depósito y asociala a la persona donante correspondiente.</p>
+            </div>
+            <button class="btn btn--ghost btn--sm" data-toast="Borrador guardado temporalmente">Guardar borrador</button>
+          </div>
+
+          <section class="card" aria-labelledby="donante-title">
+            <div class="card__header">
+              <div>
+                <h2 id="donante-title">Paso 1 · Persona donante</h2>
+                <p class="muted" style="font-size: var(--fs-sm);">Buscá un donante existente o registrá uno nuevo antes de cargar los bienes recibidos.</p>
+              </div>
+            </div>
+
+            <div class="filterbar" data-filter-group aria-label="Tipo de carga de donante">
+              <button class="filter-pill" type="button" aria-pressed="true">Buscar existente</button>
+              <button class="filter-pill" type="button" aria-pressed="false">Registrar nuevo</button>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label class="field__label" for="buscar-donante">Buscar por nombre, DNI, CUIT o email</label>
+                <input class="input" id="buscar-donante" type="search" placeholder="Ej: Martín Rodríguez">
+                <span class="field__hint">Seleccioná el resultado correcto para vincular la donación.</span>
+              </div>
+              <div class="field">
+                <label class="field__label" for="tipo-persona">Tipo de persona</label>
+                <select class="select" id="tipo-persona">
+                  <option>Humana</option>
+                  <option>Jurídica</option>
+                </select>
+              </div>
+            </div>
+
+            <article class="stat" style="display: flex; justify-content: space-between; align-items: center; gap: var(--sp-4); flex-wrap: wrap;">
+              <div>
+                <p class="stat__label">Donante seleccionado</p>
+                <p class="stat__value" style="font-size: var(--fs-lg);">Martín Rodríguez</p>
+                <p class="muted" style="font-size: var(--fs-sm);">DNI 32.456.789 · martin.rodriguez@mail.com</p>
+              </div>
+              <button class="btn btn--sm" type="button" data-toast="Donante seleccionado correctamente">Seleccionar</button>
+            </article>
+          </section>
+
+          <section class="card mt-5" aria-labelledby="donacion-title">
+            <div class="card__header">
+              <div>
+                <h2 id="donacion-title">Paso 2 · Datos de la donación</h2>
+                <p class="muted" style="font-size: var(--fs-sm);">La carga será segmentada internamente por subcategoría para su posterior asignación.</p>
+              </div>
+            </div>
+
+            <form onsubmit="event.preventDefault(); donaTrackToast('Donación registrada correctamente', 'success');">
+              <div class="form-grid">
+                <div class="field">
+                  <label class="field__label" for="categoria">Categoría</label>
+                  <select class="select" id="categoria" required>
+                    <option value="">Seleccionar categoría</option>
+                    <option>Alimentos</option>
+                    <option>Vestimenta</option>
+                    <option>Mobiliario</option>
+                    <option>Higiene</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="subcategoria">Subcategoría</label>
+                  <select class="select" id="subcategoria" required>
+                    <option value="">Seleccionar subcategoría</option>
+                    <option>Fideos secos</option>
+                    <option>Arroz</option>
+                    <option>Sillas</option>
+                    <option>Ropa de abrigo</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="cantidad">Cantidad</label>
+                  <input class="input" id="cantidad" type="number" min="1" placeholder="Ej: 10" required>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="unidad">Unidad</label>
+                  <select class="select" id="unidad" required>
+                    <option>Unidades</option>
+                    <option>Paquetes</option>
+                    <option>Kilogramos</option>
+                    <option>Litros</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="estado">Estado del bien</label>
+                  <select class="select" id="estado">
+                    <option>No aplica</option>
+                    <option>Nuevo</option>
+                    <option>Usado en buen estado</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="vencimiento">Fecha de vencimiento</label>
+                  <input class="input" id="vencimiento" type="date">
+                  <span class="field__hint">Solo obligatorio para bienes perecederos.</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="descripcion">Descripción general</label>
+                <textarea class="textarea" id="descripcion" placeholder="Ej: 10 paquetes de fideos secos de 500g, en buen estado y sin daños visibles." required></textarea>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label class="field__label" for="fecha-recepcion">Fecha de recepción</label>
+                  <input class="input" id="fecha-recepcion" type="date" required>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="responsable">Responsable de recepción</label>
+                  <input class="input" id="responsable" type="text" placeholder="Nombre del administrador" required>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center wrap gap-3">
+                <p class="field__hint">Al confirmar, la donación queda en depósito y disponible para el proceso de asignación.</p>
+                <div class="flex gap-2 wrap">
+                  <button class="btn btn--ghost" type="reset">Cancelar</button>
+                  <button class="btn btn--primary" type="submit">Registrar donación</button>
+                </div>
+              </div>
+            </form>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
+    <div class="modal__box">
+      <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2>
+      <p class="muted mt-4">Sesión activa como Administrador.</p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+        <a class="btn btn--danger" href="../login.html">Cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+
+
+  <script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donaciones asignadas — DonaTrack</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+
+  <!-- REQ. 11 — DONACIONES ASIGNADAS (ENTIDAD BENEFICIARIA) -->
+  <div class="page">
+    <header class="topbar">
+      <a class="brand" href="../index.html">◆ DonaTrack</a>
+      <button class="nav-toggle" data-nav-toggle aria-controls="ongnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+      <nav class="topbar__nav" id="ongnav" aria-label="Panel de entidad beneficiaria">
+        <a href="asignadas.html" aria-current="page">Donaciones asignadas</a>
+        <a href="necesidades.html">Necesidades</a>
+        <a href="mapa.html">Mapa</a>
+        <a href="notificaciones.html">Notificaciones</a>
+      </nav>
+      <div class="topbar__actions">
+        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">ER</button>
+      </div>
+    </header>
+
+    <main id="main" class="page-body">
+      <div class="container">
+        <!--<p class="req-tag">Req. 11 — Estado de donaciones asignadas</p>-->
+        <div class="page-head">
+          <div>
+            <h1>Donaciones asignadas</h1>
+            <p class="page-head__sub">Consultá el estado de las donaciones vinculadas a tus necesidades materiales.</p>
+          </div>
+          <span class="muted">4 donaciones</span>
+        </div>
+
+        <section class="card" aria-label="Filtros de donaciones asignadas">
+          <div class="flex items-center gap-3 wrap" style="margin-bottom: var(--sp-4);">
+            <span class="muted" style="font-size: var(--fs-sm);">Estado:</span>
+            <div class="filterbar" data-filter-group style="margin:0;" role="group" aria-label="Filtrar por estado">
+              <button class="filter-pill" aria-pressed="true">Todos</button>
+              <button class="filter-pill" aria-pressed="false">Asignada</button>
+              <button class="filter-pill" aria-pressed="false">En camino</button>
+              <button class="filter-pill" aria-pressed="false">Pendiente recepción</button>
+              <button class="filter-pill" aria-pressed="false">Recibida</button>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field" style="margin:0;">
+              <label class="field__label" for="categoria">Categoría</label>
+              <select class="select" id="categoria">
+                <option>Todas</option>
+                <option>Alimentos</option>
+                <option>Mobiliario</option>
+                <option>Indumentaria</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0;">
+              <label class="field__label" for="subcategoria">Subcategoría</label>
+              <select class="select" id="subcategoria">
+                <option>Todas</option>
+                <option>Fideos secos</option>
+                <option>Sillas</option>
+                <option>Ropa de abrigo</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="card mt-5" data-skeleton aria-labelledby="tabla-asignadas-title">
+          <div data-loader aria-hidden="true">
+            <div class="skeleton skeleton--line" style="width:35%;"></div>
+            <div class="skeleton skeleton--line" style="width:100%;"></div>
+            <div class="skeleton skeleton--line" style="width:100%;"></div>
+            <div class="skeleton skeleton--line" style="width:80%;"></div>
+          </div>
+
+          <div data-content hidden>
+            <div class="card__header">
+              <div>
+                <h2 id="tabla-asignadas-title">Listado de donaciones</h2>
+                <p class="muted" style="font-size: var(--fs-sm);">Las acciones dependen del estado actual de la entrega.</p>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table">
+                <caption class="sr-only">Listado de donaciones asignadas a la entidad beneficiaria</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Fecha asignación</th>
+                    <th scope="col">Subcategoría</th>
+                    <th scope="col">Categoría</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col">Donante</th>
+                    <th scope="col">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="num">18/04/2025</td>
+                    <td><strong>Fideos secos</strong></td>
+                    <td><span class="badge badge--warning">Alimentos</span></td>
+                    <td class="num">100 paq.</td>
+                    <td><span class="badge badge--warning">En camino</span></td>
+                    <td class="muted">Ana Pérez</td>
+                    <td><a class="btn btn--sm btn--ghost" href="mapa.html">Ver en mapa</a></td>
+                  </tr>
+                  <tr>
+                    <td class="num">15/04/2025</td>
+                    <td><strong>Sillas</strong></td>
+                    <td><span class="badge badge--category">Mobiliario</span></td>
+                    <td class="num">6 un.</td>
+                    <td><span class="badge badge--info">Asignada</span></td>
+                    <td class="muted">Carlos Gómez</td>
+                    <td><a class="btn btn--sm btn--ghost" href="mapa.html">Ver detalle</a></td>
+                  </tr>
+                  <tr>
+                    <td class="num">10/04/2025</td>
+                    <td><strong>Ropa de abrigo</strong></td>
+                    <td><span class="badge">Indumentaria</span></td>
+                    <td class="num">30 un.</td>
+                    <td><span class="badge badge--success">Pendiente recepción</span></td>
+                    <td class="muted">Empresa XYZ</td>
+                    <td><a class="btn btn--sm btn--primary" href="confirmar-recepcion.html">Confirmar</a></td>
+                  </tr>
+                  <tr>
+                    <td class="num">02/04/2025</td>
+                    <td><strong>Mesas</strong></td>
+                    <td><span class="badge badge--category">Mobiliario</span></td>
+                    <td class="num">2 un.</td>
+                    <td><span class="badge badge--success">Recibida</span></td>
+                    <td class="muted">Martín Rodríguez</td>
+                    <td><button class="btn btn--sm btn--ghost" data-toast="Comprobante de recepción generado">Comprobante</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
+    <div class="modal__box">
+      <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Escuela Rural N°10</h2>
+      <p class="muted mt-4">Entidad beneficiaria · Mendoza, Argentina</p>
+      <div class="modal__actions">
+        <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+        <a class="btn btn--danger" href="../login.html">Cerrar sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/app.js"></script>
+</body>
+</html>

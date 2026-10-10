@@ -1,4 +1,4 @@
-package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
+/*package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
@@ -36,4 +36,4 @@ public class AuthController {
         session.invalidate(); // Borra la sesión
         return "redirect:/";
     }
-}
+}*/
