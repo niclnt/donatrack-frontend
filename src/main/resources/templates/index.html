@@ -1,9 +1,74 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Prueba DonaTrack</title>
-</head>
+<head th:replace="~{fragments/base :: head('DonaTrack — Trazabilidad de donaciones')}"></head>
 <body>
-<h1 th:text="${mensaje}">Texto estático que será reemplazado por Thymeleaf</h1>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+    <header class="topbar">
+        <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+        <button class="nav-toggle" data-nav-toggle aria-controls="mainnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+        <nav class="topbar__nav" id="mainnav" aria-label="Principal">
+            <a th:href="@{/}" aria-current="page">Inicio</a>
+            <a href="#mapa">Mapa de donaciones</a>
+            <a href="#legal">Legales</a>
+        </nav>
+        <div class="topbar__actions">
+            <!-- Ruteamos a nuestro nuevo endpoint de login -->
+            <a class="btn btn--ghost btn--sm" th:href="@{/login}">Iniciar sesión</a>
+            <a class="btn btn--primary btn--sm" th:href="@{/login#registro}">Registrarme</a>
+        </div>
+    </header>
+
+    <main class="page-body">
+        <div class="container">
+
+            <!-- Propósito y Objetivos -->
+            <div class="card" style="text-align: center; padding: 50px 20px; margin-bottom: 30px;">
+                <h1 style="font-size: 2.5em; margin-bottom: 15px;">Conectando solidaridad con necesidades reales</h1>
+                <p class="muted" style="font-size: 1.2em; max-width: 700px; margin: 0 auto 30px; line-height: 1.5;">
+                    DonaTrack es la plataforma de UTN Solidaria diseñada para organizar y monitorear el ciclo completo de tus donaciones materiales, garantizando trazabilidad y transparencia desde nuestro depósito hasta las manos de quienes más lo necesitan.
+                </p>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <!-- ACA VA el login,  ponemos el th:href a su ruta -->
+                    <a href="#" class="btn btn-primary" style="padding: 12px 25px; font-size: 1.1em;">Iniciar Sesión</a>
+                    <a href="#" class="btn btn-outline" style="padding: 12px 25px; font-size: 1.1em;">Crear Cuenta</a>
+                </div>
+            </div>
+
+            <!-- Ejemplos destacados del último mes -->
+            <h2 style="margin-bottom: 20px;">Donaciones entregadas recientemente</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+
+                <div class="card" style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span class="badge" style="background: #2ea043; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em;">Entregada con éxito</span>
+                        <small class="muted">Hace 2 días</small>
+                    </div>
+                    <h3 style="margin: 0 0 5px 0;">30 Bancos y Sillas</h3>
+                    <p class="muted" style="margin: 0 0 15px 0;">Destino: Escuela Rural N°10</p>
+                    <a href="#" style="color: #58a6ff; text-decoration: none; font-size: 0.9em;">Ver fotos de la donación →</a>
+                </div>
+
+                <div class="card" style="padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span class="badge" style="background: #2ea043; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em;">Entregada con éxito</span>
+                        <small class="muted">Hace 1 semana</small>
+                    </div>
+                    <h3 style="margin: 0 0 5px 0;">100 Paquetes de Fideos</h3>
+                    <p class="muted" style="margin: 0 0 15px 0;">Destino: Comedor Escobar Sonrisas</p>
+                    <a href="#" style="color: #58a6ff; text-decoration: none; font-size: 0.9em;">Ver fotos de la donación →</a>
+                </div>
+            </div>
+
+            <!--  Informacion Legal -->
+            <div style="text-align: center; margin-top: 50px; border-top: 1px solid #333; padding-top: 25px;">
+                <a href="#" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Información Legal</a>
+                <a href="#" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Aviso de Privacidad</a>
+            </div>
+
+        </div>
+    </main>
+</div>
 </body>
 </html>
