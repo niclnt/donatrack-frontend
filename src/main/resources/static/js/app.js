@@ -69,3 +69,27 @@
     }
   });
 })();
+
+/* ---- Agregados para el front SSR (Entrega 5) ---- */
+(function () {
+  "use strict";
+
+  /* Mensajes flash del servidor (ej. "Camión registrado") -> toast */
+  document.querySelectorAll("[data-flash]").forEach(function (el) {
+    if (window.donaTrackToast) window.donaTrackToast(el.textContent.trim(), el.getAttribute("data-tipo") || "success");
+  });
+
+  /* Loader en el boton al enviar formularios: evita doble envio y muestra que se esta procesando */
+  document.querySelectorAll("form[data-loading]").forEach(function (form) {
+    form.addEventListener("submit", function () {
+      var btn = form.querySelector("button[type=submit]");
+      if (!btn) return;
+      btn.setAttribute("aria-busy", "true");
+      btn.disabled = true;
+      var spin = document.createElement("span");
+      spin.className = "spinner spinner--sm";
+      spin.setAttribute("aria-hidden", "true");
+      btn.prepend(spin);
+    });
+  });
+})();

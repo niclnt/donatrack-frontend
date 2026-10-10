@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Crear cuenta')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+<header th:replace="~{fragments/base :: topbar('registro')}"></header>
+
+<main id="main" class="page-body">
+  <div class="container" style="max-width: 640px;">
+    <p class="steps">Paso 2 de 2 · Tus datos</p>
+
+    <th:block th:switch="${tipo.name()}">
+      <th:block th:case="'PERSONA'">
+        <h1 style="font-size: var(--fs-xl);">Cuenta de donante</h1>
+        <p class="muted">Vas a donar a título personal.</p>
+      </th:block>
+      <th:block th:case="'ORGANIZACION'">
+        <h1 style="font-size: var(--fs-xl);">Cuenta de empresa u organización</h1>
+        <p class="muted">Vas a donar en nombre de una organización.</p>
+      </th:block>
+      <th:block th:case="'ENTIDAD'">
+        <h1 style="font-size: var(--fs-xl);">Cuenta de entidad beneficiaria</h1>
+        <p class="muted">Vas a recibir donaciones y cargar las necesidades de tu entidad.</p>
+      </th:block>
+    </th:block>
+    <p style="margin-bottom: var(--sp-5);"><a th:href="@{/registro}">← Cambiar tipo de cuenta</a></p>
+
+    <div th:if="${errorGeneral}" class="alert alert--error" role="alert" th:text="${errorGeneral}">Error</div>
+    <div th:if="${#fields.hasErrors('${registro.*}')}" class="alert alert--error" role="alert">Revisá los campos marcados.</div>
+
+    <form class="card" th:object="${registro}" th:action="@{/registro/{slug}(slug=${tipo.slug})}" method="post" data-loading novalidate>
+
+      <!-- ===== Persona humana ===== -->
+      <fieldset class="fieldset" th:if="${tipo.name() == 'PERSONA'}">
+        <legend class="fieldset__legend">Datos personales</legend>
+        <div class="field">
+          <label class="field__label" for="nombre">Nombre y apellido</label>
+          <input class="input" th:errorclass="input--error" type="text" th:field="*{nombre}" autocomplete="name">
+          <p class="field__error" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></p>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label" for="tipoDoc">Tipo de documento</label>
+            <select class="select" th:field="*{tipoDoc}">
+              <option value="DNI">DNI</option>
+              <option value="LC">Libreta cívica</option>
+              <option value="LE">Libreta de enrolamiento</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label" for="documento">Número de documento</label>
+            <input class="input" th:errorclass="input--error" type="text" inputmode="numeric" th:field="*{documento}" placeholder="Sin puntos">
+            <p class="field__error" th:if="${#fields.hasErrors('documento')}" th:errors="*{documento}"></p>
+          </div>
+          <div class="field">
+            <label class="field__label" for="edad">Edad</label>
+            <input class="input" th:errorclass="input--error" type="number" min="1" max="120" th:field="*{edad}">
+            <p class="field__error" th:if="${#fields.hasErrors('edad')}" th:errors="*{edad}"></p>
+          </div>
+          <div class="field">
+            <label class="field__label" for="genero">Género</label>
+            <select class="select" th:errorclass="input--error" th:field="*{genero}">
+              <option value="">Elegí una opción</option>
+              <option value="F">Femenino</option>
+              <option value="M">Masculino</option>
+              <option value="X">Otro / prefiero no decir</option>
+            </select>
+            <p class="field__error" th:if="${#fields.hasErrors('genero')}" th:errors="*{genero}"></p>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="direccion">Dirección</label>
+          <input class="input" th:errorclass="input--error" type="text" th:field="*{direccion}" autocomplete="street-address" placeholder="Calle y número, localidad">
+          <p class="field__error" th:if="${#fields.hasErrors('direccion')}" th:errors="*{direccion}"></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="fieldset" th:if="${tipo.name() == 'PERSONA'}">
+        <legend class="fieldset__legend">¿Cómo querés que te avisemos?</legend>
+        <p class="field__hint" style="margin-bottom: var(--sp-3);">Te avisamos cuando tu donación sale del depósito y cuando llega a destino.</p>
+        <div class="radio-row">
+          <label class="radio"><input type="radio" th:field="*{medioPreferido}" value="EMAIL"> Correo electrónico</label>
+          <label class="radio"><input type="radio" th:field="*{medioPreferido}" value="WHATSAPP"> WhatsApp</label>
+          <label class="radio"><input type="radio" th:field="*{medioPreferido}" value="TELEFONO"> Teléfono</label>
+        </div>
+        <p class="field__error" th:if="${#fields.hasErrors('medioPreferido')}" th:errors="*{medioPreferido}"></p>
+        <div class="field mt-4">
+          <label class="field__label" for="telefono">Teléfono <span class="dim">(opcional si elegís correo)</span></label>
+          <input class="input" th:errorclass="input--error" type="tel" th:field="*{telefono}" autocomplete="tel" placeholder="Ej: 1144556677">
+          <p class="field__error" th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}"></p>
+        </div>
+      </fieldset>
+
+      <!-- ===== Persona juridica ===== -->
+      <fieldset class="fieldset" th:if="${tipo.name() == 'ORGANIZACION'}">
+        <legend class="fieldset__legend">Datos de la organización</legend>
+        <div class="field">
+          <label class="field__label" for="razonSocial">Razón social</label>
+          <input class="input" th:errorclass="input--error" type="text" th:field="*{razonSocial}" autocomplete="organization">
+          <p class="field__error" th:if="${#fields.hasErrors('razonSocial')}" th:errors="*{razonSocial}"></p>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label" for="tipoJuridico">Tipo de organización</label>
+            <select class="select" th:errorclass="input--error" th:field="*{tipoJuridico}">
+              <option value="EMPRESA">Empresa</option>
+              <option value="ONG">ONG / Fundación</option>
+              <option value="GUBERNAMENTAL">Organismo público</option>
+            </select>
+            <p class="field__error" th:if="${#fields.hasErrors('tipoJuridico')}" th:errors="*{tipoJuridico}"></p>
+          </div>
+          <div class="field">
+            <label class="field__label" for="rubro">Rubro</label>
+            <input class="input" th:errorclass="input--error" type="text" th:field="*{rubro}" placeholder="Ej: Alimenticio">
+            <p class="field__error" th:if="${#fields.hasErrors('rubro')}" th:errors="*{rubro}"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ===== Entidad beneficiaria ===== -->
+      <fieldset class="fieldset" th:if="${tipo.name() == 'ENTIDAD'}">
+        <legend class="fieldset__legend">Datos de la entidad</legend>
+        <div class="field">
+          <label class="field__label" for="razonSocial">Nombre de la entidad</label>
+          <input class="input" th:errorclass="input--error" type="text" th:field="*{razonSocial}" autocomplete="organization" placeholder="Ej: Comedor Los Piletones">
+          <p class="field__error" th:if="${#fields.hasErrors('razonSocial')}" th:errors="*{razonSocial}"></p>
+        </div>
+        <div class="field">
+          <label class="field__label" for="telefono">Teléfono</label>
+          <input class="input" th:errorclass="input--error" type="tel" th:field="*{telefono}" autocomplete="tel" placeholder="Ej: 49191234">
+          <p class="field__error" th:if="${#fields.hasErrors('telefono')}" th:errors="*{telefono}"></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="fieldset" th:if="${tipo.name() == 'ENTIDAD'}">
+        <legend class="fieldset__legend">¿Dónde entregamos las donaciones?</legend>
+        <p class="field__hint" style="margin-bottom: var(--sp-3);">Usamos esta dirección para planificar las rutas de los camiones.</p>
+        <div class="field">
+          <label class="field__label" for="direccion">Dirección</label>
+          <input class="input" th:errorclass="input--error" type="text" th:field="*{direccion}" autocomplete="street-address" placeholder="Calle y número">
+          <p class="field__error" th:if="${#fields.hasErrors('direccion')}" th:errors="*{direccion}"></p>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label" for="localidad">Localidad o barrio</label>
+            <input class="input" th:errorclass="input--error" type="text" th:field="*{localidad}">
+            <p class="field__error" th:if="${#fields.hasErrors('localidad')}" th:errors="*{localidad}"></p>
+          </div>
+          <div class="field">
+            <label class="field__label" for="ciudad">Ciudad o partido</label>
+            <input class="input" th:errorclass="input--error" type="text" th:field="*{ciudad}">
+            <p class="field__error" th:if="${#fields.hasErrors('ciudad')}" th:errors="*{ciudad}"></p>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="provincia">Provincia</label>
+          <input class="input" th:errorclass="input--error" type="text" th:field="*{provincia}">
+          <p class="field__error" th:if="${#fields.hasErrors('provincia')}" th:errors="*{provincia}"></p>
+        </div>
+      </fieldset>
+
+      <!-- ===== Cuenta (todos) ===== -->
+      <fieldset class="fieldset">
+        <legend class="fieldset__legend">Datos de ingreso</legend>
+        <div class="field">
+          <label class="field__label" for="mail">Correo electrónico</label>
+          <input class="input" th:errorclass="input--error" type="email" th:field="*{mail}" autocomplete="email" placeholder="tu@correo.com">
+          <span class="field__hint">Lo vas a usar para ingresar.</span>
+          <p class="field__error" th:if="${#fields.hasErrors('mail')}" th:errors="*{mail}"></p>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label" for="password">Contraseña</label>
+            <!-- Sin th:field: la contraseña no se vuelve a escribir en el HTML -->
+            <input class="input" th:classappend="${#fields.hasErrors('password')} ? 'input--error'" type="password"
+                   id="password" name="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+            <p class="field__error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+          </div>
+          <div class="field">
+            <label class="field__label" for="confirmacion">Repetir contraseña</label>
+            <input class="input" th:classappend="${#fields.hasErrors('confirmacion')} ? 'input--error'" type="password"
+                   id="confirmacion" name="confirmacion" autocomplete="new-password">
+            <p class="field__error" th:if="${#fields.hasErrors('confirmacion')}" th:errors="*{confirmacion}"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <button class="btn btn--primary btn--block" type="submit">Crear cuenta</button>
+    </form>
+
+    <p class="muted text-center" style="margin-top: var(--sp-5);">
+      ¿Ya tenés cuenta? <a th:href="@{/login}">Ingresá</a>
+    </p>
+  </div>
+</main>
+</div>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
