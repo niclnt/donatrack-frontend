@@ -29,7 +29,6 @@ public class CustomAuthProvider implements AuthenticationProvider {
 
     private final AuthApiService authApiService;
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String INCENTIVOS_SERVICE_URL = "http://localhost:8082";
 
     public CustomAuthProvider(AuthApiService authApiService) {
         this.authApiService = authApiService;
@@ -40,18 +39,28 @@ public class CustomAuthProvider implements AuthenticationProvider {
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
 
+        log.info("[AUTH-PROVIDER] ===== INICIANTE AUTENTICACION =====");
+        log.info("[AUTH-PROVIDER] Intentando login para usuario: {}", username);
+
         AuthResponseDTO respuesta;
         try {
             respuesta = authApiService.login(username, password);
         } catch (ServicioNoDisponibleException e) {
+            log.error("[AUTH-PROVIDER] Servicio de Auth NO disponible: {}", e.getMessage());
             throw new AuthenticationServiceException(e.getMessage(), e);
         }
+
         if (respuesta == null) {
+            log.warn("[AUTH-PROVIDER] Credenciales invalidas para usuario: {}", username);
             throw new BadCredentialsException("Usuario o contraseña inválidos");
         }
 
         List<String> roles = respuesta.roles() == null ? List.of() : respuesta.roles();
         List<String> permisos = respuesta.permisos() == null ? List.of() : respuesta.permisos();
+
+        log.info("[AUTH-PROVIDER] Login exitoso en Auth-Service.");
+        log.info("[AUTH-PROVIDER] USUARIO_ID recibido: {}", respuesta.usuarioId());
+        log.info("[AUTH-PROVIDER] ROLES recibidos: {}", roles);
 
         HttpSession session = SesionUsuario.actual();
         session.setAttribute(SesionUsuario.ACCESS_TOKEN, respuesta.accessToken());
@@ -60,27 +69,38 @@ public class CustomAuthProvider implements AuthenticationProvider {
         session.setAttribute(SesionUsuario.ROLES, roles);
 
         // --- OBTENER DONANTE_ID DESDE DONACIONES-SERVICE ---
-        if (roles.contains("DONANTE") || roles.contains("ROLE_DONANTE")) {
-            try {
-                String DONACIONES_SERVICE_URL = "http://localhost:8080"; // Puerto donde corre donaciones-service
+        // Verificamos ROL_DONANTE_HUMANO / DONANTE_JURIDICO para coincidir con el log real
+        boolean esDonante = roles.stream().anyMatch(r ->
+                r.contains("DONANTE") || r.equals(SesionUsuario.ROL_DONANTE_HUMANO) || r.equals(SesionUsuario.ROL_DONANTE_JURIDICO)
+        );
 
-                // Llamada al nuevo endpoint de DonanteController
-                Map personaHumana = restTemplate.getForObject(
-                        DONACIONES_SERVICE_URL + "/donantes/personaHumana/usuario/" + respuesta.usuarioId(),
-                        Map.class
-                );
+        if (esDonante) {
+            log.info("[AUTH-PROVIDER] El usuario tiene rol de DONANTE. Consultando a donaciones-service...");
+            try {
+                String DONACIONES_SERVICE_URL = "http://localhost:8080";
+                String urlConsulta = DONACIONES_SERVICE_URL + "/donantes/personaHumana/usuario/" + respuesta.usuarioId();
+
+                log.info("[AUTH-PROVIDER] Realizando GET a: {}", urlConsulta);
+
+                Map personaHumana = restTemplate.getForObject(urlConsulta, Map.class);
+
+                log.info("[AUTH-PROVIDER] Respuesta recibida de Donaciones: {}", personaHumana);
 
                 if (personaHumana != null && personaHumana.get("id") != null) {
                     Long donanteId = Long.valueOf(personaHumana.get("id").toString());
                     session.setAttribute(SesionUsuario.DONANTE_ID, donanteId);
-                    log.info("Donante ID {} asignado a la sesión para usuarioId {}", donanteId, respuesta.usuarioId());
+                    log.info("[AUTH-PROVIDER] ¡EXITO! DONANTE_ID {} guardado en la sesion.", donanteId);
+                } else {
+                    log.warn("[AUTH-PROVIDER] La respuesta de donaciones fue nula o no contiene el campo 'id'.");
                 }
             } catch (Exception e) {
-                log.warn("No se pudo obtener la PersonaHumana para el usuarioId {}: {}", respuesta.usuarioId(), e.getMessage());
+                log.error("[AUTH-PROVIDER] Error al consultar donaciones-service para usuarioId {}: {}", respuesta.usuarioId(), e.getMessage(), e);
             }
+        } else {
+            log.warn("[AUTH-PROVIDER] El usuario NO coincide con los roles de donante evaluados. Roles actual: {}", roles);
         }
 
-        log.info("Usuario {} logueado con roles {}", respuesta.mail(), roles);
+        log.info("[AUTH-PROVIDER] Usuario {} logueado correctamente con roles {}", respuesta.mail(), roles);
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         roles.forEach(rol -> authorities.add(new SimpleGrantedAuthority("ROLE_" + rol)));
