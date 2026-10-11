@@ -1,29 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ingresar — DonaTrack</title>
-  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
-</head>
+<head th:replace="~{fragments/base :: head('Ingresar')}"></head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
 
 <div class="page">
   <header class="topbar">
-    <a class="brand" href="index.html">◆ DonaTrack</a>
+    <a class="brand" th:href="@{/}">◆ DonaTrack</a>
     <div class="topbar__actions" style="margin-left:auto;">
-      <a class="btn btn--link btn--sm" href="index.html">← Volver al inicio</a>
+      <a class="btn btn--link btn--sm" th:href="@{/}">← Volver al inicio</a>
     </div>
   </header>
 
   <main id="main" class="page-body">
     <div class="container" style="max-width: 440px;">
       <div class="card">
-        <div class="filterbar" data-filter-group role="tablist" aria-label="Modo de acceso">
+        <!-- Por el momento los dejo comentado, creo que no tienen mucho sentido
+          <div class="filterbar" data-filter-group role="tablist" aria-label="Modo de acceso">
           <button class="filter-pill" aria-pressed="true">Iniciar sesión</button>
           <button class="filter-pill" aria-pressed="false" id="registro">Registrarme</button>
-        </div>
+        </div> -->
 
         <h1 style="font-size: var(--fs-xl); margin-bottom: var(--sp-2);">Bienvenido/a</h1>
         <p class="muted" style="margin-bottom: var(--sp-5);">Accedé para gestionar tus donaciones.</p>
@@ -51,12 +47,9 @@
           <button class="btn btn--primary btn--block" type="submit">Ingresar</button>
         </form>
 
-        <p class="muted text-center" style="margin-top: var(--sp-5);">¿No tenés cuenta? <a th:href="@{/registro}">Creá una</a></p>
+        <p class="muted text-center" style="margin-top: var(--sp-5)";>¿No tenés cuenta? <a style="color:#7c6cf5;" th:href="@{/registro}" class="btn--link">Creá una</a></p>
       </div>
 
-      <p class="dim text-center mt-4" style="font-size: var(--fs-xs);">
-        Demo de maqueta — cualquier dato te lleva al panel de la persona donante.
-      </p>
     </div>
   </main>
 </div>

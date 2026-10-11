@@ -108,6 +108,7 @@
               <option value="EMPRESA">Empresa</option>
               <option value="ONG">ONG / Fundación</option>
               <option value="GUBERNAMENTAL">Organismo público</option>
+              <option value="INSTITUCION">Institución</option>
             </select>
             <p class="field__error" th:if="${#fields.hasErrors('tipoJuridico')}" th:errors="*{tipoJuridico}"></p>
           </div>
@@ -119,6 +120,60 @@
         </div>
       </fieldset>
 
+      <fieldset class="fieldset" th:if="${tipo.name() == 'ORGANIZACION'}">
+        <legend class="fieldset__legend">¿Cómo querés que te avisemos?</legend>
+        <p class="field__hint" style="margin-bottom: var(--sp-3);">
+          Te avisamos cuando una donación realizada por la organización es asignada
+          y cuando llega a destino.
+        </p>
+
+        <div class="radio-row">
+          <label class="radio">
+            <input type="radio"
+                   th:field="*{medioPreferido}"
+                   value="EMAIL">
+            Correo electrónico
+          </label>
+
+          <label class="radio">
+            <input type="radio"
+                   th:field="*{medioPreferido}"
+                   value="WHATSAPP">
+            WhatsApp
+          </label>
+
+          <label class="radio">
+            <input type="radio"
+                   th:field="*{medioPreferido}"
+                   value="TELEFONO">
+            Teléfono
+          </label>
+        </div>
+
+        <p class="field__error"
+           th:if="${#fields.hasErrors('medioPreferido')}"
+           th:errors="*{medioPreferido}">
+        </p>
+
+        <div class="field mt-4">
+          <label class="field__label" for="telefono">
+            Teléfono
+            <span class="dim">(opcional si elegís correo)</span>
+          </label>
+
+          <input class="input"
+                 th:errorclass="input--error"
+                 type="tel"
+                 th:field="*{telefono}"
+                 autocomplete="tel"
+                 placeholder="Ej: 1144556677">
+
+          <p class="field__error"
+             th:if="${#fields.hasErrors('telefono')}"
+             th:errors="*{telefono}">
+          </p>
+        </div>
+      </fieldset>
       <!-- ===== Entidad beneficiaria ===== -->
       <fieldset class="fieldset" th:if="${tipo.name() == 'ENTIDAD'}">
         <legend class="fieldset__legend">Datos de la entidad</legend>

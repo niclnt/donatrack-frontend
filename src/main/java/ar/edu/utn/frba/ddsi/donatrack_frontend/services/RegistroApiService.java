@@ -22,7 +22,7 @@ public class RegistroApiService {
 
     static final int LARGO_MINIMO_PASSWORD = 8;
     private static final Set<String> MEDIOS = Set.of("EMAIL", "TELEFONO", "WHATSAPP");
-    private static final Set<String> TIPOS_JURIDICOS = Set.of("EMPRESA", "ONG", "GUBERNAMENTAL");
+    private static final Set<String> TIPOS_JURIDICOS = Set.of("EMPRESA", "ONG", "GUBERNAMENTAL", "INSTITUCION");
     private static final Set<String> GENEROS = Set.of("F", "M", "X");
 
     private final WebApiCallerService webApiCallerService;
@@ -76,10 +76,26 @@ public class RegistroApiService {
 
     private void validarOrganizacion(RegistroForm form, Errors errores) {
         requerido(form.getRazonSocial(), "razonSocial", "Ingresá la razón social", errores);
+
         if (!valorPermitido(TIPOS_JURIDICOS, form.getTipoJuridico())) {
             errores.rejectValue("tipoJuridico", "invalido", "Elegí el tipo de organización");
         }
         requerido(form.getRubro(), "rubro", "Ingresá el rubro", errores);
+
+        if (!valorPermitido(MEDIOS, form.getMedioPreferido())) {
+            errores.rejectValue(
+                "medioPreferido",
+                "invalido",
+                "Elegí cómo querés que te contactemos");
+        } else if (!"EMAIL".equals(form.getMedioPreferido())
+            && vacio(form.getTelefono())) {
+            errores.rejectValue(
+                "telefono",
+                "requerido",
+                "Para usar ese medio necesitamos un teléfono");
+        }
+
+        validarTelefonoOpcional(form, errores);
     }
 
     private void validarEntidad(RegistroForm form, Errors errores) {
@@ -134,8 +150,34 @@ public class RegistroApiService {
     }
 
     private PersonaJuridicaRegistroRequest organizacionRequest(RegistroForm form) {
-        return new PersonaJuridicaRegistroRequest(form.getRazonSocial().trim(), form.getTipoJuridico(),
-                form.getRubro().trim(), form.getMail().trim(), form.getPassword());
+        String mail = form.getMail().trim();
+        String telefono = vacio(form.getTelefono())
+            ? null
+            : soloDigitos(form.getTelefono());
+
+        List<MedioDeContactoDTO> medios = new ArrayList<>();
+        medios.add(new MedioDeContactoDTO("EMAIL", mail));
+
+        if (telefono != null) {
+            medios.add(new MedioDeContactoDTO("TELEFONO", telefono));
+
+            if ("WHATSAPP".equals(form.getMedioPreferido())) {
+                medios.add(new MedioDeContactoDTO("WHATSAPP", telefono));
+            }
+        }
+
+        MedioDeContactoDTO preferido = new MedioDeContactoDTO(
+            form.getMedioPreferido(),
+            "EMAIL".equals(form.getMedioPreferido()) ? mail : telefono
+        );
+        return new PersonaJuridicaRegistroRequest(
+            form.getRazonSocial().trim(),
+            form.getTipoJuridico(),
+            medios,
+            preferido,
+            form.getRubro().trim(),
+            mail,
+            form.getPassword());
     }
 
     private EntidadBeneficiariaRegistroRequest entidadRequest(RegistroForm form) {

@@ -16,7 +16,7 @@
         <div class="topbar__actions">
             <!-- Ruteamos a nuestro nuevo endpoint de login -->
             <a class="btn btn--ghost btn--sm" th:href="@{/login}">Iniciar sesión</a>
-            <a class="btn btn--primary btn--sm" th:href="@{/login#registro}">Registrarme</a>
+            <a class="btn btn--primary btn--sm" th:href="@{/registro}">Registrarme</a>
         </div>
     </header>
 
@@ -30,9 +30,8 @@
                     DonaTrack es la plataforma de UTN Solidaria diseñada para organizar y monitorear el ciclo completo de tus donaciones materiales, garantizando trazabilidad y transparencia desde nuestro depósito hasta las manos de quienes más lo necesitan.
                 </p>
                 <div style="display: flex; gap: 15px; justify-content: center;">
-                    <!-- ACA VA el login,  ponemos el th:href a su ruta -->
-                    <a href="#" class="btn btn-primary" style="padding: 12px 25px; font-size: 1.1em;">Iniciar Sesión</a>
-                    <a href="#" class="btn btn-outline" style="padding: 12px 25px; font-size: 1.1em;">Crear Cuenta</a>
+                    <a th:href="@{/login}" class="btn btn-primary" style="padding: 12px 25px; font-size: 1.1em;">Iniciar Sesión</a>
+                    <a th:href="@{/registro}" class="btn btn-outline" style="padding: 12px 25px; font-size: 1.1em;">Crear Cuenta</a>
                 </div>
             </div>
 
