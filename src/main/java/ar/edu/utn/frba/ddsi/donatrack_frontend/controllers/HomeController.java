@@ -1,6 +1,7 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
 import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.catalogo.CategoriaCatalogoResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionResponse;
@@ -8,6 +9,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
+import java.util.List;
 import lombok.Data;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -52,7 +54,7 @@ public class HomeController {
             return "redirect:/login";
         }
 
-        Long donanteId = extraerId();
+        Long donanteId = extraerDonanteId();
 
         StringBuilder backendUrl = new StringBuilder(donacionesServiceUrl + "/donaciones-service/donaciones/donantes/")
                 .append(donanteId).append("?");
@@ -82,6 +84,21 @@ public class HomeController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
         }
+
+        List<CategoriaCatalogoResponse> categorias;
+
+        try {
+            categorias = webApiCallerService.getList(
+                donacionesServiceUrl + "/donaciones/catalogo/categorias",
+                CategoriaCatalogoResponse[].class
+            );
+        } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
+            categorias = List.of();
+            model.addAttribute("errorCatalogo", "No se pudieron cargar las categorías. Intentá nuevamente más tarde.");
+        }
+
+        model.addAttribute("categorias", categorias);
+
         return "donante/nueva-donacion";
     }
 
@@ -99,7 +116,7 @@ public class HomeController {
             return "redirect:/login";
         }
 
-        Long donanteId = extraerId();
+        Long donanteId = extraerDonanteId();
 
         BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria, false, false);
         BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategoria);
@@ -139,5 +156,17 @@ public class HomeController {
             System.out.println("Error al extraer ID de SesionUsuario: " + e.getMessage());
         }
         return 1L; // Fallback de seguridad
+    }
+
+    private Long extraerDonanteId() {
+        Long donanteId = SesionUsuario.donanteId();
+
+        if (donanteId == null) {
+            throw new IllegalStateException(
+                "No hay un donante autenticado en la sesión"
+            );
+        }
+
+        return donanteId;
     }
 }

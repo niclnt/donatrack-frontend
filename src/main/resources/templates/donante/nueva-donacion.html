@@ -25,6 +25,13 @@
                         <input type="text" name="descripcionDonacion" class="form-control" style="width: 100%; padding: 8px;" required>
                     </div>
 
+                    <div th:if="${errorCatalogo}"
+                         class="alert alert--error"
+                         role="alert"
+                         th:text="${errorCatalogo}">
+                        No se pudieron cargar las categorías.
+                    </div>
+
                     <h3 style="margin-top: 30px; margin-bottom: 10px;">Agregar un Bien (Item)</h3>
                     <div class="form-group">
                         <label>¿Qué vas a donar?</label><br>
@@ -49,14 +56,18 @@
                     <div class="form-group" style="display: flex; gap: 10px; margin-top: 15px;">
                         <div style="flex: 1;">
                             <label>Categoría:</label><br>
-                            <select name="categoria" class="form-control" style="width: 100%; padding: 8px;">
-                                <option value="ALIMENTOS">Alimentos</option>
-                                <option value="INDUMENTARIA">Indumentaria</option>
+                            <select name="categoria" id="categoria" class="form-control" style="width: 100%; padding: 8px;" required>
+                                <option value="">Seleccionar categoría</option>
+
+                                <option th:each="categoria : ${categorias}" th:value="${categoria.nombre}" th:text="${categoria.nombre}">Categoría</option>
                             </select>
                         </div>
+
                         <div style="flex: 1;">
                             <label>Subcategoría:</label><br>
-                            <input type="text" name="subcategoria" class="form-control" placeholder="Ej: Fideos Secos" style="width: 100%; padding: 8px;" required>
+                            <select name="subcategoria" id="subcategoria" class="form-control" style="width: 100%; padding: 8px;" required disabled>
+                                <option value="">Primero seleccioná una categoría</option>
+                            </select>
                         </div>
                     </div>
 
@@ -70,5 +81,46 @@
     </main>
 </div>
 <script th:src="@{/assets/js/app.js}"></script>
+<script th:inline="javascript">
+    const categorias = /*[[${categorias}]]*/ [];
+
+    const categoriaSelect = document.getElementById('categoria');
+    const subcategoriaSelect = document.getElementById('subcategoria');
+
+    categoriaSelect.addEventListener('change', function () {
+        const categoriaSeleccionada = categorias.find(
+            categoria => categoria.nombre === this.value
+        );
+
+        subcategoriaSelect.innerHTML = '';
+
+        if (!categoriaSeleccionada) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Primero seleccioná una categoría';
+
+            subcategoriaSelect.appendChild(option);
+            subcategoriaSelect.disabled = true;
+            return;
+        }
+
+        const optionInicial = document.createElement('option');
+        optionInicial.value = '';
+        optionInicial.textContent = 'Seleccionar subcategoría';
+        subcategoriaSelect.appendChild(optionInicial);
+
+        categoriaSeleccionada.subcategorias.forEach(subcategoria => {
+            const option = document.createElement('option');
+
+            option.value = subcategoria.nombre;
+            option.textContent = subcategoria.nombre;
+
+            subcategoriaSelect.appendChild(option);
+        });
+
+        subcategoriaSelect.disabled =
+            categoriaSeleccionada.subcategorias.length === 0;
+    });
+</script>
 </body>
 </html>
