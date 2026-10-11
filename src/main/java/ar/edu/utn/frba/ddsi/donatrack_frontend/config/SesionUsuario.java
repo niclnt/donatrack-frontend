@@ -12,6 +12,7 @@ public final class SesionUsuario {
     public static final String ACCESS_TOKEN = "accessToken";
     public static final String REFRESH_TOKEN = "refreshToken";
     public static final String USUARIO_ID = "usuarioId";
+    public static final String DONANTE_ID = "donanteId"; // <-- AGREGAR ESTA LÍNEA
     public static final String ROLES = "roles";
 
     public static final String ROL_ADMIN = "ADMIN";
@@ -36,8 +37,11 @@ public final class SesionUsuario {
         return (String) actual().getAttribute(REFRESH_TOKEN);
     }
 
-    // Pantalla de inicio de cada rol, a donde se redirige despues del login
-    // TODO: cambiar "/" por el panel de admin y de ong cuando esas vistas existan
+    public static Long donanteId() {
+        Object id = actual().getAttribute(DONANTE_ID);
+        return id != null ? Long.valueOf(id.toString()) : null;
+    }
+
     public static String panelPara(List<String> roles) {
         if (roles.contains(ROL_ADMIN)) return "/";
         if (roles.contains(ROL_DONANTE_HUMANO) || roles.contains(ROL_DONANTE_JURIDICO)) return "/donante/mis-donaciones";

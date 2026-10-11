@@ -41,21 +41,30 @@
         </div>
       </div>
 
-      <!-- Categoría actual y Barra de progreso dinámicos -->
-      <div class="hero-card" style="margin-bottom: var(--sp-6);" th:if="${progreso != null}">
-        <div style="font-size: 2.5rem;" aria-hidden="true">🥈</div>
+      <!-- Categoría actual e hitos dinámicos -->
+      <div class="hero-card" style="margin-bottom: var(--sp-6);" th:if="${categoriaActual != null}">
+        <div style="font-size: 2.5rem;" aria-hidden="true">🎖️</div>
         <div style="flex:1;">
-          <h2>Categoría Donante</h2>
-          <p style="color:#5b5680;">Categoría actual e hitos</p>
+          <h2 style="text-transform: capitalize;" th:text="'Categoría ' + ${#strings.toLowerCase(categoriaActual)}">Categoría Colaborador</h2>
+          <p style="color:#5b5680;">Completa misiones secuenciales para desbloquear el siguiente nivel</p>
+
           <div class="flex items-center gap-3 mt-4">
             <div class="progress" style="flex:1; max-width:280px; background:#cfc9f2;">
-              <div class="progress__fill" th:style="'width:' + ${progreso.porcentajeAvance} + '%;'"></div>
+              <div class="progress__fill"
+                   th:style="'width:' + ${(totalMisionesCat > 0 ? (misionesCompletadasCat * 100.0 / totalMisionesCat) : 0)} + '%;'"></div>
             </div>
             <span style="color:#4c4470; font-weight:600; font-size: var(--fs-sm);">
-                <span th:text="${progreso.puntosTotales}">0</span> /
-                <span th:text="${progreso.puntosSiguienteNivel}">100</span> puntos para subir
-              </span>
+                <span th:text="${misionesCompletadasCat}">0</span> /
+                <span th:text="${totalMisionesCat}">3</span> misiones completadas
+            </span>
           </div>
+
+          <p class="mt-2 muted" style="font-size: var(--fs-xs);" th:if="${misionesFaltantes > 0}">
+            Te faltan <strong th:text="${misionesFaltantes}">3</strong> misión(es) para subir de categoría.
+          </p>
+          <p class="mt-2" style="font-size: var(--fs-xs); color: var(--success);" th:if="${misionesFaltantes == 0}">
+            ¡Excelente! Has alcanzado la máxima categoría.
+          </p>
         </div>
       </div>
 
@@ -83,34 +92,76 @@
         </table>
       </div>
 
-      <!-- Misiones Activas -->
-      <h3 style="margin-bottom: var(--sp-4);">Misiones</h3>
-      <div class="grid" style="gap: var(--sp-3);" th:if="${progreso != null}">
+      <!-- Mis Misiones -->
+      <h3 style="margin-bottom: var(--sp-4);">Misión Actual</h3>
+      <div class="grid" style="gap: var(--sp-3); margin-bottom: var(--sp-6);">
 
-        <div class="card flex items-center gap-4"
-             th:each="mision : ${progreso.misionesActivas}"
-             th:style="${mision.completada} ? 'border-color: rgba(74,222,128,.4);' : ''">
+        <div class="card flex items-center gap-4 p-4"
+             th:each="mision : ${misiones}"
+             th:style="${mision.estado == 'COMPLETADA'} ? 'border-color: rgba(74,222,128,.4);' : ''">
 
-          <div style="font-size:1.6rem;" aria-hidden="true" th:text="${mision.completada} ? '🏆' : '🎯'">🎯</div>
-          <div style="flex:1;">
-            <strong th:text="${mision.nombre}">Nombre de Misión</strong>
-            <p class="muted" style="font-size: var(--fs-sm);" th:text="${mision.descripcion}">Descripción de la misión.</p>
-            <div class="progress mt-4" style="max-width:360px;">
+          <!-- Ícono de Misión -->
+          <div style="font-size:1.8rem; flex-shrink: 0;" aria-hidden="true"
+               th:text="${mision.estado == 'COMPLETADA'} ? '🏆' : (${mision.estado == 'BLOQUEADA'} ? '🔒' : '🎯')">🎯</div>
+
+          <!-- Nombre, descripción y barra de progreso -->
+          <div style="flex: 1; min-width: 0;">
+            <strong style="font-size: var(--fs-md); color: #ffffff;" th:text="${mision.nombre}">Primer Impulso</strong>
+            <p class="muted mt-1 mb-0" style="font-size: var(--fs-sm);" th:text="${mision.descripcion}">
+              Realizá tu primera donación aportando al menos 3 bienes en un solo envío.
+            </p>
+
+            <div class="progress" style="width: 100%; max-width: 360px; height: 8px; background: rgba(255,255,255,0.1); margin-top: 1rem;">
               <div class="progress__fill"
-                   th:style="${mision.completada} ? 'width:100%; background:var(--success);' : 'width:50%;'"></div>
+                   th:style="'width:' + ${mision.progreso} + '%; ' + (${mision.estado == 'COMPLETADA'} ? 'background:var(--success);' : '')"></div>
             </div>
           </div>
 
-          <div class="text-center">
-            <p class="dim" style="font-size:var(--fs-xs);">Recompensa</p>
-            <strong th:text="'+' + ${mision.puntosOtorgados} + ' pts'">+10 pts</strong>
+          <!-- Columna Progreso (%) Destacada Grande -->
+          <div class="text-center" style="flex-shrink: 0; padding: 0 var(--sp-2);">
+            <p class="dim" style="font-size:var(--fs-xs); margin-bottom: 2px;">Progreso</p>
+            <strong style="font-size: var(--fs-md); color: #ffffff;"
+                    th:text="${#numbers.formatDecimal(mision.progreso, 1, 1)} + '%'">0,0%</strong>
           </div>
 
-          <span class="badge badge--success" th:if="${mision.completada}">✓</span>
-          <span class="badge badge--warning" th:unless="${mision.completada}">⏳</span>
+          <!-- Columna Recompensa -->
+          <div class="text-center" style="flex-shrink: 0; padding: 0 var(--sp-2);" th:if="${mision.insigniaRecompensa != null}">
+            <p class="dim" style="font-size:var(--fs-xs); margin-bottom: 2px;">Recompensa</p>
+            <strong style="font-size: var(--fs-md); color: #ffffff;"
+                    th:text="${mision.insigniaRecompensa.nombre}">Manos a la Obra</strong>
+          </div>
+
+          <!-- Badge de Estado -->
+          <div style="flex-shrink: 0;">
+            <span class="badge badge--success" th:if="${mision.estado == 'COMPLETADA'}">✓</span>
+            <span class="badge badge--warning" th:if="${mision.estado == 'EN_PROGRESO'}">⏳</span>
+            <span class="badge" style="opacity: 0.6;" th:if="${mision.estado == 'BLOQUEADA'}">🔒</span>
+          </div>
+
+        </div>
+
+        <div class="card p-4 text-center dim" th:if="${#lists.isEmpty(misiones)}">
+          No tienes misiones activas por el momento.
         </div>
 
       </div>
+
+      <!-- Mis Insignias Obtenidas -->
+      <h3 style="margin-bottom: var(--sp-4);">Mis Insignias Obtenidas</h3>
+      <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-6);">
+
+        <div class="card text-center p-4 flex flex-col items-center justify-center" th:each="insignia : ${insignias}">
+          <div style="font-size: 2.5rem; margin-bottom: var(--sp-2);" aria-hidden="true">🎖️</div>
+          <strong style="font-size: var(--fs-md);" th:text="${insignia.nombre}">Manos a la Obra</strong>
+          <p class="muted mt-2" style="font-size: var(--fs-xs);" th:text="${insignia.descripcion}">Otorgada por completar tu primera misión.</p>
+        </div>
+
+        <div class="card p-4 text-center dim" style="grid-column: 1 / -1;" th:if="${#lists.isEmpty(insignias)}">
+          Aún no has ganado insignias. ¡Completa tu primera misión para desbloquear una!
+        </div>
+
+      </div>
+
     </div>
   </main>
 </div>
