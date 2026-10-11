@@ -7,6 +7,9 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.services.AuthApiService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -82,7 +85,11 @@ public class CustomAuthProvider implements AuthenticationProvider {
 
                 log.info("[AUTH-PROVIDER] Realizando GET a: {}", urlConsulta);
 
-                Map personaHumana = restTemplate.getForObject(urlConsulta, Map.class);
+                // Donaciones exige token: usamos el que acabamos de recibir del auth-service
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(respuesta.accessToken());
+                Map personaHumana = restTemplate.exchange(
+                        urlConsulta, HttpMethod.GET, new HttpEntity<>(headers), Map.class).getBody();
 
                 log.info("[AUTH-PROVIDER] Respuesta recibida de Donaciones: {}", personaHumana);
 

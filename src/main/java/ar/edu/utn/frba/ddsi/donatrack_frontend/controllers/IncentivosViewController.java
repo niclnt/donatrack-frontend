@@ -4,13 +4,14 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.InsigniaDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.MisionResponseDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.PuestoDTO;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.SesionExpiradaException;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,14 @@ public class IncentivosViewController {
 
     private static final Logger log = LoggerFactory.getLogger(IncentivosViewController.class);
 
-    private final RestTemplate restTemplate = new RestTemplate();
     private final String INCENTIVOS_SERVICE_URL = "http://localhost:8082";
+
+    // Manda el token de la sesion en cada llamada (y lo refresca si vencio)
+    private final WebApiCallerService webApiCallerService;
+
+    public IncentivosViewController(WebApiCallerService webApiCallerService) {
+        this.webApiCallerService = webApiCallerService;
+    }
 
     @GetMapping
     public String verIncentivos(Model model) {
@@ -54,7 +61,7 @@ public class IncentivosViewController {
         try {
             // A. Misión Actual
             log.info("[INCENTIVOS-VIEW] Consultando Misión Actual: {}/incentivos/donantes/{}/mision-actual", INCENTIVOS_SERVICE_URL, donanteId);
-            Map<String, Object> misionActualMap = restTemplate.getForObject(
+            Map<String, Object> misionActualMap = webApiCallerService.get(
                     INCENTIVOS_SERVICE_URL + "/incentivos/donantes/" + donanteId + "/mision-actual",
                     Map.class
             );
@@ -62,7 +69,7 @@ public class IncentivosViewController {
 
             // B. Métricas del Donante (Categoría y avance en misiones)
             log.info("[INCENTIVOS-VIEW] Consultando Métricas: {}/incentivos/donantes/{}/metricas", INCENTIVOS_SERVICE_URL, donanteId);
-            Map<String, Object> metricasMap = restTemplate.getForObject(
+            Map<String, Object> metricasMap = webApiCallerService.get(
                     INCENTIVOS_SERVICE_URL + "/incentivos/donantes/" + donanteId + "/metricas",
                     Map.class
             );
@@ -70,11 +77,10 @@ public class IncentivosViewController {
 
             // C. Insignias Obtenidas
             log.info("[INCENTIVOS-VIEW] Consultando Insignias: {}/incentivos/donantes/{}/insignias", INCENTIVOS_SERVICE_URL, donanteId);
-            InsigniaDTO[] insigniasArray = restTemplate.getForObject(
+            List<InsigniaDTO> insignias = webApiCallerService.getList(
                     INCENTIVOS_SERVICE_URL + "/incentivos/donantes/" + donanteId + "/insignias",
                     InsigniaDTO[].class
             );
-            List<InsigniaDTO> insignias = insigniasArray != null ? List.of(insigniasArray) : List.of();
             log.info("[INCENTIVOS-VIEW] Insignias obtenidas: {}", insignias.size());
 
             // 3. Procesamiento y mapeo para Thymeleaf
@@ -142,6 +148,8 @@ public class IncentivosViewController {
             );
             model.addAttribute("ranking", ranking);
 
+        } catch (SesionExpiradaException e) {
+            throw e; // ErroresControllerAdvice manda al login
         } catch (Exception e) {
             log.error("[INCENTIVOS-VIEW] Error al conectar con el servicio de incentivos: {}", e.getMessage(), e);
             model.addAttribute("error", "Error al conectar con el servicio de incentivos: " + e.getMessage());
