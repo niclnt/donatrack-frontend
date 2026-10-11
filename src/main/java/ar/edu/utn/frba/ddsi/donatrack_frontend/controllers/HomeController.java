@@ -3,6 +3,7 @@ package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
@@ -11,6 +12,7 @@ import lombok.Data;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,9 +25,13 @@ public class HomeController {
 
     // Manda el token de la sesion en cada llamada (y lo refresca si vencio)
     private final WebApiCallerService webApiCallerService;
+    private final String donacionesServiceUrl;
 
-    public HomeController(WebApiCallerService webApiCallerService) {
+    public HomeController(
+            WebApiCallerService webApiCallerService,
+            @Value("${donaciones.service.url}") String donacionesServiceUrl) {
         this.webApiCallerService = webApiCallerService;
+        this.donacionesServiceUrl = donacionesServiceUrl;
     }
 
     @GetMapping("/")
@@ -48,7 +54,7 @@ public class HomeController {
 
         Long donanteId = extraerId();
 
-        StringBuilder backendUrl = new StringBuilder("http://localhost:8080/donaciones-service/donaciones/donantes/")
+        StringBuilder backendUrl = new StringBuilder(donacionesServiceUrl + "/donaciones-service/donaciones/donantes/")
                 .append(donanteId).append("?");
 
         if (estado != null && !estado.isEmpty()) backendUrl.append("estado=").append(estado).append("&");
@@ -110,10 +116,10 @@ public class HomeController {
                 java.util.List.of(bien)
         );
 
-        String backendUrl = "http://localhost:8080/donaciones-service/donaciones/donantes/" + donanteId;
+        String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
 
         try {
-            webApiCallerService.post(backendUrl, request, String.class);
+            webApiCallerService.post(backendUrl, request, DonacionResponse.class);
         } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
             System.out.println("Error al guardar en el backend: " + e.getMessage());
             return "redirect:/donante/nueva-donacion";

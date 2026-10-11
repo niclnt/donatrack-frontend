@@ -25,6 +25,15 @@ public class NotificacionesController {
 
   @GetMapping("/donante/notificaciones")
   public String notificaciones(Model model) {
+    return cargarNotificaciones(model, "donante/notificaciones");
+  }
+
+  @GetMapping("/ong/notificaciones")
+  public String notificacionesEntidad(Model model) {
+    return cargarNotificaciones(model, "ong/notificaciones");
+  }
+
+  private String cargarNotificaciones(Model model, String vista) {
     Long usuarioId = (Long) SesionUsuario.actual().getAttribute(SesionUsuario.USUARIO_ID);
 
     if(usuarioId == null){
@@ -38,7 +47,7 @@ public class NotificacionesController {
     } catch (RestClientException e) {
       model.addAttribute("error", "No se pudo conectar con el Servicio de Notificaciones. Intenta de nuevo mas tarde.");
     }
-    
-    return "donante/notificaciones";
+
+    return vista;
   }
 }

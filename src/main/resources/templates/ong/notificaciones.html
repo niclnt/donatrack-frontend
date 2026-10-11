@@ -1,29 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notificaciones — DonaTrack</title>
-  <link rel="stylesheet" href="../assets/css/styles.css">
-</head>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Notificaciones — Entidad Beneficiaria')}"></head>
 <body>
-  <a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <!-- REQ. 13 — NOTIFICACIONES (ENTIDAD BENEFICIARIA) -->
-  <div class="page">
-    <header class="topbar">
-      <a class="brand" href="../index.html">◆ DonaTrack</a>
-      <button class="nav-toggle" data-nav-toggle aria-controls="ongnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
-      <nav class="topbar__nav" id="ongnav" aria-label="Panel de entidad beneficiaria">
-        <a href="asignadas.html">Donaciones asignadas</a>
-        <a href="necesidades.html">Necesidades</a>
-        <a href="mapa.html">Mapa</a>
-        <a href="notificaciones.html" aria-current="page">Notificaciones</a>
-      </nav>
-      <div class="topbar__actions">
-        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">ER</button>
-      </div>
-    </header>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <header th:replace="~{fragments/base :: topbar('notificaciones')}"></header>
 
     <main id="main" class="page-body">
       <div class="container" style="max-width: 1040px;">
@@ -33,7 +14,12 @@
             <h1>Notificaciones</h1>
             <p class="page-head__sub">Avisos sobre asignaciones de donaciones y confirmaciones de recepción.</p>
           </div>
-          <button class="btn btn--ghost btn--sm" data-toast="Todas las notificaciones fueron marcadas como leídas">Marcar todo como leído</button>
+          <!--<button class="btn btn--ghost btn--sm" data-toast="Todas las notificaciones fueron marcadas como leídas">Marcar todo como leído</button> -->
+        </div>
+
+        <!-- Mensaje de error -->
+        <div th:if="${error != null}" class="alert alert-danger" style="margin-bottom: var(--sp-4);">
+          <p th:text="${error}">Ocurrió un error al cargar las notificaciones.</p>
         </div>
 
         <div class="grid" style="grid-template-columns: minmax(220px, 280px) 1fr; align-items:start;">
@@ -118,6 +104,6 @@
     </div>
   </div>
 
-  <script src="../assets/js/app.js"></script>
+  <script th:src="@{/assets/js/app.js}"></script>
 </body>
 </html>
