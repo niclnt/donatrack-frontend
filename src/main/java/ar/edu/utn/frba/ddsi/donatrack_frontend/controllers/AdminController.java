@@ -240,4 +240,78 @@ public class AdminController {
         return "redirect:/admin/camiones?exito=true";
     }
 
+    // --- REQ 19: RANKINGS MENSUALES ---
+
+    @GetMapping("/admin/rankings")
+    public String mostrarRankings(Authentication authentication, Model model) {
+        if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+
+        try {
+            // Apuntamos al puerto 8082 (incentivos-service)
+            String url = "http://localhost:8082/incentivos/reportes/mensual";
+            model.addAttribute("rankingMensual", webApiCallerService.getList(url, Map[].class));
+        } catch (Exception e) {
+            model.addAttribute("rankingMensual", List.of());
+            System.out.println("Error cargando rankings: " + e.getMessage());
+        }
+
+        return "admin/rankings";
+    }
+
+    // --- REQ 20: IMPORTAR CSV ---
+
+    @GetMapping("/admin/importar-csv")
+    public String mostrarImportacion(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+        return "admin/importar-csv";
+    }
+
+    @PostMapping("/admin/importar-csv")
+    public String procesarImportacion(
+            @RequestParam("archivo") org.springframework.web.multipart.MultipartFile archivo,
+            Authentication authentication,
+            Model model) {
+
+        if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+
+        if (archivo.isEmpty()) {
+            model.addAttribute("error", "Por favor, seleccioná un archivo CSV válido.");
+            return "admin/importar-csv";
+        }
+
+        try {
+            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.MULTIPART_FORM_DATA);
+
+            // Inyectamos el token del administrador actual en la cabecera
+            String token = (String) authentication.getCredentials();
+            if (token != null) {
+                headers.setBearerAuth(token);
+            }
+
+            // Envolvemos el archivo binario para retransmitirlo al backend
+            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
+            body.add("archivo", new org.springframework.core.io.ByteArrayResource(archivo.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return archivo.getOriginalFilename(); // Spring exige que el recurso retenga su nombre original
+                }
+            });
+
+            org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = new org.springframework.http.HttpEntity<>(body, headers);
+            String url = "http://localhost:8080/donantes/importar";
+
+            // Recibimos el DTO "ResultadoImportacionResponse" mapeado como un diccionario
+            org.springframework.http.ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+            model.addAttribute("exito", "El archivo fue procesado con éxito.");
+            model.addAttribute("resultado", response.getBody()); // Datos estadísticos de la importación
+
+        } catch (Exception e) {
+            model.addAttribute("error", "Error crítico en el motor de importación: " + e.getMessage());
+        }
+
+        return "admin/importar-csv";
+    }
 }

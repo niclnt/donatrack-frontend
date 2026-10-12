@@ -1,124 +1,114 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Importar CSV — DonaTrack</title>
-  <link rel="stylesheet" href="../assets/css/styles.css">
-</head>
+<head th:replace="~{fragments/base :: head('Importar CSV — DonaTrack')}"></head>
 <body>
-  <a class="skip-link" href="#main">Saltar al contenido</a>
+<a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <!-- REQ. 20 — IMPORTAR DONANTES CSV MASIVO -->
-  <div class="page">
+<div class="page">
     <header class="topbar">
-      <a class="brand" href="../index.html">◆ DonaTrack</a>
-      <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
-      <nav class="topbar__nav" id="adminnav" aria-label="Panel administrador">
-        <a href="registrar-donacion.html">Registrar</a>
-        <a href="deposito-vencidas.html">Depósito</a>
-        <a href="asignar-algoritmo.html">Asignación</a>
-        <a href="camiones.html">Camiones</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="importar-csv.html" aria-current="page">CSV</a>
-      </nav>
-      <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
+        <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+        <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+        <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
+            <a th:href="@{/}">Sitio Público</a>
+            <a th:href="@{/donante/mis-donaciones}">Mi Perfil Donante</a>
+        </nav>
+        <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
     </header>
 
     <div class="shell">
-      <aside class="sidebar" aria-label="Navegación de administración">
-        <p class="sidebar__label">Administración</p>
-        <a href="registrar-donacion.html">Registrar donación</a>
-        <a href="deposito-vencidas.html">Depósito y vencidas</a>
-        <a href="asignar-algoritmo.html">Asignación por algoritmo</a>
-        <a href="camiones.html">Camiones</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="importar-csv.html" aria-current="page">Importar CSV</a>
-      </aside>
+        <aside class="sidebar" aria-label="Navegación de administración">
+            <p class="sidebar__label">Administración</p>
+            <a th:href="@{/admin/registrar-donacion}">Registrar donación</a>
+            <a th:href="@{/admin/deposito-vencidas}">Depósito y vencidas</a>
+            <a th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
+            <a th:href="@{/admin/camiones}">Camiones</a>
+            <a th:href="@{/admin/rankings}">Rankings</a>
+            <a th:href="@{/admin/importar-csv}" aria-current="page">Importar CSV</a>
+        </aside>
 
-      <main id="main" class="shell__main">
-        <div class="container" style="max-width: 1180px;">
-          <div class="page-head">
-            <div>
-              <h1>Importar donantes desde CSV</h1>
-              <p class="page-head__sub">Cargá archivos masivos para crear o actualizar personas donantes y otorgarles usuario.</p>
-            </div>
-            <button class="btn btn--ghost btn--sm" data-toast="Plantilla CSV descargada">Descargar plantilla</button>
-          </div>
+        <main id="main" class="shell__main">
+            <div class="container" style="max-width: 1180px;">
+                <div class="page-head">
+                    <div>
+                        <h1>Importar donantes desde CSV</h1>
+                        <p class="page-head__sub">Cargá archivos masivos para crear o actualizar personas donantes y otorgarles usuario.</p>
+                    </div>
+                    <button class="btn btn--ghost btn--sm">Descargar plantilla</button>
+                </div>
 
-          <section class="card" aria-labelledby="upload-title">
-            <div class="card__header">
-              <div>
-                <h2 id="upload-title">Carga de archivo</h2>
-                <p class="muted" style="font-size: var(--fs-sm);">Formato esperado: TipoPersona, TipoDoc, Documento, Nombre/Razón Social, Email y Teléfono.</p>
-              </div>
-            </div>
-            <form onsubmit="event.preventDefault(); donaTrackToast('Importación iniciada correctamente', 'success');">
-              <div class="field">
-                <label class="field__label" for="archivo">Archivo CSV</label>
-                <input class="input" id="archivo" type="file" accept=".csv" required>
-                <span class="field__hint">La importación soporta archivos de más de 10.000 filas. Se validan duplicados por email.</span>
-              </div>
-              <div class="field">
-                <label class="field__label" for="separador">Separador</label>
-                <select class="select" id="separador">
-                  <option>Coma (,)</option>
-                  <option>Punto y coma (;)</option>
-                  <option>Tabulación</option>
-                </select>
-              </div>
-              <div class="flex justify-between items-center wrap gap-3">
-                <p class="field__hint">Los registros existentes se actualizan; los nuevos reciben credenciales de acceso.</p>
-                <button class="btn btn--primary" type="submit">Iniciar importación</button>
-              </div>
-            </form>
-          </section>
+                <!-- Alertas de estado de importación -->
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;"></div>
+                <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;"></div>
 
-          <section class="card mt-5" aria-labelledby="progreso-title" data-skeleton>
-            <div class="card__header">
-              <div><h2 id="progreso-title">Progreso de importación</h2><p class="muted" style="font-size: var(--fs-sm);">Simulación de estado asincrónico del procesamiento masivo.</p></div>
-              <span class="badge badge--info">Procesando</span>
-            </div>
-            <div data-loader>
-              <div class="skeleton skeleton--line" style="width: 70%;"></div>
-              <div class="skeleton skeleton--line" style="width: 55%;"></div>
-              <div class="skeleton skeleton--line" style="width: 90%;"></div>
-            </div>
-            <div data-content hidden>
-              <div class="progress" aria-label="Progreso de importación"><div class="progress__fill" style="width: 82%;"></div></div>
-              <div class="grid grid--stats mt-5">
-                <article class="stat"><p class="stat__label">Filas procesadas</p><p class="stat__value">16.420</p></article>
-                <article class="stat"><p class="stat__label">Creados</p><p class="stat__value">2.315</p></article>
-                <article class="stat"><p class="stat__label">Actualizados</p><p class="stat__value">13.892</p></article>
-                <article class="stat"><p class="stat__label">Errores</p><p class="stat__value">213</p></article>
-              </div>
-            </div>
-          </section>
+                <section class="card" aria-labelledby="upload-title">
+                    <div class="card__header">
+                        <div>
+                            <h2 id="upload-title">Carga de archivo</h2>
+                            <p class="muted" style="font-size: var(--fs-sm);">Formato esperado: TipoPersona, TipoDoc, Documento, Nombre/Razón Social, Email y Teléfono.</p>
+                        </div>
+                    </div>
 
-          <section class="card mt-5" aria-labelledby="preview-title">
-            <div class="card__header">
-              <div><h2 id="preview-title">Vista previa de registros</h2><p class="muted" style="font-size: var(--fs-sm);">Primeras filas detectadas antes de confirmar la carga completa.</p></div>
+                    <!-- Formulario Multipart crucial para envío de archivos -->
+                    <form th:action="@{/admin/importar-csv}" method="post" enctype="multipart/form-data">
+                        <div class="field">
+                            <label class="field__label" for="archivo">Archivo CSV</label>
+                            <input class="input" id="archivo" name="archivo" type="file" accept=".csv" required>
+                            <span class="field__hint">La importación soporta archivos de más de 10.000 filas. Se validan duplicados por email.</span>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="separador">Separador (Informativo)</label>
+                            <select class="select" id="separador" name="separador">
+                                <option value=",">Coma (,)</option>
+                                <option value=";">Punto y coma (;)</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-between items-center wrap gap-3 mt-4">
+                            <p class="field__hint">Los registros existentes se actualizan; los nuevos reciben credenciales de acceso.</p>
+                            <button class="btn btn--primary" type="submit">Iniciar importación</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Cuadro de resultados (se muestra únicamente si el backend devolvió un resultado) -->
+                <section class="card mt-5" aria-labelledby="progreso-title" th:if="${resultado != null}">
+                    <div class="card__header">
+                        <div>
+                            <h2 id="progreso-title">Resumen de importación</h2>
+                            <p class="muted" style="font-size: var(--fs-sm);">Procesamiento finalizado.</p>
+                        </div>
+                        <span class="badge badge--success">Completado</span>
+                    </div>
+
+                    <div data-content>
+                        <div class="progress" aria-label="Progreso de importación"><div class="progress__fill" style="width: 100%;"></div></div>
+                        <div class="grid grid--stats mt-5">
+                            <article class="stat">
+                                <p class="stat__label">Total procesadas</p>
+                                <p class="stat__value" th:text="${resultado.get('totalProcesados') ?: 0}">16.420</p>
+                            </article>
+                            <article class="stat">
+                                <p class="stat__label">Nuevos</p>
+                                <p class="stat__value" th:text="${resultado.get('insertados') ?: 0}">2.315</p>
+                            </article>
+                            <article class="stat">
+                                <p class="stat__label">Actualizados</p>
+                                <p class="stat__value" th:text="${resultado.get('actualizados') ?: 0}">13.892</p>
+                            </article>
+                            <article class="stat">
+                                <p class="stat__label">Errores</p>
+                                <p class="stat__value" th:text="${resultado.get('errores') ?: 0}">213</p>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
             </div>
-            <div class="table-wrap">
-              <table class="table">
-                <caption class="sr-only">Vista previa de importación CSV</caption>
-                <thead><tr><th scope="col">Tipo</th><th scope="col">Documento</th><th scope="col">Nombre/Razón social</th><th scope="col">Email</th><th scope="col">Resultado</th></tr></thead>
-                <tbody>
-                  <tr><td>HUMANA</td><td>12345678</td><td>Ana Pérez</td><td>ana@mail.com</td><td><span class="badge badge--success">Nuevo usuario</span></td></tr>
-                  <tr><td>JURIDICA</td><td>30-12345678-9</td><td>Arcos Plateados S.A.</td><td>contacto@empresa.com</td><td><span class="badge badge--info">Actualización</span></td></tr>
-                  <tr><td>HUMANA</td><td>87654321</td><td>Mario López</td><td>mario@mail.com</td><td><span class="badge badge--danger">Email inválido</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
-      </main>
+        </main>
     </div>
-  </div>
+</div>
 
-  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h"><div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" href="../login.html">Cerrar sesión</a></div></div></div>
+<div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h"><div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" th:href="@{/logout}">Cerrar sesión</a></div></div></div>
 
-  <script th:src="@{/assets/js/app.js}"></script>
+<script th:src="@{/assets/js/app.js}"></script>
 </body>
 </html>
