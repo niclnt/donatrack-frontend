@@ -1,109 +1,26 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/base :: head('Notificaciones — Entidad Beneficiaria')}"></head>
+<head th:replace="~{fragments/base :: head('Mis Notificaciones')}"></head>
 <body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <a class="skip-link" href="#main">Saltar al contenido</a>
+<div class="page">
   <header th:replace="~{fragments/base :: topbar('notificaciones')}"></header>
 
-    <main id="main" class="page-body">
-      <div class="container" style="max-width: 1040px;">
-        <!--<p class="req-tag">Req. 13 — Notificaciones para entidad beneficiaria</p>-->
-        <div class="page-head">
-          <div>
-            <h1>Notificaciones</h1>
-            <p class="page-head__sub">Avisos sobre asignaciones de donaciones y confirmaciones de recepción.</p>
-          </div>
-          <!--<button class="btn btn--ghost btn--sm" data-toast="Todas las notificaciones fueron marcadas como leídas">Marcar todo como leído</button> -->
-        </div>
-
-        <!-- Mensaje de error -->
-        <div th:if="${error != null}" class="alert alert-danger" style="margin-bottom: var(--sp-4);">
-          <p th:text="${error}">Ocurrió un error al cargar las notificaciones.</p>
-        </div>
-
-        <div class="grid" style="grid-template-columns: minmax(220px, 280px) 1fr; align-items:start;">
-          <aside class="card" aria-label="Resumen de notificaciones">
-            <div class="stat" style="margin-bottom: var(--sp-4);">
-              <p class="stat__label">No leídas</p>
-              <p class="stat__value">2</p>
-            </div>
-            <div class="stat" style="margin-bottom: var(--sp-4);">
-              <p class="stat__label">Esta semana</p>
-              <p class="stat__value">5</p>
-            </div>
-            <div class="filterbar" data-filter-group role="group" aria-label="Filtrar notificaciones" style="display:block; margin:0;">
-              <button class="filter-pill btn--block" aria-pressed="true" style="justify-content:flex-start; width:100%; margin-bottom: var(--sp-2);">Todas</button>
-              <button class="filter-pill btn--block" aria-pressed="false" style="justify-content:flex-start; width:100%; margin-bottom: var(--sp-2);">Asignaciones</button>
-              <button class="filter-pill btn--block" aria-pressed="false" style="justify-content:flex-start; width:100%;">Entregas</button>
-            </div>
-          </aside>
-
-          <section class="card" aria-labelledby="lista-notificaciones-title">
-            <div class="card__header">
-              <h2 id="lista-notificaciones-title">Centro de notificaciones</h2>
-            </div>
-
-            <div class="grid" style="gap: var(--sp-3);">
-              <article class="card card--flat" style="border-left: 3px solid var(--warning);">
-                <div class="flex justify-between items-center gap-3 wrap">
-                  <div>
-                    <h3 style="font-size: var(--fs-md);">Donación en camino</h3>
-                    <p class="muted" style="font-size: var(--fs-sm);">La donación de <strong>100 paquetes de fideos secos</strong> ya inició su traslado.</p>
-                  </div>
-                  <span class="badge badge--warning">Hace 10 min</span>
-                </div>
-                <div class="mt-4"><a class="btn btn--sm btn--primary" href="mapa.html">Ver en mapa</a></div>
-              </article>
-
-              <article class="card card--flat" style="border-left: 3px solid var(--info);">
-                <div class="flex justify-between items-center gap-3 wrap">
-                  <div>
-                    <h3 style="font-size: var(--fs-md);">Nueva donación asignada</h3>
-                    <p class="muted" style="font-size: var(--fs-sm);">Se asignaron <strong>6 sillas</strong> para cubrir parcialmente una necesidad extraordinaria.</p>
-                  </div>
-                  <span class="badge badge--info">Hoy</span>
-                </div>
-                <div class="mt-4"><a class="btn btn--sm btn--ghost" href="asignadas.html">Ver donación</a></div>
-              </article>
-
-              <article class="card card--flat" style="border-left: 3px solid var(--success);">
-                <div class="flex justify-between items-center gap-3 wrap">
-                  <div>
-                    <h3 style="font-size: var(--fs-md);">Recepción confirmada</h3>
-                    <p class="muted" style="font-size: var(--fs-sm);">Confirmaste la recepción de <strong>30 prendas de abrigo</strong>. Se notificó al donante.</p>
-                  </div>
-                  <span class="badge badge--success">Ayer</span>
-                </div>
-              </article>
-
-              <article class="card card--flat">
-                <div class="flex justify-between items-center gap-3 wrap">
-                  <div>
-                    <h3 style="font-size: var(--fs-md);">Nueva donación asignada</h3>
-                    <p class="muted" style="font-size: var(--fs-sm);">La donación de mesas quedó asociada a tu entidad y será planificada para entrega.</p>
-                  </div>
-                  <span class="badge">12/04/2025</span>
-                </div>
-              </article>
-            </div>
-          </section>
+  <main id="main" class="page-body">
+    <div class="container" style="max-width: 820px;">
+      <div class="page-head">
+        <div>
+          <h1>Centro de notificaciones</h1>
+          <p class="page-head__sub">Seguimiento de asignaciones y entregas.</p>
         </div>
       </div>
-    </main>
-  </div>
 
-  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-    <div class="modal__box">
-      <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Escuela Rural N°10</h2>
-      <p class="muted mt-4">Entidad beneficiaria · Mendoza, Argentina</p>
-      <div class="modal__actions">
-        <button class="btn btn--ghost" data-modal-close>Cerrar</button>
-        <a class="btn btn--danger" href="../login.html">Cerrar sesión</a>
-      </div>
+      <div th:replace="~{fragments/notificaciones :: lista(${error}, ${notificaciones})}"></div>
     </div>
-  </div>
+  </main>
+</div>
 
-  <script th:src="@{/assets/js/app.js}"></script>
+<script th:src="@{/assets/js/app.js}"></script>
 </body>
 </html>

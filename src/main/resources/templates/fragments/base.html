@@ -28,6 +28,14 @@
         <a th:href="@{/donante/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
     </nav>
 
+    <!-- NAVBAR para ENTIDADES BENEFICIARIAS-->
+    <nav class="topbar__nav" id="ongnav" aria-label="Panel de entidad beneficiaria" sec:authorize="hasRole('BENEFICIARIO')">
+        <a th:href="@{/ong/asignadas}" th:attr="aria-current=${paginaActual == 'asignadas' ? 'page' : null}">Donaciones asignadas</a>
+        <a th:href="@{/ong/necesidades}" th:attr="aria-current=${paginaActual == 'necesidades' ? 'page' : null}">Necesidades</a>
+        <a th:href="@{/ong/mapa}" th:attr="aria-current=${paginaActual == 'mapa' ? 'page' : null}">Mapa</a>
+        <a th:href="@{/ong/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}" >Notificaciones</a>
+    </nav>
+
     <div class="topbar__actions">
         <th:block sec:authorize="!isAuthenticated()">
             <a class="btn btn--ghost btn--sm" th:href="@{/login}">Iniciar sesión</a>

@@ -6,24 +6,7 @@
 
 <!-- REQ. 10 — NECESIDADES MATERIALES (ENTIDAD BENEFICIARIA) -->
 <div class="page">
-  <header class="topbar">
-    <a class="brand" th:href="@{/}">◆ DonaTrack</a>
-    <button class="nav-toggle" data-nav-toggle aria-controls="ongnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
-    <nav class="topbar__nav" id="ongnav" aria-label="Panel de entidad beneficiaria">
-      <a th:href="@{/ong/asignadas}">Donaciones asignadas</a>
-
-      <a th:href="@{/ong/necesidades}" aria-current="page">Necesidades</a>
-
-      <a th:href="@{/ong/mapa}">Mapa</a>
-
-      <a th:href="@{/ong/notificaciones}">Notificaciones</a>
-    </nav>
-    <div class="topbar__actions">
-      <button sec:authorize="isAuthenticated()" class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta" th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">
-        ER
-      </button>
-    </div>
-  </header>
+  <header th:replace="~{fragments/base :: topbar('necesidades')}"></header>
 
   <main id="main" class="page-body">
     <div class="container" style="max-width: 980px;">
@@ -70,7 +53,7 @@
             <div class="field">
               <label class="field__label" for="tipo-necesidad">Tipo de necesidad</label>
               <select class="select" id="tipoNecesidad" name="tipoNecesidad" required>
-                <option value="">Seleccionar tipo</option>
+                <option value="" disabled selected hidden>Seleccionar tipo</option>
                 <option value="RECURRENTE">Recurrente</option>
                 <option value="EXTRAORDINARIA">Extraordinaria</option>
               </select>
@@ -81,7 +64,7 @@
               <label class="field__label" for="categoriaNombre">Categoría</label>
 
               <select class="select" id="categoriaNombre" name="categoriaNombre" required>
-                <option value="">Seleccionar categoría</option>
+                <option value="" disabled selected hidden>Seleccionar categoría</option>
                 <option th:each="categoria : ${categorias}" th:value="${categoria.nombre}" th:text="${categoria.nombre}" th:attr="data-categoria-id=${categoria.id}">Categoría</option>
               </select>
             </div>
@@ -90,7 +73,7 @@
               <label class="field__label" for="subcategoriaNombre">Subcategoría</label>
 
               <select class="select" id="subcategoriaNombre" name="subcategoriaNombre" required style="pointer-events:none;opacity:.55;">
-                <option value="">Primero seleccioná una categoría</option>
+                <option value="" disabled selected hidden>Primero seleccioná una categoría</option>
               </select>
               <span class="field__hint">Seleccioná una subcategoría del catálogo parametrizado.</span>
             </div>
@@ -228,8 +211,7 @@
 
       const option = document.createElement('option');
       option.value = '';
-      option.textContent =
-              'Primero seleccioná una categoría';
+      option.textContent = 'Primero seleccioná una categoría';
 
       subcategoriaSelect.appendChild(option);
       return;
@@ -240,8 +222,10 @@
 
     const optionInicial = document.createElement('option');
     optionInicial.value = '';
-    optionInicial.textContent =
-            'Seleccionar subcategoría';
+    optionInicial.textContent = 'Seleccionar subcategoría';
+    optionInicial.disabled = true;
+    optionInicial.selected = true;
+    optionInicial.hidden = true;
 
     subcategoriaSelect.appendChild(optionInicial);
 
