@@ -1,142 +1,105 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Asignación por algoritmo — DonaTrack</title>
-  <link rel="stylesheet" href="../assets/css/styles.css">
-</head>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Asignación por algoritmo — DonaTrack')}"></head>
 <body>
-  <a class="skip-link" href="#main">Saltar al contenido</a>
+<a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <!-- REQ. 17 — SELECCIONAR ENTIDAD BENEFICIARIA FINAL SEGÚN ALGORITMOS -->
-  <div class="page">
+<div class="page">
     <header class="topbar">
-      <a class="brand" href="../index.html">◆ DonaTrack</a>
-      <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
-      <nav class="topbar__nav" id="adminnav" aria-label="Panel administrador">
-        <a href="registrar-donacion.html">Registrar</a>
-        <a href="deposito-vencidas.html">Depósito</a>
-        <a href="asignar-algoritmo.html" aria-current="page">Asignación</a>
-        <a href="camiones.html">Camiones</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="importar-csv.html">CSV</a>
-      </nav>
-      <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
+        <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+        <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+        <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
+            <a th:href="@{/}">Sitio Público</a>
+            <a th:href="@{/donante/mis-donaciones}">Mi Perfil Donante</a>
+        </nav>
+        <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
     </header>
 
     <div class="shell">
-      <aside class="sidebar" aria-label="Navegación de administración">
-        <p class="sidebar__label">Administración</p>
-        <a href="registrar-donacion.html">Registrar donación</a>
-        <a href="deposito-vencidas.html">Depósito y vencidas</a>
-        <a href="asignar-algoritmo.html" aria-current="page">Asignación por algoritmo</a>
-        <a href="camiones.html">Camiones</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="importar-csv.html">Importar CSV</a>
-      </aside>
+        <aside class="sidebar" aria-label="Navegación de administración">
+            <p class="sidebar__label">Administración</p>
+            <a th:href="@{/admin/registrar-donacion}">Registrar donación</a>
+            <a th:href="@{/admin/deposito-vencidas}">Depósito y vencidas</a>
+            <a th:href="@{/admin/asignar-algoritmo}" aria-current="page">Asignación por algoritmo</a>
+            <a href="#">Camiones</a>
+            <a href="#">Rankings</a>
+            <a href="#">Importar CSV</a>
+        </aside>
 
-      <main id="main" class="shell__main">
-        <div class="container" style="max-width: 1180px;">
-          <p class="req-tag">Req. 17 — Selección de entidad beneficiaria</p>
-          <div class="page-head">
-            <div>
-              <h1>Asignar entidad beneficiaria</h1>
-              <p class="page-head__sub">Revisá las sugerencias del motor de matchmaking y confirmá el destino final de la donación.</p>
+        <main id="main" class="shell__main">
+            <div class="container" style="max-width: 1180px;">
+                <div class="page-head">
+                    <div>
+                        <h1>Asignar entidad beneficiaria</h1>
+                        <p class="page-head__sub">Revisá las sugerencias del motor de matchmaking y confirmá el destino final de la donación.</p>
+                    </div>
+
+                    <!-- Botón para forzar ejecución manual -->
+                    <form th:action="@{/admin/forzar-algoritmo}" method="post">
+                        <button type="submit" class="btn btn--ghost btn--sm">Actualizar sugerencias</button>
+                    </form>
+                </div>
+
+                <div th:if="${param.actualizado}" class="alert alert-info" style="margin-bottom: 20px;">El algoritmo se ejecutó correctamente y actualizó las sugerencias.</div>
+                <div th:if="${param.exito}" class="alert alert-success" style="margin-bottom: 20px;">¡Asignación confirmada exitosamente!</div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;"></div>
+
+                <!-- Iteramos sobre los MATCHES devueltos por el algoritmo -->
+                <th:block th:each="propuesta : ${propuestas}">
+                    <div class="grid" style="grid-template-columns: minmax(280px, .9fr) minmax(320px, 1.4fr); align-items: start; margin-bottom: 40px;">
+
+                        <section class="card" aria-labelledby="donacion-title">
+                            <div class="card__header">
+                                <div>
+                                    <h2 id="donacion-title">Donación a asignar</h2>
+                                    <!-- Mostramos el ID para referencia -->
+                                    <p class="muted" style="font-size: var(--fs-sm);" th:text="'Donación Seg. ID: ' + ${propuesta.get('donacionSegmentadaId')}"></p>
+                                </div>
+                                <span class="badge badge--warning">Pendiente</span>
+                            </div>
+
+                            <div class="field"><span class="field__label">Puntaje de Match</span><strong th:text="${propuesta.get('puntaje')} + ' puntos'">92 puntos</strong></div>
+                        </section>
+
+                        <section class="card" aria-labelledby="sugerencias-title">
+                            <div class="card__header">
+                                <div>
+                                    <h2 id="sugerencias-title">Entidad Sugerida</h2>
+                                    <p class="muted" style="font-size: var(--fs-sm);">Coincidencia obtenida por el motor.</p>
+                                </div>
+                            </div>
+
+                            <article class="card card--flat" style="border-color: var(--primary); margin-bottom: var(--sp-4);">
+                                <div class="flex justify-between items-center gap-3 wrap">
+                                    <div>
+                                        <!-- Información de la Necesidad/Entidad sugerida -->
+                                        <h3 th:text="'Necesidad ID: ' + ${propuesta.get('necesidadId')}">Escuela Rural</h3>
+                                    </div>
+                                    <span class="badge badge--success">#1 Recomendada</span>
+                                </div>
+
+                                <form th:action="@{/admin/confirmar-asignacion}" method="post" class="mt-4 flex justify-between items-center wrap gap-3">
+                                    <input type="hidden" name="idDonacionSegmentada" th:value="${propuesta.get('donacionSegmentadaId')}">
+                                    <input type="hidden" name="idNecesidad" th:value="${propuesta.get('necesidadId')}">
+                                    <button type="submit" class="btn btn--primary">Confirmar asignación</button>
+                                </form>
+                            </article>
+                        </section>
+                    </div>
+                </th:block>
+
+                <!-- Mensaje vacío -->
+                <div th:if="${propuestas == null or propuestas.isEmpty()}" class="card" style="text-align: center; padding: 40px;">
+                    <p class="muted">No hay sugerencias de asignación disponibles en este momento. Hacé clic en "Actualizar sugerencias" para correr el motor.</p>
+                </div>
+
             </div>
-            <button class="btn btn--ghost btn--sm" data-toast="Rankings actualizados desde los algoritmos">Actualizar sugerencias</button>
-          </div>
-
-          <div class="grid" style="grid-template-columns: minmax(280px, .9fr) minmax(320px, 1.4fr); align-items: start;">
-            <section class="card" aria-labelledby="donacion-title">
-              <div class="card__header">
-                <div>
-                  <h2 id="donacion-title">Donación a asignar</h2>
-                  <p class="muted" style="font-size: var(--fs-sm);">Información proveniente del depósito.</p>
-                </div>
-                <span class="badge badge--warning">Pendiente</span>
-              </div>
-
-              <div class="field"><span class="field__label">Ítem</span><strong>Sillas escolares</strong></div>
-              <div class="field"><span class="field__label">Categoría</span><span class="badge badge--category">Mobiliario</span></div>
-              <div class="field"><span class="field__label">Cantidad</span><strong>6 unidades</strong></div>
-              <div class="field"><span class="field__label">Donante</span><span>Martín Rodríguez</span></div>
-              <div class="field"><span class="field__label">Fecha de depósito</span><span>12/04/2026</span></div>
-              <div class="field"><span class="field__label">Observaciones</span><span class="muted">Sillas sin daños visibles.</span></div>
-            </section>
-
-            <section class="card" aria-labelledby="sugerencias-title">
-              <div class="card__header">
-                <div>
-                  <h2 id="sugerencias-title">Sugerencias del algoritmo</h2>
-                  <p class="muted" style="font-size: var(--fs-sm);">Coincidencias obtenidas por compatibilidad semántica y prioridad a sub-atendidos.</p>
-                </div>
-              </div>
-
-              <article class="card card--flat" style="border-color: var(--primary); margin-bottom: var(--sp-4);">
-                <div class="flex justify-between items-center gap-3 wrap">
-                  <div>
-                    <h3>Escuela Rural N°10</h3>
-                    <p class="muted" style="font-size: var(--fs-sm);">Mendoza · Necesidad extraordinaria</p>
-                  </div>
-                  <span class="badge badge--success">#1 Recomendada</span>
-                </div>
-                <div class="mt-4">
-                  <p class="field__hint">Coincidencia semántica · 92%</p>
-                  <div class="progress"><div class="progress__fill" style="width: 92%;"></div></div>
-                </div>
-                <div class="mt-4">
-                  <p class="field__hint">Cobertura de volumen · 70%</p>
-                  <div class="progress"><div class="progress__fill" style="width: 70%;"></div></div>
-                </div>
-                <div class="mt-4">
-                  <p class="field__hint">Prioridad por sub-atención · Alta</p>
-                  <div class="progress"><div class="progress__fill" style="width: 84%;"></div></div>
-                </div>
-                <div class="entity__tags mt-4"><span class="chip">Sillas solicitadas</span><span class="chip">Mobiliario escolar</span><span class="chip">Alta urgencia</span></div>
-              </article>
-
-              <article class="card card--flat" style="margin-bottom: var(--sp-4);">
-                <div class="flex justify-between items-center gap-3 wrap">
-                  <div><h3>Comedor Comunitario Luz</h3><p class="muted" style="font-size: var(--fs-sm);">Morón · Necesidad recurrente</p></div>
-                  <span class="badge badge--info">#2</span>
-                </div>
-                <div class="mt-4"><p class="field__hint">Score general · 77%</p><div class="progress"><div class="progress__fill" style="width: 77%;"></div></div></div>
-                <div class="entity__tags mt-4"><span class="chip">Mobiliario</span><span class="chip">Media prioridad</span></div>
-              </article>
-
-              <article class="card card--flat">
-                <div class="flex justify-between items-center gap-3 wrap">
-                  <div><h3>Hogar Esperanza</h3><p class="muted" style="font-size: var(--fs-sm);">CABA · Necesidad extraordinaria</p></div>
-                  <span class="badge">#3</span>
-                </div>
-                <div class="mt-4"><p class="field__hint">Score general · 64%</p><div class="progress"><div class="progress__fill" style="width: 64%;"></div></div></div>
-                <div class="entity__tags mt-4"><span class="chip">Sillas</span><span class="chip">Lejanía media</span></div>
-              </article>
-            </section>
-          </div>
-
-          <section class="card mt-5" aria-labelledby="seleccion-title">
-            <div class="flex justify-between items-center wrap gap-3">
-              <div>
-                <h2 id="seleccion-title">Entidad seleccionada: Escuela Rural N°10</h2>
-                <p class="muted" style="font-size: var(--fs-sm);">Al confirmar, la donación cambiará a asignación realizada y se notificará a la entidad y al donante.</p>
-              </div>
-              <div class="flex gap-2 wrap">
-                <button class="btn btn--ghost">Cancelar</button>
-                <button class="btn btn--primary" data-toast="Asignación confirmada correctamente">Confirmar asignación</button>
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
+        </main>
     </div>
-  </div>
+</div>
 
-  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-    <div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" href="../login.html">Cerrar sesión</a></div></div>
-  </div>
+<div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h"><div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" th:href="@{/logout}">Cerrar sesión</a></div></div></div>
 
-  <script th:src="@{/assets/js/app.js}"></script>
+<script th:src="@{/assets/js/app.js}"></script>
 </body>
 </html>

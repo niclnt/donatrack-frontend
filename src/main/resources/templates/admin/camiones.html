@@ -1,99 +1,132 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Camiones — DonaTrack</title>
-  <link rel="stylesheet" href="../assets/css/styles.css">
-</head>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Camiones — DonaTrack')}"></head>
 <body>
-  <a class="skip-link" href="#main">Saltar al contenido</a>
+<a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <!-- REQ. 18 — ADMINISTRAR CAMIONES DISPONIBLES -->
-  <div class="page">
+<div class="page">
     <header class="topbar">
-      <a class="brand" href="../index.html">◆ DonaTrack</a>
-      <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
-      <nav class="topbar__nav" id="adminnav" aria-label="Panel administrador">
-        <a href="registrar-donacion.html">Registrar</a>
-        <a href="deposito-vencidas.html">Depósito</a>
-        <a href="asignar-algoritmo.html">Asignación</a>
-        <a href="camiones.html" aria-current="page">Camiones</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="importar-csv.html">CSV</a>
-      </nav>
-      <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
+        <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+        <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+        <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
+            <a th:href="@{/}">Sitio Público</a>
+            <a th:href="@{/donante/mis-donaciones}">Mi Perfil Donante</a>
+        </nav>
+        <div class="topbar__actions"><button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button></div>
     </header>
 
     <div class="shell">
-      <aside class="sidebar" aria-label="Navegación de administración">
-        <p class="sidebar__label">Administración</p>
-        <a href="registrar-donacion.html">Registrar donación</a>
-        <a href="deposito-vencidas.html">Depósito y vencidas</a>
-        <a href="asignar-algoritmo.html">Asignación por algoritmo</a>
-        <a href="camiones.html" aria-current="page">Camiones</a>
-        <a href="rankings.html">Rankings</a>
-        <a href="importar-csv.html">Importar CSV</a>
-      </aside>
+        <aside class="sidebar" aria-label="Navegación de administración">
+            <p class="sidebar__label">Administración</p>
+            <a th:href="@{/admin/registrar-donacion}">Registrar donación</a>
+            <a th:href="@{/admin/deposito-vencidas}">Depósito y vencidas</a>
+            <a th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
+            <a th:href="@{/admin/camiones}" aria-current="page">Camiones</a>
+            <a href="#">Rankings</a>
+            <a href="#">Importar CSV</a>
+        </aside>
 
-      <main id="main" class="shell__main">
-        <div class="container" style="max-width: 1180px;">
-          <p class="req-tag">Req. 18 — Gestión de flota</p>
-          <div class="page-head">
-            <div>
-              <h1>Camiones disponibles</h1>
-              <p class="page-head__sub">Administrá la flota utilizada para la planificación y ejecución de rutas.</p>
+        <main id="main" class="shell__main">
+            <div class="container" style="max-width: 1180px;">
+                <div class="page-head">
+                    <div>
+                        <h1>Camiones disponibles</h1>
+                        <p class="page-head__sub">Administrá la flota utilizada para la planificación y ejecución de rutas.</p>
+                    </div>
+                    <button class="btn btn--primary btn--sm" data-modal-open="modal-camion">+ Nuevo camión</button>
+                </div>
+
+                <div th:if="${param.exito}" class="alert alert-success" style="margin-bottom: 20px;">¡Camión registrado exitosamente en la flota!</div>
+
+                <!-- Indicadores dinámicos rápidos -->
+                <section class="grid grid--stats" aria-label="Resumen de flota">
+                    <article class="stat"><p class="stat__label">Camiones registrados</p><p class="stat__value" th:text="${camiones != null ? camiones.size() : 0}">0</p></article>
+                </section>
+
+                <section class="card mt-5" aria-labelledby="camiones-title">
+                    <div class="card__header">
+                        <div><h2 id="camiones-title">Listado de camiones</h2><p class="muted" style="font-size: var(--fs-sm);">Patente, dimensiones y disponibilidad operativa.</p></div>
+                        <a th:href="@{/admin/camiones}" class="btn btn--ghost btn--sm">Actualizar</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <caption class="sr-only">Listado de camiones disponibles</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col">Patente</th>
+                                <th scope="col">Volumen</th>
+                                <th scope="col">Altura</th>
+                                <th scope="col">Carga</th>
+                                <th scope="col">Estado</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="camion : ${camiones}">
+                                <td><strong th:text="${camion.get('patente')}">AB 123 CD</strong></td>
+                                <td th:text="${camion.get('volumenM3')} + ' m³'">18 m³</td>
+                                <td th:text="${camion.get('alturaMetros')} + ' m'">3.2 m</td>
+                                <td class="num" th:text="${camion.get('capacidadPesoKg')} + ' kg'">2.000 kg</td>
+                                <td>
+                                    <span class="badge badge--info" th:text="${camion.get('estado')}">DISPONIBLE</span>
+                                </td>
+                            </tr>
+                            <!-- Fila vacía si no hay camiones -->
+                            <tr th:if="${camiones == null or camiones.isEmpty()}">
+                                <td colspan="5" class="muted" style="text-align: center; padding: 20px;">No hay camiones registrados en la base de datos.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Formulario de carga (dentro del mismo HTML para no abrir modales complejos) -->
+                <section class="card mt-5" aria-labelledby="form-title" id="modal-camion">
+                    <div class="card__header"><div><h2 id="form-title">Registrar nuevo camión</h2><p class="muted" style="font-size: var(--fs-sm);">Los datos se utilizan para validar capacidad y restricciones de planificación.</p></div></div>
+
+                    <form th:action="@{/admin/camiones}" method="post">
+                        <div class="form-grid">
+                            <div class="field">
+                                <label class="field__label" for="patente">Patente</label>
+                                <input class="input" id="patente" name="patente" placeholder="Ej: AB 123 CD" required>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="estado">Estado inicial</label>
+                                <select class="select" id="estado" name="estado" required>
+                                    <option value="DISPONIBLE">Disponible</option>
+                                    <option value="EN_MANTENIMIENTO">En mantenimiento</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="volumen">Capacidad en volumen (m³)</label>
+                                <input class="input" id="volumen" name="volumen" type="number" min="1" step="0.1" required>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="altura">Altura máxima (m)</label>
+                                <input class="input" id="altura" name="altura" type="number" min="1" step="0.1" required>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="carga">Capacidad de carga (kg)</label>
+                                <input class="input" id="carga" name="carga" type="number" min="1" required>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="chofer">Chofer asignado</label>
+                                <input class="input" id="chofer" name="chofer" placeholder="Opcional">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center wrap gap-3 mt-4">
+                            <p class="field__hint">Todos los camiones pueden transportar cualquier tipo de bien.</p>
+                            <button class="btn btn--primary" type="submit">Guardar camión</button>
+                        </div>
+                    </form>
+                </section>
+
             </div>
-            <button class="btn btn--primary btn--sm" data-modal-open="modal-camion">+ Nuevo camión</button>
-          </div>
-
-          <section class="grid grid--stats" aria-label="Resumen de flota">
-            <article class="stat"><p class="stat__label">Camiones activos</p><p class="stat__value">4</p></article>
-            <article class="stat"><p class="stat__label">En ruta</p><p class="stat__value">2</p></article>
-            <article class="stat"><p class="stat__label">Capacidad total</p><p class="stat__value">7.200 kg</p></article>
-          </section>
-
-          <section class="card mt-5" aria-labelledby="camiones-title">
-            <div class="card__header">
-              <div><h2 id="camiones-title">Listado de camiones</h2><p class="muted" style="font-size: var(--fs-sm);">Patente, dimensiones y disponibilidad operativa.</p></div>
-              <button class="btn btn--ghost btn--sm" data-toast="Datos de flota actualizados">Actualizar</button>
-            </div>
-            <div class="table-wrap">
-              <table class="table">
-                <caption class="sr-only">Listado de camiones disponibles</caption>
-                <thead><tr><th scope="col">Patente</th><th scope="col">Volumen</th><th scope="col">Altura</th><th scope="col">Carga</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
-                <tbody>
-                  <tr><td><strong>AB 123 CD</strong></td><td>18 m³</td><td>3.2 m</td><td class="num">2.000 kg</td><td><span class="badge badge--success">Disponible</span></td><td><button class="btn btn--link btn--sm">Editar</button><button class="btn btn--danger btn--sm">Retirar</button></td></tr>
-                  <tr><td><strong>EF 456 GH</strong></td><td>12 m³</td><td>2.8 m</td><td class="num">1.500 kg</td><td><span class="badge badge--info">En ruta</span></td><td><button class="btn btn--link btn--sm">Ver ruta</button></td></tr>
-                  <tr><td><strong>IJ 789 KL</strong></td><td>20 m³</td><td>3.5 m</td><td class="num">2.500 kg</td><td><span class="badge badge--success">Disponible</span></td><td><button class="btn btn--link btn--sm">Editar</button><button class="btn btn--danger btn--sm">Retirar</button></td></tr>
-                  <tr><td><strong>MN 321 OP</strong></td><td>10 m³</td><td>2.6 m</td><td class="num">1.200 kg</td><td><span class="badge badge--warning">Mantenimiento</span></td><td><button class="btn btn--link btn--sm">Editar</button></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="card mt-5" aria-labelledby="form-title">
-            <div class="card__header"><div><h2 id="form-title">Registrar nuevo camión</h2><p class="muted" style="font-size: var(--fs-sm);">Los datos se utilizan para validar capacidad y restricciones de planificación.</p></div></div>
-            <form onsubmit="event.preventDefault(); donaTrackToast('Camión registrado correctamente', 'success');">
-              <div class="form-grid">
-                <div class="field"><label class="field__label" for="patente">Patente</label><input class="input" id="patente" placeholder="Ej: AB 123 CD" required></div>
-                <div class="field"><label class="field__label" for="estado">Estado</label><select class="select" id="estado" required><option>Disponible</option><option>En mantenimiento</option><option>Fuera de servicio</option></select></div>
-                <div class="field"><label class="field__label" for="volumen">Capacidad en volumen (m³)</label><input class="input" id="volumen" type="number" min="1" step="0.1" required></div>
-                <div class="field"><label class="field__label" for="altura">Altura máxima (m)</label><input class="input" id="altura" type="number" min="1" step="0.1" required></div>
-                <div class="field"><label class="field__label" for="carga">Capacidad de carga (kg)</label><input class="input" id="carga" type="number" min="1" required></div>
-                <div class="field"><label class="field__label" for="chofer">Chofer asignado</label><input class="input" id="chofer" placeholder="Opcional"></div>
-              </div>
-              <div class="flex justify-between items-center wrap gap-3"><p class="field__hint">Todos los camiones pueden transportar cualquier tipo de bien.</p><button class="btn btn--primary" type="submit">Guardar camión</button></div>
-            </form>
-          </section>
-        </div>
-      </main>
+        </main>
     </div>
-  </div>
+</div>
 
-  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h"><div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" href="../login.html">Cerrar sesión</a></div></div></div>
-  <div class="modal" id="modal-camion" hidden role="dialog" aria-modal="true" aria-labelledby="modal-camion-h"><div class="modal__box"><h2 id="modal-camion-h" style="font-size: var(--fs-lg);">Nuevo camión</h2><p class="muted mt-4">Completá el formulario inferior para registrar la unidad con sus capacidades operativas.</p><div class="modal__actions"><button class="btn btn--primary" data-modal-close>Entendido</button></div></div></div>
+<div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h"><div class="modal__box"><h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2><p class="muted mt-4">Sesión activa como Administrador.</p><div class="modal__actions"><button class="btn btn--ghost" data-modal-close>Cerrar</button><a class="btn btn--danger" th:href="@{/logout}">Cerrar sesión</a></div></div></div>
 
-  <script th:src="@{/assets/js/app.js}"></script>
+<script th:src="@{/assets/js/app.js}"></script>
 </body>
 </html>
