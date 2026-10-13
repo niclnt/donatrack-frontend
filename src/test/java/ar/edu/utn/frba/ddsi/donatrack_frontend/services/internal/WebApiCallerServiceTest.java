@@ -7,12 +7,15 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.SesionExpiradaExceptio
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -119,5 +122,35 @@ class WebApiCallerServiceTest {
 
         ApiException e = assertThrows(ApiException.class, () -> caller.post(API, "{}", String.class));
         assertEquals("La patente ya existe", e.getMessage());
+    }
+
+    @Test
+    void unPostSinCuerpoSeMandaIgual() {
+        server.expect(requestTo(API)).andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer access-viejo"))
+                .andRespond(withSuccess("ok", MediaType.TEXT_PLAIN));
+
+        assertEquals("ok", caller.post(API, null, String.class));
+        server.verify();
+    }
+
+    @Test
+    void elMultipartMandaElArchivoConElToken() {
+        server.expect(requestTo(API)).andExpect(method(HttpMethod.POST))
+                .andExpect(header("Authorization", "Bearer access-viejo"))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("filename=\"donantes.csv\"")))
+                .andRespond(withSuccess("{\"filasLeidas\":2}", MediaType.APPLICATION_JSON));
+
+        MultiValueMap<String, Object> partes = new LinkedMultiValueMap<>();
+        partes.add("archivo", new ByteArrayResource("a,b\n1,2".getBytes()) {
+            @Override
+            public String getFilename() {
+                return "donantes.csv";
+            }
+        });
+
+        assertEquals(2, caller.postMultipart(API, partes, Map.class).get("filasLeidas"));
+        server.verify();
     }
 }

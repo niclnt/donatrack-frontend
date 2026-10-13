@@ -12,8 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
@@ -54,16 +56,28 @@ public class WebApiCallerService {
     }
 
     public <T> T post(String url, Object body, Class<T> tipo) {
-        return conToken(token -> restClient.post().uri(url)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .body(body)
+        return conToken(token -> conCuerpo(restClient.post().uri(url)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token), body)
                 .retrieve().body(tipo));
     }
 
     public <T> T put(String url, Object body, Class<T> tipo) {
-        return conToken(token -> restClient.put().uri(url)
+        return conToken(token -> conCuerpo(restClient.put().uri(url)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token), body)
+                .retrieve().body(tipo));
+    }
+
+    // RestClient falla con NullPointerException si se le pasa body(null): sin cuerpo no se setea
+    private static RestClient.RequestBodySpec conCuerpo(RestClient.RequestBodySpec request, Object body) {
+        return body == null ? request : request.body(body);
+    }
+
+    // Para subir archivos (ej. importacion CSV)
+    public <T> T postMultipart(String url, MultiValueMap<String, ?> partes, Class<T> tipo) {
+        return conToken(token -> restClient.post().uri(url)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-                .body(body)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(partes)
                 .retrieve().body(tipo));
     }
 

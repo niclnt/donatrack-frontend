@@ -31,9 +31,9 @@
                 <div class="page-head">
                     <div>
                         <h1>Importar donantes desde CSV</h1>
-                        <p class="page-head__sub">Cargá archivos masivos para crear o actualizar personas donantes y otorgarles usuario.</p>
+                        <p class="page-head__sub">Cargá archivos masivos para registrar personas donantes y otorgarles usuario.</p>
                     </div>
-                    <button class="btn btn--ghost btn--sm">Descargar plantilla</button>
+                    <a class="btn btn--ghost btn--sm" th:href="@{/assets/plantillas/donantes.csv}" download>Descargar plantilla</a>
                 </div>
 
                 <!-- Alertas de estado de importación -->
@@ -44,7 +44,7 @@
                     <div class="card__header">
                         <div>
                             <h2 id="upload-title">Carga de archivo</h2>
-                            <p class="muted" style="font-size: var(--fs-sm);">Formato esperado: TipoPersona, TipoDoc, Documento, Nombre/Razón Social, Email y Teléfono.</p>
+                            <p class="muted" style="font-size: var(--fs-sm);">Formato esperado (separado por comas, UTF-8, con encabezado): TipoPersona, TipoDoc, Documento, Nombre/Razón Social, Email y Teléfono.</p>
                         </div>
                     </div>
 
@@ -55,15 +55,8 @@
                             <input class="input" id="archivo" name="archivo" type="file" accept=".csv" required>
                             <span class="field__hint">La importación soporta archivos de más de 10.000 filas. Se validan duplicados por email.</span>
                         </div>
-                        <div class="field">
-                            <label class="field__label" for="separador">Separador (Informativo)</label>
-                            <select class="select" id="separador" name="separador">
-                                <option value=",">Coma (,)</option>
-                                <option value=";">Punto y coma (;)</option>
-                            </select>
-                        </div>
                         <div class="flex justify-between items-center wrap gap-3 mt-4">
-                            <p class="field__hint">Los registros existentes se actualizan; los nuevos reciben credenciales de acceso.</p>
+                            <p class="field__hint">Los correos ya registrados se omiten; los nuevos donantes reciben un usuario. Un archivo grande puede tardar un par de minutos.</p>
                             <button class="btn btn--primary" type="submit">Iniciar importación</button>
                         </div>
                     </form>
@@ -83,21 +76,34 @@
                         <div class="progress" aria-label="Progreso de importación"><div class="progress__fill" style="width: 100%;"></div></div>
                         <div class="grid grid--stats mt-5">
                             <article class="stat">
-                                <p class="stat__label">Total procesadas</p>
-                                <p class="stat__value" th:text="${resultado.get('totalProcesados') ?: 0}">16.420</p>
+                                <p class="stat__label">Filas leídas</p>
+                                <p class="stat__value" th:text="${resultado.filasLeidas}">16.420</p>
                             </article>
                             <article class="stat">
-                                <p class="stat__label">Nuevos</p>
-                                <p class="stat__value" th:text="${resultado.get('insertados') ?: 0}">2.315</p>
+                                <p class="stat__label">Donantes creados</p>
+                                <p class="stat__value" th:text="${resultado.donantesCreados}">16.200</p>
                             </article>
                             <article class="stat">
-                                <p class="stat__label">Actualizados</p>
-                                <p class="stat__value" th:text="${resultado.get('actualizados') ?: 0}">13.892</p>
+                                <p class="stat__label">Usuarios creados</p>
+                                <p class="stat__value" th:text="${resultado.usuariosCreados}">16.200</p>
                             </article>
                             <article class="stat">
-                                <p class="stat__label">Errores</p>
-                                <p class="stat__value" th:text="${resultado.get('errores') ?: 0}">213</p>
+                                <p class="stat__label">Omitidas</p>
+                                <p class="stat__value" th:text="${resultado.cantidadOmitidas()}">220</p>
                             </article>
+                        </div>
+
+                        <div class="table-wrap mt-5" th:if="${resultado.cantidadOmitidas() > 0}">
+                            <table class="table">
+                                <caption class="muted" style="text-align:left; font-size: var(--fs-sm);">Filas omitidas</caption>
+                                <thead><tr><th>Email</th><th>Motivo</th></tr></thead>
+                                <tbody>
+                                <tr th:each="fila : ${resultado.omitidas}">
+                                    <td th:text="${fila.mail() ?: '—'}">ana@mail.com</td>
+                                    <td th:text="${fila.motivo()}">El correo ya existe</td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>

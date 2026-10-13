@@ -33,14 +33,16 @@
                         <h1>Camiones disponibles</h1>
                         <p class="page-head__sub">Administrá la flota utilizada para la planificación y ejecución de rutas.</p>
                     </div>
-                    <button class="btn btn--primary btn--sm" data-modal-open="modal-camion">+ Nuevo camión</button>
                 </div>
 
-                <div th:if="${param.exito}" class="alert alert-success" style="margin-bottom: 20px;">¡Camión registrado exitosamente en la flota!</div>
+                <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;">Camión registrado.</div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;">Error.</div>
 
                 <!-- Indicadores dinámicos rápidos -->
                 <section class="grid grid--stats" aria-label="Resumen de flota">
-                    <article class="stat"><p class="stat__label">Camiones registrados</p><p class="stat__value" th:text="${camiones != null ? camiones.size() : 0}">0</p></article>
+                    <article class="stat"><p class="stat__label">Camiones registrados</p><p class="stat__value" th:text="${camiones.size()}">0</p></article>
+                    <article class="stat"><p class="stat__label">Disponibles</p><p class="stat__value" th:text="${disponibles}">0</p></article>
+                    <article class="stat"><p class="stat__label">Fuera de servicio</p><p class="stat__value" th:text="${camiones.size() - disponibles}">0</p></article>
                 </section>
 
                 <section class="card mt-5" aria-labelledby="camiones-title">
@@ -58,21 +60,30 @@
                                 <th scope="col">Altura</th>
                                 <th scope="col">Carga</th>
                                 <th scope="col">Estado</th>
+                                <th scope="col"><span class="sr-only">Acciones</span></th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr th:each="camion : ${camiones}">
-                                <td><strong th:text="${camion.get('patente')}">AB 123 CD</strong></td>
-                                <td th:text="${camion.get('volumenM3')} + ' m³'">18 m³</td>
-                                <td th:text="${camion.get('alturaMetros')} + ' m'">3.2 m</td>
-                                <td class="num" th:text="${camion.get('capacidadPesoKg')} + ' kg'">2.000 kg</td>
+                            <tr th:each="camion : ${camiones}" th:with="disponible=${camion.disponible() == true}">
+                                <td><strong th:text="${camion.patente()}">AB 123 CD</strong></td>
+                                <td th:text="${camion.capacidadVolumen()} + ' m³'">18 m³</td>
+                                <td th:text="${camion.altura()} + ' m'">3.2 m</td>
+                                <td class="num" th:text="${camion.capacidadCarga()} + ' kg'">2000 kg</td>
                                 <td>
-                                    <span class="badge badge--info" th:text="${camion.get('estado')}">DISPONIBLE</span>
+                                    <span class="badge" th:classappend="${disponible} ? 'badge--success' : 'badge--warning'"
+                                          th:text="${disponible} ? 'Disponible' : 'Fuera de servicio'">Disponible</span>
+                                </td>
+                                <td>
+                                    <form th:action="@{/admin/camiones/{patente}/disponibilidad(patente=${camion.patente()})}" method="post">
+                                        <input type="hidden" name="disponible" th:value="${!disponible}">
+                                        <button type="submit" class="btn btn--ghost btn--sm"
+                                                th:text="${disponible} ? 'Sacar de servicio' : 'Marcar disponible'">Sacar de servicio</button>
+                                    </form>
                                 </td>
                             </tr>
                             <!-- Fila vacía si no hay camiones -->
-                            <tr th:if="${camiones == null or camiones.isEmpty()}">
-                                <td colspan="5" class="muted" style="text-align: center; padding: 20px;">No hay camiones registrados en la base de datos.</td>
+                            <tr th:if="${camiones.isEmpty()}">
+                                <td colspan="6" class="muted" style="text-align: center; padding: 20px;">No hay camiones registrados en la flota.</td>
                             </tr>
                             </tbody>
                         </table>
@@ -80,7 +91,7 @@
                 </section>
 
                 <!-- Formulario de carga (dentro del mismo HTML para no abrir modales complejos) -->
-                <section class="card mt-5" aria-labelledby="form-title" id="modal-camion">
+                <section class="card mt-5" aria-labelledby="form-title">
                     <div class="card__header"><div><h2 id="form-title">Registrar nuevo camión</h2><p class="muted" style="font-size: var(--fs-sm);">Los datos se utilizan para validar capacidad y restricciones de planificación.</p></div></div>
 
                     <form th:action="@{/admin/camiones}" method="post">
@@ -90,10 +101,10 @@
                                 <input class="input" id="patente" name="patente" placeholder="Ej: AB 123 CD" required>
                             </div>
                             <div class="field">
-                                <label class="field__label" for="estado">Estado inicial</label>
-                                <select class="select" id="estado" name="estado" required>
-                                    <option value="DISPONIBLE">Disponible</option>
-                                    <option value="EN_MANTENIMIENTO">En mantenimiento</option>
+                                <label class="field__label" for="disponible">Estado inicial</label>
+                                <select class="select" id="disponible" name="disponible" required>
+                                    <option value="true">Disponible</option>
+                                    <option value="false">Fuera de servicio</option>
                                 </select>
                             </div>
                             <div class="field">

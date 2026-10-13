@@ -2,21 +2,36 @@ package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.asignacion.PropuestaAsignacionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.importacion.ResultadoImportacionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionCreateRequest;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,9 +39,16 @@ import java.util.Map;
 public class AdminController {
 
     private final WebApiCallerService webApiCallerService;
+    private final String donacionesServiceUrl;
+    private final String logisticaServiceUrl;
 
-    public AdminController(WebApiCallerService webApiCallerService) {
+    public AdminController(
+            WebApiCallerService webApiCallerService,
+            @Value("${donaciones.service.url}") String donacionesServiceUrl,
+            @Value("${logistica.service.url}") String logisticaServiceUrl) {
         this.webApiCallerService = webApiCallerService;
+        this.donacionesServiceUrl = donacionesServiceUrl;
+        this.logisticaServiceUrl = logisticaServiceUrl;
     }
 
     // --- REQ 15: REGISTRAR DONACIÓN ---
@@ -148,46 +170,57 @@ public class AdminController {
     public String mostrarAsignacion(Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
+        // El motor devuelve pares (donacion, necesidad); se agrupan por donacion para elegir entre sus candidatas
+        Map<Long, List<PropuestaAsignacionResponse>> propuestasPorDonacion = new LinkedHashMap<>();
         try {
-            // Buscamos el Top 10 de sugerencias del motor de matchmaking
-            String url = "http://localhost:8080/api/asignaciones/rankings/top";
-            model.addAttribute("propuestas", webApiCallerService.getList(url, Map[].class));
-        } catch (Exception e) {
-            model.addAttribute("propuestas", List.of());
+            List<PropuestaAsignacionResponse> propuestas = webApiCallerService.getList(
+                    donacionesServiceUrl + "/api/asignaciones/rankings/top", PropuestaAsignacionResponse[].class);
+            for (PropuestaAsignacionResponse propuesta : propuestas) {
+                propuestasPorDonacion.computeIfAbsent(propuesta.idDonacionSegmentada(), id -> new ArrayList<>()).add(propuesta);
+            }
+        } catch (ApiException | ServicioNoDisponibleException e) {
             model.addAttribute("error", "No se pudieron cargar las sugerencias del algoritmo: " + e.getMessage());
         }
+        model.addAttribute("propuestasPorDonacion", propuestasPorDonacion);
 
         return "admin/asignar-algoritmo";
     }
 
     @PostMapping("/admin/forzar-algoritmo")
-    public String forzarAlgoritmo(Authentication authentication) {
+    public String forzarAlgoritmo(Authentication authentication, RedirectAttributes redirect) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
         try {
-            webApiCallerService.post("http://localhost:8080/api/asignaciones/forzar-ejecucion", null, String.class);
-        } catch (Exception ignored) {}
+            webApiCallerService.post(donacionesServiceUrl + "/api/asignaciones/forzar-ejecucion", null, String.class);
+            redirect.addFlashAttribute("exito", "El algoritmo se ejecutó y actualizó las sugerencias.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudo ejecutar el algoritmo: " + e.getMessage());
+        }
 
-        return "redirect:/admin/asignar-algoritmo?actualizado=true";
+        return "redirect:/admin/asignar-algoritmo";
     }
 
     @PostMapping("/admin/confirmar-asignacion")
     public String confirmarAsignacion(
             @RequestParam Long idDonacionSegmentada,
             @RequestParam Long idNecesidad,
-            Authentication authentication) {
+            Authentication authentication,
+            RedirectAttributes redirect) {
 
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
-        String url = "http://localhost:8080/api/asignaciones/" + idDonacionSegmentada + "/confirmar/" + idNecesidad + "?responsable=" + authentication.getName();
+        String url = donacionesServiceUrl + "/api/asignaciones/" + idDonacionSegmentada
+                + "/confirmar/" + idNecesidad + "?responsable=" + authentication.getName();
 
         try {
             webApiCallerService.post(url, null, String.class);
-        } catch (Exception e) {
-            System.out.println("Error al confirmar asignación: " + e.getMessage());
+            redirect.addFlashAttribute("exito", "Asignación confirmada: la donación " + idDonacionSegmentada
+                    + " quedó asignada a la necesidad " + idNecesidad + ".");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudo confirmar la asignación: " + e.getMessage());
         }
 
-        return "redirect:/admin/asignar-algoritmo?exito=true";
+        return "redirect:/admin/asignar-algoritmo";
     }
 
     // --- REQ 18: ADMINISTRAR CAMIONES ---
@@ -196,14 +229,14 @@ public class AdminController {
     public String mostrarCamiones(Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
+        List<CamionResponse> camiones = List.of();
         try {
-            // Se usa el puerto 8083 para logistica-service
-            String url = "http://localhost:8083/logistica/camiones";
-            model.addAttribute("camiones", webApiCallerService.getList(url, Map[].class));
-        } catch (Exception e) {
-            model.addAttribute("camiones", List.of());
-            System.out.println("Error cargando camiones: " + e.getMessage());
+            camiones = webApiCallerService.getList(logisticaServiceUrl + "/logistica/camiones", CamionResponse[].class);
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            model.addAttribute("error", "No se pudo cargar la flota: " + e.getMessage());
         }
+        model.addAttribute("camiones", camiones);
+        model.addAttribute("disponibles", camiones.stream().filter(c -> Boolean.TRUE.equals(c.disponible())).count());
 
         return "admin/camiones";
     }
@@ -211,33 +244,60 @@ public class AdminController {
     @PostMapping("/admin/camiones")
     public String registrarCamion(
             @RequestParam String patente,
-            @RequestParam String estado,
+            @RequestParam(defaultValue = "true") boolean disponible,
             @RequestParam Double volumen,
             @RequestParam Double altura,
             @RequestParam Double carga,
             @RequestParam(required = false) String chofer,
-            Authentication authentication) {
+            Authentication authentication,
+            RedirectAttributes redirect) {
 
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
-        // Mapeo adaptado al CamionCreateRequest del backend
-        Map<String, Object> requestBody = Map.of(
-                "patente", patente,
-                "estado", estado,
-                "volumenM3", volumen,
-                "alturaMetros", altura,
-                "capacidadPesoKg", carga,
-                "choferAsignado", chofer != null ? chofer : ""
-        );
+        String patenteNormalizada = patente.trim().toUpperCase();
+        String nombreChofer = chofer == null || chofer.isBlank() ? null : chofer.trim();
+        CamionCreateRequest request = new CamionCreateRequest(patenteNormalizada, volumen, altura, carga, nombreChofer);
 
         try {
-            String url = "http://localhost:8083/logistica/camiones";
-            webApiCallerService.post(url, requestBody, String.class);
-        } catch (Exception e) {
-            System.out.println("Error al registrar camión: " + e.getMessage());
+            webApiCallerService.post(logisticaServiceUrl + "/logistica/camiones", request, CamionResponse.class);
+            // El alta siempre crea el camion disponible; si se cargo "fuera de servicio" se cambia despues
+            if (!disponible) {
+                cambiarDisponibilidadEnLogistica(patenteNormalizada, false);
+            }
+            redirect.addFlashAttribute("exito", "Camión " + patenteNormalizada + " registrado en la flota.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudo registrar el camión: " + e.getMessage());
         }
 
-        return "redirect:/admin/camiones?exito=true";
+        return "redirect:/admin/camiones";
+    }
+
+    @PostMapping("/admin/camiones/{patente}/disponibilidad")
+    public String cambiarDisponibilidad(
+            @PathVariable String patente,
+            @RequestParam boolean disponible,
+            Authentication authentication,
+            RedirectAttributes redirect) {
+
+        if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+
+        try {
+            cambiarDisponibilidadEnLogistica(patente, disponible);
+            redirect.addFlashAttribute("exito", "Camión " + patente + (disponible ? " disponible." : " fuera de servicio."));
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudo cambiar la disponibilidad: " + e.getMessage());
+        }
+
+        return "redirect:/admin/camiones";
+    }
+
+    private void cambiarDisponibilidadEnLogistica(String patente, boolean disponible) {
+        String url = UriComponentsBuilder.fromUriString(logisticaServiceUrl)
+                .path("/logistica/camiones/{patente}/disponibilidad")
+                .queryParam("disponible", disponible)
+                .buildAndExpand(patente)
+                .toUriString();
+        webApiCallerService.put(url, null, CamionResponse.class);
     }
 
     // --- REQ 19: RANKINGS MENSUALES ---
@@ -261,14 +321,20 @@ public class AdminController {
     // --- REQ 20: IMPORTAR CSV ---
 
     @GetMapping("/admin/importar-csv")
-    public String mostrarImportacion(Authentication authentication) {
+    public String mostrarImportacion(
+            @RequestParam(required = false) String archivoGrande,
+            Authentication authentication,
+            Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+        if (archivoGrande != null) {
+            model.addAttribute("error", "El archivo supera el tamaño máximo permitido (20 MB).");
+        }
         return "admin/importar-csv";
     }
 
     @PostMapping("/admin/importar-csv")
     public String procesarImportacion(
-            @RequestParam("archivo") org.springframework.web.multipart.MultipartFile archivo,
+            @RequestParam("archivo") MultipartFile archivo,
             Authentication authentication,
             Model model) {
 
@@ -279,37 +345,27 @@ public class AdminController {
             return "admin/importar-csv";
         }
 
+        // Se reenvia el archivo con su nombre original; el token del admin lo agrega WebApiCallerService
+        MultiValueMap<String, Object> partes = new LinkedMultiValueMap<>();
         try {
-            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.MULTIPART_FORM_DATA);
-
-            // Inyectamos el token del administrador actual en la cabecera
-            String token = (String) authentication.getCredentials();
-            if (token != null) {
-                headers.setBearerAuth(token);
-            }
-
-            // Envolvemos el archivo binario para retransmitirlo al backend
-            org.springframework.util.MultiValueMap<String, Object> body = new org.springframework.util.LinkedMultiValueMap<>();
-            body.add("archivo", new org.springframework.core.io.ByteArrayResource(archivo.getBytes()) {
+            partes.add("archivo", new ByteArrayResource(archivo.getBytes()) {
                 @Override
                 public String getFilename() {
-                    return archivo.getOriginalFilename(); // Spring exige que el recurso retenga su nombre original
+                    return archivo.getOriginalFilename();
                 }
             });
+        } catch (IOException e) {
+            model.addAttribute("error", "No se pudo leer el archivo subido.");
+            return "admin/importar-csv";
+        }
 
-            org.springframework.http.HttpEntity<org.springframework.util.MultiValueMap<String, Object>> requestEntity = new org.springframework.http.HttpEntity<>(body, headers);
-            String url = "http://localhost:8080/donantes/importar";
-
-            // Recibimos el DTO "ResultadoImportacionResponse" mapeado como un diccionario
-            org.springframework.http.ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
-
-            model.addAttribute("exito", "El archivo fue procesado con éxito.");
-            model.addAttribute("resultado", response.getBody()); // Datos estadísticos de la importación
-
-        } catch (Exception e) {
-            model.addAttribute("error", "Error crítico en el motor de importación: " + e.getMessage());
+        try {
+            ResultadoImportacionResponse resultado = webApiCallerService.postMultipart(
+                    donacionesServiceUrl + "/donantes/importar", partes, ResultadoImportacionResponse.class);
+            model.addAttribute("exito", "El archivo fue procesado.");
+            model.addAttribute("resultado", resultado);
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            model.addAttribute("error", "No se pudo importar el archivo: " + e.getMessage());
         }
 
         return "admin/importar-csv";

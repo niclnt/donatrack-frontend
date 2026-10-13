@@ -40,56 +40,47 @@
                     </form>
                 </div>
 
-                <div th:if="${param.actualizado}" class="alert alert-info" style="margin-bottom: 20px;">El algoritmo se ejecutó correctamente y actualizó las sugerencias.</div>
-                <div th:if="${param.exito}" class="alert alert-success" style="margin-bottom: 20px;">¡Asignación confirmada exitosamente!</div>
+                <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;">Asignación confirmada.</div>
                 <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;"></div>
 
-                <!-- Iteramos sobre los MATCHES devueltos por el algoritmo -->
-                <th:block th:each="propuesta : ${propuestas}">
-                    <div class="grid" style="grid-template-columns: minmax(280px, .9fr) minmax(320px, 1.4fr); align-items: start; margin-bottom: 40px;">
-
-                        <section class="card" aria-labelledby="donacion-title">
-                            <div class="card__header">
-                                <div>
-                                    <h2 id="donacion-title">Donación a asignar</h2>
-                                    <!-- Mostramos el ID para referencia -->
-                                    <p class="muted" style="font-size: var(--fs-sm);" th:text="'Donación Seg. ID: ' + ${propuesta.get('donacionSegmentadaId')}"></p>
-                                </div>
-                                <span class="badge badge--warning">Pendiente</span>
-                            </div>
-
-                            <div class="field"><span class="field__label">Puntaje de Match</span><strong th:text="${propuesta.get('puntaje')} + ' puntos'">92 puntos</strong></div>
-                        </section>
-
-                        <section class="card" aria-labelledby="sugerencias-title">
-                            <div class="card__header">
-                                <div>
-                                    <h2 id="sugerencias-title">Entidad Sugerida</h2>
-                                    <p class="muted" style="font-size: var(--fs-sm);">Coincidencia obtenida por el motor.</p>
-                                </div>
-                            </div>
-
-                            <article class="card card--flat" style="border-color: var(--primary); margin-bottom: var(--sp-4);">
-                                <div class="flex justify-between items-center gap-3 wrap">
-                                    <div>
-                                        <!-- Información de la Necesidad/Entidad sugerida -->
-                                        <h3 th:text="'Necesidad ID: ' + ${propuesta.get('necesidadId')}">Escuela Rural</h3>
-                                    </div>
-                                    <span class="badge badge--success">#1 Recomendada</span>
-                                </div>
-
-                                <form th:action="@{/admin/confirmar-asignacion}" method="post" class="mt-4 flex justify-between items-center wrap gap-3">
-                                    <input type="hidden" name="idDonacionSegmentada" th:value="${propuesta.get('donacionSegmentadaId')}">
-                                    <input type="hidden" name="idNecesidad" th:value="${propuesta.get('necesidadId')}">
-                                    <button type="submit" class="btn btn--primary">Confirmar asignación</button>
-                                </form>
-                            </article>
-                        </section>
+                <!-- Una tarjeta por donación con sus necesidades candidatas, en el orden que devuelve el motor -->
+                <section class="card" th:each="grupo : ${propuestasPorDonacion}" style="margin-bottom: var(--sp-6);"
+                         th:attr="aria-labelledby='donacion-' + ${grupo.key}">
+                    <div class="card__header">
+                        <div>
+                            <h2 th:id="'donacion-' + ${grupo.key}" th:text="${grupo.value[0].nombreDonacion()}">Fideos secos x 100</h2>
+                            <p class="muted" style="font-size: var(--fs-sm);" th:text="'Donación segmentada #' + ${grupo.key}">Donación segmentada #12</p>
+                        </div>
+                        <span class="badge badge--warning">Pendiente de asignación</span>
                     </div>
-                </th:block>
+
+                    <article class="card card--flat" th:each="propuesta, it : ${grupo.value}"
+                             th:style="${it.first} ? 'border-color: var(--primary); margin-bottom: var(--sp-3);' : 'margin-bottom: var(--sp-3);'">
+                        <div class="flex justify-between items-center gap-3 wrap">
+                            <div>
+                                <h3 th:text="${propuesta.descripcionNecesidad()}">30 bancos y 30 sillas</h3>
+                                <p class="muted" style="font-size: var(--fs-sm);" th:text="'Necesidad #' + ${propuesta.idNecesidad()}">Necesidad #4</p>
+                            </div>
+                            <span th:if="${it.first}" class="badge badge--success">Recomendada</span>
+                        </div>
+
+                        <div class="flex gap-4 wrap mt-4">
+                            <div class="field" th:each="puntaje : ${propuesta.puntajesPorAlgoritmo()}">
+                                <span class="field__label" th:text="${puntaje.key}">Compatibilidad Semantica</span>
+                                <strong th:text="${#numbers.formatDecimal(puntaje.value, 1, 2)}">0.92</strong>
+                            </div>
+                        </div>
+
+                        <form th:action="@{/admin/confirmar-asignacion}" method="post" class="mt-4 flex justify-between items-center wrap gap-3">
+                            <input type="hidden" name="idDonacionSegmentada" th:value="${propuesta.idDonacionSegmentada()}">
+                            <input type="hidden" name="idNecesidad" th:value="${propuesta.idNecesidad()}">
+                            <button type="submit" th:class="${it.first} ? 'btn btn--primary' : 'btn btn--ghost'">Asignar a esta necesidad</button>
+                        </form>
+                    </article>
+                </section>
 
                 <!-- Mensaje vacío -->
-                <div th:if="${propuestas == null or propuestas.isEmpty()}" class="card" style="text-align: center; padding: 40px;">
+                <div th:if="${propuestasPorDonacion.isEmpty()}" class="card" style="text-align: center; padding: 40px;">
                     <p class="muted">No hay sugerencias de asignación disponibles en este momento. Hacé clic en "Actualizar sugerencias" para correr el motor.</p>
                 </div>
 
