@@ -121,7 +121,7 @@
           <div class="text-center" style="flex-shrink: 0; padding: 0 var(--sp-2);">
             <p class="dim" style="font-size:var(--fs-xs); margin-bottom: 2px;">Progreso</p>
             <strong style="font-size: var(--fs-md); color: #ffffff;"
-                    th:text="${#numbers.formatDecimal(mision.progreso, 1, 1)} + '%'">0,0%</strong>
+                    th:text="${#numbers.formatDecimal(mision.progreso != null ? mision.progreso : 0.0, 1, 1)} + '%'">0,0%</strong>
           </div>
 
           <!-- Columna Recompensa -->

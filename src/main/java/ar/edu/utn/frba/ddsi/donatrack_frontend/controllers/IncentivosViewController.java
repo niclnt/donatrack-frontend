@@ -8,6 +8,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.SesionExpiradaExceptio
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,13 +24,14 @@ public class IncentivosViewController {
 
     private static final Logger log = LoggerFactory.getLogger(IncentivosViewController.class);
 
-    private final String INCENTIVOS_SERVICE_URL = "http://localhost:8082";
-
-    // Manda el token de la sesion en cada llamada (y lo refresca si vencio)
+    private final String incentivosServiceUrl;
     private final WebApiCallerService webApiCallerService;
 
-    public IncentivosViewController(WebApiCallerService webApiCallerService) {
+    public IncentivosViewController(
+            WebApiCallerService webApiCallerService,
+            @Value("${incentivos.service.url:http://localhost:8082}") String incentivosServiceUrl) {
         this.webApiCallerService = webApiCallerService;
+        this.incentivosServiceUrl = incentivosServiceUrl;
     }
 
     @GetMapping
@@ -60,28 +62,28 @@ public class IncentivosViewController {
         // 2. Consulta a los microservicios de Incentivos
         try {
             // A. Misión Actual
-            log.info("[INCENTIVOS-VIEW] Consultando Misión Actual: {}/incentivos/donantes/{}/mision-actual", INCENTIVOS_SERVICE_URL, donanteId);
+            log.info("[INCENTIVOS-VIEW] Consultando Misión Actual: {}/incentivos/donantes/{}/mision-actual", incentivosServiceUrl, donanteId);
             Map<String, Object> misionActualMap = webApiCallerService.get(
-                    INCENTIVOS_SERVICE_URL + "/incentivos/donantes/" + donanteId + "/mision-actual",
+                    incentivosServiceUrl + "/incentivos/donantes/" + donanteId + "/mision-actual",
                     Map.class
             );
             log.info("[INCENTIVOS-VIEW] Respuesta Misión Actual: {}", misionActualMap);
 
             // B. Métricas del Donante (Categoría y avance en misiones)
-            log.info("[INCENTIVOS-VIEW] Consultando Métricas: {}/incentivos/donantes/{}/metricas", INCENTIVOS_SERVICE_URL, donanteId);
+            log.info("[INCENTIVOS-VIEW] Consultando Métricas: {}/incentivos/donantes/{}/metricas", incentivosServiceUrl, donanteId);
             Map<String, Object> metricasMap = webApiCallerService.get(
-                    INCENTIVOS_SERVICE_URL + "/incentivos/donantes/" + donanteId + "/metricas",
+                    incentivosServiceUrl + "/incentivos/donantes/" + donanteId + "/metricas",
                     Map.class
             );
             log.info("[INCENTIVOS-VIEW] Respuesta Métricas: {}", metricasMap);
 
             // C. Insignias Obtenidas
-            log.info("[INCENTIVOS-VIEW] Consultando Insignias: {}/incentivos/donantes/{}/insignias", INCENTIVOS_SERVICE_URL, donanteId);
+            log.info("[INCENTIVOS-VIEW] Consultando Insignias: {}/incentivos/donantes/{}/insignias", incentivosServiceUrl, donanteId);
             List<InsigniaDTO> insignias = webApiCallerService.getList(
-                    INCENTIVOS_SERVICE_URL + "/incentivos/donantes/" + donanteId + "/insignias",
+                    incentivosServiceUrl + "/incentivos/donantes/" + donanteId + "/insignias",
                     InsigniaDTO[].class
             );
-            log.info("[INCENTIVOS-VIEW] Insignias obtenidas: {}", insignias.size());
+            log.info("[INCENTIVOS-VIEW] Insignias obtenidas: {}", insignias != null ? insignias.size() : 0);
 
             // 3. Procesamiento y mapeo para Thymeleaf
 
@@ -139,14 +141,22 @@ public class IncentivosViewController {
             model.addAttribute("totalMisionesCat", totalMisionesCat);
             model.addAttribute("misionesFaltantes", misionesFaltantes);
             model.addAttribute("misiones", misiones);
-            model.addAttribute("insignias", insignias);
+            model.addAttribute("insignias", insignias != null ? insignias : List.of());
 
-            // Ranking Mensual de Donantes
-            List<PuestoDTO> ranking = List.of(
-                    new PuestoDTO(1, "sebibalas11@gmail.com", 5),
-                    new PuestoDTO(2, "nicolnt@gmail.com", 3)
-            );
-            model.addAttribute("ranking", ranking);
+            // Ranking Mensual de Donantes desde el endpoint REST
+            List<PuestoDTO> ranking = List.of();
+            try {
+                log.info("[INCENTIVOS-VIEW] Consultando Ranking Mensual: {}/incentivos/donantes/ranking-mensual", incentivosServiceUrl);
+                ranking = webApiCallerService.getList(
+                        incentivosServiceUrl + "/incentivos/donantes/ranking-mensual",
+                        PuestoDTO[].class
+                );
+                log.info("[INCENTIVOS-VIEW] Ranking mensual recuperado con {} puestos.", ranking != null ? ranking.size() : 0);
+            } catch (Exception e) {
+                log.warn("[INCENTIVOS-VIEW] No se pudo obtener el ranking mensual desde el servicio de incentivos: {}", e.getMessage());
+                ranking = List.of();
+            }
+            model.addAttribute("ranking", ranking != null ? ranking : List.of());
 
         } catch (SesionExpiradaException e) {
             throw e; // ErroresControllerAdvice manda al login

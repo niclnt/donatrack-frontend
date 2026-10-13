@@ -5,6 +5,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.catalogo.CategoriaCatalogoRe
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.EntidadBeneficiariaResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
@@ -40,6 +41,34 @@ public class HomeController {
     public String inicio() {
         return "index";
     }
+
+    // REQ. 6 — Lista de entidades beneficiarias visible para el donante.
+    // Llama a GET /donaciones/entidades-beneficiarias que devuelve todas las entidades
+    // con sus necesidades ya embebidas en la respuesta.
+    @GetMapping("/donante/entidades")
+    public String entidades(Authentication authentication, Model model) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        List<EntidadBeneficiariaResponse> entidades;
+        try {
+            // El backend devuelve la lista completa; cada EntidadBeneficiariaResponse
+            // trae 'necesidades' embebidas (List<NecesidadResponse>) con categoria,
+            // cantidadSolicitada, cantidadRecibida, satisfecha, etc.
+            entidades = webApiCallerService.getList(
+                donacionesServiceUrl + "/donaciones/entidades-beneficiarias",
+                EntidadBeneficiariaResponse[].class
+            );
+        } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
+            entidades = java.util.List.of();
+            model.addAttribute("errorEntidades", "No se pudieron cargar las entidades. Intentá más tarde.");
+        }
+
+        model.addAttribute("entidades", entidades);
+        return "donante/entidades";
+    }
+
 
     @GetMapping("/donante/mis-donaciones")
     public String misDonaciones(
