@@ -1,26 +1,31 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<!-- Fragmento del Head: Recibe el título dinamicamente -->
+<!-- Fragmento del Head: Recibe el título dinámicamente -->
 <head th:fragment="head(titulo)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${titulo} + ' — DonaTrack'"></title>
-    <!-- Ruta dinamica al CSS -->
+    <title th:text="${titulo}"></title>
+    <!-- Ruta dinámica al CSS -->
     <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
-
     <link rel="icon" th:href="@{/assets/favicon/favicon-32x32.png}" type="image/png" sizes="32x32">
 </head>
 <body>
 
-<!-- Fragmento de la Barra de Navegacion -->
+<!-- Fragmento de la Barra de Navegación -->
 <header th:fragment="topbar(paginaActual)" class="topbar">
     <a class="brand" th:href="@{/}">◆ DonaTrack</a>
     <button class="nav-toggle" data-nav-toggle aria-controls="donornav" aria-expanded="false" aria-label="Abrir menú">☰</button>
 
-    <!-- Cada rol ve solo sus enlaces (sec:authorize lee los roles de la sesion) -->
+    <!-- NAVBAR PARA VISITANTES (NO AUTENTICADOS) -->
+    <nav class="topbar__nav" id="mainnav" aria-label="Principal" sec:authorize="!isAuthenticated()">
+        <a th:href="@{/}" th:attr="aria-current=${paginaActual == 'inicio' ? 'page' : null}">Inicio</a>
+        <a th:href="@{/donante/mapa}">Mapa de donaciones</a>
+        <a th:href="@{/legales}">Legales</a>
+    </nav>
+
+    <!-- NAVBAR PARA DONANTES (AUTENTICADOS) -->
     <nav class="topbar__nav" id="donornav" aria-label="Panel de donante" sec:authorize="hasAnyRole('DONANTE_HUMANO', 'DONANTE_JURIDICO')">
-        <!-- Los enlaces apuntan a las futuras rutas de nuestro Controller -->
         <a th:href="@{/donante/mis-donaciones}" th:attr="aria-current=${paginaActual == 'mis-donaciones' ? 'page' : null}">Mis donaciones</a>
         <a th:href="@{/donante/entidades}" th:attr="aria-current=${paginaActual == 'entidades' ? 'page' : null}">Entidades</a>
         <a sec:authorize="hasRole('DONANTE_HUMANO')" th:href="@{/donante/incentivos}" th:attr="aria-current=${paginaActual == 'incentivos' ? 'page' : null}">Incentivos</a>
@@ -28,24 +33,26 @@
         <a th:href="@{/donante/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
     </nav>
 
-    <!-- NAVBAR para ENTIDADES BENEFICIARIAS-->
+    <!-- NAVBAR PARA ENTIDADES BENEFICIARIAS (ONGs) -->
     <nav class="topbar__nav" id="ongnav" aria-label="Panel de entidad beneficiaria" sec:authorize="hasRole('BENEFICIARIO')">
         <a th:href="@{/ong/asignadas}" th:attr="aria-current=${paginaActual == 'asignadas' ? 'page' : null}">Donaciones asignadas</a>
         <a th:href="@{/ong/necesidades}" th:attr="aria-current=${paginaActual == 'necesidades' ? 'page' : null}">Necesidades</a>
         <a th:href="@{/ong/mapa}" th:attr="aria-current=${paginaActual == 'mapa' ? 'page' : null}">Mapa</a>
-        <a th:href="@{/ong/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}" >Notificaciones</a>
+        <a th:href="@{/ong/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
     </nav>
 
     <div class="topbar__actions">
         <th:block sec:authorize="!isAuthenticated()">
             <a class="btn btn--ghost btn--sm" th:href="@{/login}">Iniciar sesión</a>
+            <a class="btn btn--primary btn--sm" th:href="@{/registro}">Registrarme</a>
         </th:block>
+
         <button sec:authorize="isAuthenticated()" class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta"
                 th:text="${session.DONANTE_NOMBRE != null ? #strings.toUpperCase(#strings.substring(session.DONANTE_NOMBRE, 0, 2)) : #strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">
         </button>
     </div>
 
-    <!-- Cuenta + cerrar sesion (POST con token CSRF, que Thymeleaf agrega solo) -->
+    <!-- Modal de Cuenta + cerrar sesión -->
     <div sec:authorize="isAuthenticated()" class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
         <div class="modal__box">
             <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Mi cuenta</h2>

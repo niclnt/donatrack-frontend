@@ -11,16 +11,16 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.Map;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Data
 @Controller
@@ -38,13 +38,14 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String inicio() {
+    public String inicio(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            return "redirect:/donante/mis-donaciones";
+        }
         return "index";
     }
 
     // REQ. 6 — Lista de entidades beneficiarias visible para el donante.
-    // Llama a GET /donaciones/entidades-beneficiarias que devuelve todas las entidades
-    // con sus necesidades ya embebidas en la respuesta.
     @GetMapping("/donante/entidades")
     public String entidades(Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -53,12 +54,9 @@ public class HomeController {
 
         List<EntidadBeneficiariaResponse> entidades;
         try {
-            // El backend devuelve la lista completa; cada EntidadBeneficiariaResponse
-            // trae 'necesidades' embebidas (List<NecesidadResponse>) con categoria,
-            // cantidadSolicitada, cantidadRecibida, satisfecha, etc.
             entidades = webApiCallerService.getList(
-                donacionesServiceUrl + "/donaciones/entidades-beneficiarias",
-                EntidadBeneficiariaResponse[].class
+                    donacionesServiceUrl + "/donaciones/entidades-beneficiarias",
+                    EntidadBeneficiariaResponse[].class
             );
         } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
             entidades = java.util.List.of();
@@ -68,7 +66,6 @@ public class HomeController {
         model.addAttribute("entidades", entidades);
         return "donante/entidades";
     }
-
 
     @GetMapping("/donante/mis-donaciones")
     public String misDonaciones(
@@ -83,7 +80,14 @@ public class HomeController {
             return "redirect:/login";
         }
 
-        Long donanteId = extraerDonanteId();
+        Long donanteId;
+        try {
+            donanteId = extraerDonanteId();
+        } catch (IllegalStateException e) {
+            model.addAttribute("donaciones", java.util.List.of());
+            model.addAttribute("error", "No se encontró un perfil de donante asociado a tu cuenta. Volvé a iniciar sesión.");
+            return "donante/mis-donaciones";
+        }
 
         StringBuilder backendUrl = new StringBuilder(donacionesServiceUrl + "/donaciones-service/donaciones/donantes/")
                 .append(donanteId).append("?");
@@ -93,11 +97,11 @@ public class HomeController {
         if (busqueda != null && !busqueda.isEmpty()) backendUrl.append("busqueda=").append(busqueda).append("&");
         if (orden != null && !orden.isEmpty()) backendUrl.append("orden=").append(orden).append("&");
 
-        // Si la sesion vencio, SesionExpiradaException no se atrapa aca: ErroresControllerAdvice manda al login
         try {
             model.addAttribute("donaciones", webApiCallerService.getList(backendUrl.toString(), Map[].class));
         } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
             model.addAttribute("donaciones", java.util.List.of());
+            model.addAttribute("error", "No se pudieron cargar tus donaciones en este momento.");
         }
 
         model.addAttribute("estadoFiltro", estado);
@@ -118,8 +122,8 @@ public class HomeController {
 
         try {
             categorias = webApiCallerService.getList(
-                donacionesServiceUrl + "/donaciones/catalogo/categorias",
-                CategoriaCatalogoResponse[].class
+                    donacionesServiceUrl + "/donaciones/catalogo/categorias",
+                    CategoriaCatalogoResponse[].class
             );
         } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
             categorias = List.of();
@@ -139,13 +143,20 @@ public class HomeController {
             @RequestParam String unidad,
             @RequestParam String categoria,
             @RequestParam String subcategoria,
-            Authentication authentication){
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
         }
 
-        Long donanteId = extraerDonanteId();
+        Long donanteId;
+        try {
+            donanteId = extraerDonanteId();
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", "No se pudo realizar la donación: No hay un perfil de donante activo.");
+            return "redirect:/donante/nueva-donacion";
+        }
 
         BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria, false, false);
         BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategoria);
@@ -168,13 +179,14 @@ public class HomeController {
             webApiCallerService.post(backendUrl, request, DonacionResponse.class);
         } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
             System.out.println("Error al guardar en el backend: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorCatalogo", "Ocurrió un error al registrar la donación.");
             return "redirect:/donante/nueva-donacion";
         }
 
         return "redirect:/donante/mis-donaciones";
     }
 
-    // Usamos la clase estática de tu compañero para leer el ID directamente de la sesión
+    // Usamos la clase estática para leer el ID de usuario directamente de la sesión
     private Long extraerId() {
         try {
             Object idObjeto = SesionUsuario.actual().getAttribute(SesionUsuario.USUARIO_ID);
@@ -191,8 +203,13 @@ public class HomeController {
         Long donanteId = SesionUsuario.donanteId();
 
         if (donanteId == null) {
+            // Si no está el donanteId pero sí el id de usuario, intentamos usarlo como fallback de pruebas
+            Long usuarioId = extraerId();
+            if (usuarioId != null) {
+                return usuarioId;
+            }
             throw new IllegalStateException(
-                "No hay un donante autenticado en la sesión"
+                    "No hay un donante autenticado en la sesión"
             );
         }
 
