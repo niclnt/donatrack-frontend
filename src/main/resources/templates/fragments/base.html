@@ -41,7 +41,8 @@
             <a class="btn btn--ghost btn--sm" th:href="@{/login}">Iniciar sesión</a>
         </th:block>
         <button sec:authorize="isAuthenticated()" class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta"
-                th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">AP</button>
+                th:text="${session.DONANTE_NOMBRE != null ? #strings.toUpperCase(#strings.substring(session.DONANTE_NOMBRE, 0, 2)) : #strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">
+        </button>
     </div>
 
     <!-- Cuenta + cerrar sesion (POST con token CSRF, que Thymeleaf agrega solo) -->

@@ -11,20 +11,7 @@
 
   <!-- REQ. 6 — ENTIDADES BENEFICIARIAS (PERSONA DONANTE) -->
   <div class="page">
-    <header class="topbar">
-      <a class="brand" th:href="@{/}">◆ DonaTrack</a>
-      <button class="nav-toggle" data-nav-toggle aria-controls="donornav" aria-expanded="false" aria-label="Abrir menú">☰</button>
-      <nav class="topbar__nav" id="donornav" aria-label="Panel de donante">
-        <a th:href="@{/donante/mis-donaciones}">Mis donaciones</a>
-        <a th:href="@{/donante/entidades}" aria-current="page">Entidades</a>
-        <a th:href="@{/donante/incentivos}">Incentivos</a>
-        <a th:href="@{/donante/mapa-entregas}">Mapa</a>
-        <a th:href="@{/donante/notificaciones}">Notificaciones</a>
-      </nav>
-      <div class="topbar__actions">
-        <button class="avatar" aria-label="Mi cuenta">AP</button>
-      </div>
-    </header>
+    <header th:replace="~{fragments/base :: topbar('entidades')}"></header>
 
     <main id="main" class="page-body">
       <div class="container">
