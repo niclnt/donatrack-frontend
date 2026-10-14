@@ -55,31 +55,23 @@
         </div>
       </div>
 
-      <!-- Ranking / Leaderboard Mensual -->
-      <h3 style="margin-bottom: var(--sp-4);">Ranking Mensual de Donantes</h3>
-      <div class="card" style="margin-bottom: var(--sp-6);">
-        <table class="table" style="width: 100%; text-align: left;">
-          <thead>
-          <tr>
-            <th>Posición</th>
-            <th>Donante</th>
-            <th>Misiones Completadas</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr th:each="puesto : ${ranking}">
-            <td th:text="'#' + ${puesto.puesto}">#1</td>
-            <td th:text="${puesto.username}">usuario@mail.com</td>
-            <td th:text="${puesto.cantidadMisionesCompletadas}">0</td>
-          </tr>
-          <tr th:if="${ranking == null || #lists.isEmpty(ranking)}">
-            <td colspan="3" class="dim text-center">No hay datos del ranking disponibles este mes.</td>
-          </tr>
-          </tbody>
-        </table>
+      <!-- 1. Mis Insignias Obtenidas (Ahora antes de la Misión) -->
+      <h3 style="margin-bottom: var(--sp-4);">Mis Insignias Obtenidas</h3>
+      <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-6);">
+
+        <div class="card text-center p-4 flex flex-col items-center justify-center" th:each="insignia : ${insignias}">
+          <div style="font-size: 2.5rem; margin-bottom: var(--sp-2);" aria-hidden="true">🎖️</div>
+          <strong style="font-size: var(--fs-md);" th:text="${insignia.nombre}">Manos a la Obra</strong>
+          <p class="muted mt-2" style="font-size: var(--fs-xs);" th:text="${insignia.descripcion}">Otorgada por completar tu primera misión.</p>
+        </div>
+
+        <div class="card p-4 text-center dim" style="grid-column: 1 / -1;" th:if="${#lists.isEmpty(insignias)}">
+          Aún no has ganado insignias. ¡Completa tu primera misión para desbloquear una!
+        </div>
+
       </div>
 
-      <!-- Mis Misiones -->
+      <!-- 2. Mis Misiones -->
       <h3 style="margin-bottom: var(--sp-4);">Misión Actual</h3>
       <div class="grid" style="gap: var(--sp-3); margin-bottom: var(--sp-6);">
 
@@ -133,20 +125,31 @@
 
       </div>
 
-      <!-- Mis Insignias Obtenidas -->
-      <h3 style="margin-bottom: var(--sp-4);">Mis Insignias Obtenidas</h3>
-      <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-6);">
-
-        <div class="card text-center p-4 flex flex-col items-center justify-center" th:each="insignia : ${insignias}">
-          <div style="font-size: 2.5rem; margin-bottom: var(--sp-2);" aria-hidden="true">🎖️</div>
-          <strong style="font-size: var(--fs-md);" th:text="${insignia.nombre}">Manos a la Obra</strong>
-          <p class="muted mt-2" style="font-size: var(--fs-xs);" th:text="${insignia.descripcion}">Otorgada por completar tu primera misión.</p>
-        </div>
-
-        <div class="card p-4 text-center dim" style="grid-column: 1 / -1;" th:if="${#lists.isEmpty(insignias)}">
-          Aún no has ganado insignias. ¡Completa tu primera misión para desbloquear una!
-        </div>
-
+      <!-- 3. Ranking / Leaderboard Mensual (Abajo de todo con el mes actual dinámico) -->
+      <h3 style="margin-bottom: var(--sp-4);"
+          th:text="'Ranking Mensual de Donantes — ' + ${#temporals.format(#temporals.createNow(), 'MMMM yyyy')}">
+        Ranking Mensual de Donantes
+      </h3>
+      <div class="card" style="margin-bottom: var(--sp-6);">
+        <table class="table" style="width: 100%; text-align: left;">
+          <thead>
+          <tr>
+            <th>Posición</th>
+            <th>Donante</th>
+            <th>Misiones Completadas</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr th:each="puesto : ${ranking}">
+            <td th:text="'#' + ${puesto.puesto}">#1</td>
+            <td th:text="${puesto.username}">usuario@mail.com</td>
+            <td th:text="${puesto.cantidadMisionesCompletadas}">0</td>
+          </tr>
+          <tr th:if="${ranking == null || #lists.isEmpty(ranking)}">
+            <td colspan="3" class="dim text-center">No hay datos del ranking disponibles este mes.</td>
+          </tr>
+          </tbody>
+        </table>
       </div>
 
     </div>
