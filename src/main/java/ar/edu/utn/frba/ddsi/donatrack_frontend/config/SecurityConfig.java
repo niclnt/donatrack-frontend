@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .authenticationProvider(customAuthProvider)
                 .authorizeHttpRequests(auth -> auth
                         // Recursos estaticos y paginas publicas
-                        .requestMatchers("/", "/login", "/registro", "/registro/**", "/403", "/404", "/error", "/css/**", "/js/**", "/img/**", "/assets/**").permitAll()
+                        .requestMatchers("/", "/login", "/registro", "/registro/**","/legales", "/privacidad", "/mapa-donaciones", "/403", "/404", "/error", "/css/**", "/js/**", "/img/**", "/assets/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(SesionUsuario.ROL_ADMIN)
                         .requestMatchers("/donante/**").hasAnyRole(SesionUsuario.ROL_DONANTE_HUMANO, SesionUsuario.ROL_DONANTE_JURIDICO)
                         .requestMatchers("/ong/**").hasRole(SesionUsuario.ROL_BENEFICIARIO)

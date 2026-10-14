@@ -5,8 +5,14 @@
 
   /* --- Nav responsive (hamburguesa) --- */
   document.querySelectorAll("[data-nav-toggle]").forEach(function (btn) {
-    var menu = document.getElementById(btn.getAttribute("aria-controls"));
+    //var menu = document.getElementById(btn.getAttribute("aria-controls")); No permitia usar el menu hamburguesa desde visitante (no logueado)
+    var barra = btn.closest(".topbar");
+    var menu = null;
+    if (barra){
+      menu = barra.querySelector(".topbar__nav");
+    }
     if (!menu) return;
+    btn.setAttribute("aria-controls", menu.id);
     btn.addEventListener("click", function () {
       var open = btn.getAttribute("aria-expanded") === "true";
       btn.setAttribute("aria-expanded", String(!open));

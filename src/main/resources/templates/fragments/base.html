@@ -20,7 +20,7 @@
     <!-- NAVBAR PARA VISITANTES (NO AUTENTICADOS) -->
     <nav class="topbar__nav" id="mainnav" aria-label="Principal" sec:authorize="!isAuthenticated()">
         <a th:href="@{/}" th:attr="aria-current=${paginaActual == 'inicio' ? 'page' : null}">Inicio</a>
-        <a th:href="@{/donante/mapa}">Mapa de donaciones</a>
+        <a th:href="@{/mapa-donaciones}">Mapa de donaciones</a>
         <a th:href="@{/legales}">Legales</a>
     </nav>
 

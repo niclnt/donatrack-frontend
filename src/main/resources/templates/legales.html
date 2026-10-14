@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/base :: head('Información Legal')}"></head>
+
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+
+    <header th:replace="~{fragments/base :: topbar('legales')}"></header>
+
+    <main id="main" class="page-body">
+        <div class="container">
+
+            <h1>Información Legal</h1>
+            <p class="muted">
+                Información legal de la plataforma DonaTrack.
+            </p>
+
+        </div>
+    </main>
+
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

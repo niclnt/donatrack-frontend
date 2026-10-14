@@ -136,6 +136,21 @@ public class HomeController {
         return "donante/nueva-donacion";
     }
 
+    @GetMapping("/legales")
+    public String mostrarLegales() {
+        return "legales";
+    }
+
+    @GetMapping("/privacidad")
+    public String mostrarPrivacidad() {
+        return "privacidad";
+    }
+
+    @GetMapping("/mapa-donaciones")
+    public String mostrarMapaDonaciones() {
+        return "mapa-donaciones";
+    }
+
     @PostMapping("/donante/nueva-donacion")
     public String procesarNuevaDonacion(
             @RequestParam String descripcionDonacion,

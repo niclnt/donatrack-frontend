@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mapa de Donaciones — DonaTrack</title>
+
+    <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+
+    <header th:replace="~{fragments/base :: topbar('mapa-donaciones')}"></header>
+
+    <main id="main" class="page-body">
+        <div class="container">
+
+            <h1>Mapa de donaciones realizadas</h1>
+            <p class="muted">
+                Explorá las donaciones entregadas a las entidades
+                beneficiarias de DonaTrack.
+            </p>
+            <div id="mapa" style="height: 450px; margin-top: 24px;">
+            </div>
+
+        </div>
+    </main>
+
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:src="@{/assets/js/mapa-donaciones.js}"></script>
+</body>
+</html>
