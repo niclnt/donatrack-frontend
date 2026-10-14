@@ -21,11 +21,11 @@
         <aside class="sidebar" aria-label="Navegación de administración">
             <p class="sidebar__label">Administración</p>
             <a th:href="@{/admin/registrar-donacion}" aria-current="page">Registrar donación</a>
-            <a th:href="@{/admin/deposito-vencidas}" aria-current="page">Depósito y vencidas</a>
-            <a th:href="@{/admin/asignar-algoritmo}" aria-current="page">Asignación por algoritmo</a>
-            <a th:href="@{/admin/camiones}" aria-current="page">Camiones</a>
-            <a th:href="@{/admin/rankings}" aria-current="page">Rankings</a>
-            <a th:href="@{/admin/importar-csv}" aria-current="page">Importar CSV</a>
+            <a th:href="@{/admin/deposito-vencidas}">Depósito y vencidas</a>
+            <a th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
+            <a th:href="@{/admin/camiones}">Camiones</a>
+            <a th:href="@{/admin/rankings}">Rankings</a>
+            <a th:href="@{/admin/importar-csv}">Importar CSV</a>
         </aside>
 
         <main id="main" class="shell__main">
@@ -37,73 +37,81 @@
                     </div>
                 </div>
 
-                <section class="card" aria-labelledby="donante-title">
-                    <div class="card__header">
-                        <div>
-                            <h2 id="donante-title">Paso 1 · Persona donante</h2>
-                            <p class="muted" style="font-size: var(--fs-sm);">Buscá un donante existente o registrá uno nuevo antes de cargar los bienes recibidos.</p>
+                <form th:action="@{/admin/registrar-donacion}" method="post">
+
+                    <!-- ID REAL DEL DONANTE (Se llena mediante JS al buscar/seleccionar) -->
+                    <input type="hidden" name="donanteId" id="donanteIdInput" required>
+
+                    <!-- PASO 1: SELECCIÓN DE DONANTE -->
+                    <section class="card" aria-labelledby="donante-title">
+                        <div class="card__header">
+                            <div>
+                                <h2 id="donante-title">Paso 1 · Persona donante</h2>
+                                <p class="muted" style="font-size: var(--fs-sm);">Buscá un donante existente o registrá uno nuevo antes de cargar los bienes recibidos.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="filterbar" data-filter-group aria-label="Tipo de carga de donante">
-                        <button class="filter-pill" type="button" aria-pressed="true">Buscar existente</button>
-                        <button class="filter-pill" type="button" aria-pressed="false">Registrar nuevo</button>
-                    </div>
-
-                    <div class="form-grid">
-                        <div class="field">
-                            <label class="field__label" for="buscar-donante">Buscar por nombre, DNI, CUIT o email</label>
-                            <input class="input" id="buscar-donante" type="search" placeholder="Ej: Martín Rodríguez">
-                            <span class="field__hint">Seleccioná el resultado correcto para vincular la donación.</span>
+                        <div class="filterbar" data-filter-group aria-label="Tipo de carga de donante">
+                            <button class="filter-pill" type="button" aria-pressed="true">Buscar existente</button>
+                            <button class="filter-pill" type="button" aria-pressed="false">Registrar nuevo</button>
                         </div>
-                        <div class="field">
-                            <label class="field__label" for="tipo-persona">Tipo de persona</label>
-                            <select class="select" id="tipo-persona">
-                                <option>Humana</option>
-                                <option>Jurídica</option>
-                            </select>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <label class="field__label" for="buscar-donante">Buscar por nombre, DNI, CUIT o email</label>
+                                <div style="display: flex; gap: var(--sp-2);">
+                                    <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez">
+                                    <button class="btn btn--primary" type="button" id="btnBuscarDonante">Buscar</button>
+                                </div>
+                                <span class="field__hint">Seleccioná el resultado correcto para vincular la donación.</span>
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="tipo-persona">Tipo de persona</label>
+                                <select class="select" id="tipo-persona">
+                                    <option value="HUMANA">Humana</option>
+                                    <option value="JURIDICA">Jurídica</option>
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <article class="stat" style="display: flex; justify-content: space-between; align-items: center; gap: var(--sp-4); flex-wrap: wrap;">
-                        <div>
-                            <p class="stat__label">Donante seleccionado</p>
-                            <p class="stat__value" style="font-size: var(--fs-lg);">Martín Rodríguez</p>
-                            <p class="muted" style="font-size: var(--fs-sm);">DNI 32.456.789 · martin.rodriguez@mail.com</p>
+                        <!-- ESTADO 1: NINGÚN DONANTE SELECCIONADO (INICIAL) -->
+                        <div id="donanteVacio" class="card text-center dim mt-4" style="background: var(--surface-2); padding: var(--sp-4);">
+                            Ningún donante seleccionado. Usá el buscador para vincular la donación.
                         </div>
-                        <button class="btn btn--sm" type="button" data-toast="Donante seleccionado correctamente">Seleccionar</button>
-                    </article>
-                </section>
 
-                <section class="card mt-5" aria-labelledby="donacion-title">
-                    <div class="card__header">
-                        <div>
-                            <h2 id="donacion-title">Paso 2 · Datos de la donación</h2>
-                            <p class="muted" style="font-size: var(--fs-sm);">La carga será segmentada internamente por subcategoría para su posterior asignación.</p>
+                        <!-- ESTADO 2: DONANTE SELECCIONADO (DINÁMICO) -->
+                        <article id="cardDonanteSeleccionado" class="stat mt-4" style="display: none; justify-content: space-between; align-items: center; gap: var(--sp-4); flex-wrap: wrap; background: var(--surface-2);">
+                            <div>
+                                <p class="stat__label">Donante seleccionado</p>
+                                <p class="stat__value" id="donanteNombre" style="font-size: var(--fs-lg);">—</p>
+                                <p class="muted" id="donanteDetalles" style="font-size: var(--fs-sm);">—</p>
+                            </div>
+                            <button class="btn btn--sm btn-outline" type="button" onclick="deseleccionarDonante()">Cambiar donante</button>
+                        </article>
+                    </section>
+
+                    <!-- PASO 2: DATOS DE LA DONACIÓN -->
+                    <section class="card mt-5" aria-labelledby="donacion-title">
+                        <div class="card__header">
+                            <div>
+                                <h2 id="donacion-title">Paso 2 · Datos de la donación</h2>
+                                <p class="muted" style="font-size: var(--fs-sm);">La carga será segmentada internamente por subcategoría para su posterior asignación.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Alertas dinámicas gestionadas por Thymeleaf -->
-                    <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 4px;"></div>
-                    <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 4px;"></div>
-
-                    <form th:action="@{/admin/registrar-donacion}" method="post">
-
-                        <!-- ID harcodeado del donante para pruebas -->
-                        <input type="hidden" name="donanteId" value="1">
+                        <!-- Alertas dinámicas -->
+                        <div th:if="${exito}" class="alert alert--success" th:text="${exito}"></div>
+                        <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
 
                         <div class="form-grid">
                             <div class="field">
                                 <label class="field__label" for="categoria">Categoría</label>
-                                <!-- Cambiamos el select por un input asociado a un datalist -->
                                 <input class="input" id="categoria" name="categoria" list="lista-categorias" placeholder="Elegí o escribí una nueva..." required>
                                 <datalist id="lista-categorias">
-                                    <!-- Opciones dinámicas de la BD (si las hay) -->
                                     <option th:each="cat : ${categorias}" th:value="${cat.nombre}"></option>
-                                    <!-- Opciones de respaldo para que puedas probar ahora mismo -->
                                     <option value="Alimentos"></option>
                                     <option value="Mobiliario"></option>
-                                    <option value="Vestimenta"></option>
+                                    <option value="Indumentaria"></option>
                                 </datalist>
                             </div>
 
@@ -111,24 +119,28 @@
                                 <label class="field__label" for="subcategoria">Subcategoría</label>
                                 <input class="input" id="subcategoria" name="subcategoria" list="lista-subcategorias" placeholder="Elegí o escribí una nueva..." required>
                                 <datalist id="lista-subcategorias">
-                                    <!-- Opciones de respaldo base -->
                                     <option value="Fideos secos"></option>
                                     <option value="Arroz"></option>
                                     <option value="Sillas"></option>
                                     <option value="Mesas"></option>
                                 </datalist>
                             </div>
+
                             <div class="field">
                                 <label class="field__label" for="cantidad">Cantidad</label>
                                 <input class="input" id="cantidad" name="cantidad" type="number" min="1" placeholder="Ej: 10" required>
                             </div>
+
                             <div class="field">
                                 <label class="field__label" for="unidad">Unidad</label>
                                 <select class="select" id="unidad" name="unidad" required>
                                     <option value="Unidades">Unidades</option>
                                     <option value="Paquetes">Paquetes</option>
+                                    <option value="Kilogramos">Kilogramos</option>
+                                    <option value="Litros">Litros</option>
                                 </select>
                             </div>
+
                             <div class="field">
                                 <label class="field__label" for="estado">Estado del bien</label>
                                 <select class="select" id="estado" name="estado">
@@ -136,6 +148,7 @@
                                     <option value="Usado en buen estado">Usado en buen estado</option>
                                 </select>
                             </div>
+
                             <div class="field">
                                 <label class="field__label" for="vencimiento">Fecha de vencimiento</label>
                                 <input class="input" id="vencimiento" name="vencimiento" type="date">
@@ -144,13 +157,13 @@
 
                         <div class="field">
                             <label class="field__label" for="descripcion">Descripción general</label>
-                            <textarea class="textarea" id="descripcion" name="descripcion" required></textarea>
+                            <textarea class="textarea" id="descripcion" name="descripcion" placeholder="Detalle adicional del lote de donación..." required></textarea>
                         </div>
 
                         <div class="form-grid">
                             <div class="field">
                                 <label class="field__label" for="responsable">Responsable de recepción</label>
-                                <input class="input" id="responsable" name="responsable" type="text" required>
+                                <input class="input" id="responsable" name="responsable" type="text" placeholder="Nombre de quien recibe en depósito" required>
                             </div>
                         </div>
 
@@ -158,8 +171,8 @@
                             <p class="field__hint">Al confirmar, la donación queda en depósito y disponible para el proceso de asignación.</p>
                             <button class="btn btn--primary" type="submit">Registrar donación</button>
                         </div>
-                    </form>
-                </section>
+                    </section>
+                </form>
             </div>
         </main>
     </div>

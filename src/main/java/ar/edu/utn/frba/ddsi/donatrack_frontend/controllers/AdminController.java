@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -58,8 +59,7 @@ public class AdminController {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
         try {
-            // CORRECCIÓN: URL correcta del CatalogoController de tus compañeros
-            String categoriasUrl = "http://localhost:8080/donaciones/catalogo/categorias";
+            String categoriasUrl = donacionesServiceUrl + "/donaciones/catalogo/categorias";
             model.addAttribute("categorias", webApiCallerService.getList(categoriasUrl, Map[].class));
         } catch (Exception e) {
             model.addAttribute("categorias", List.of());
@@ -94,7 +94,7 @@ public class AdminController {
         BienDTO bien = new BienDTO(descripcion, catRef, subRef, uniRef, cantidad, fechaVenc, usado, false, 0.0, 0.0);
         DonacionCreateRequest request = new DonacionCreateRequest(descripcion + " (Recepción por: " + responsable + ")", LocalDate.now(), List.of(bien));
 
-        String backendUrl = "http://localhost:8080/donaciones-service/donaciones/donantes/" + donanteId;
+        String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
 
         try {
             webApiCallerService.post(backendUrl, request, String.class);
@@ -104,12 +104,28 @@ public class AdminController {
         }
 
         try {
-            model.addAttribute("categorias", webApiCallerService.getList("http://localhost:8080/donaciones/catalogo/categorias", Map[].class));
+            model.addAttribute("categorias", webApiCallerService.getList(donacionesServiceUrl + "/donaciones/catalogo/categorias", Map[].class));
         } catch (Exception ignored) {}
 
         return "admin/registrar-donacion";
     }
 
+    @GetMapping("/api/donantes/buscar")
+    @ResponseBody
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> buscarDonantesProxy(@RequestParam(defaultValue = "HUMANA") String tipo) {
+        String endpoint = tipo.equalsIgnoreCase("JURIDICA")
+                ? "/donantes/personaJuridica"
+                : "/donantes/personaHumana";
+
+        try {
+            List rawList = webApiCallerService.getList(donacionesServiceUrl + endpoint, Map[].class);
+            return (List<Map<String, Object>>) rawList;
+        } catch (Exception e) {
+            System.out.println("Error buscando donantes en proxy: " + e.getMessage());
+            return List.of();
+        }
+    }
     // --- REQ 16: DEPÓSITO Y VENCIDAS ---
 
     @GetMapping("/admin/deposito-vencidas")
@@ -117,7 +133,7 @@ public class AdminController {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
         try {
-            String url = "http://localhost:8080/donaciones-service/donaciones?estado=EN_DEPOSITO";
+            String url = donacionesServiceUrl + "/donaciones-service/donaciones?estado=EN_DEPOSITO";
             model.addAttribute("donaciones", webApiCallerService.getList(url, Map[].class));
         } catch (Exception e) {
             model.addAttribute("donaciones", List.of());
@@ -125,6 +141,7 @@ public class AdminController {
 
         return "admin/deposito-vencidas";
     }
+
     @PostMapping("/admin/marcar-vencidas")
     public String procesarVencidas(
             @RequestParam(required = false) List<String> segmentosIds,
@@ -139,22 +156,20 @@ public class AdminController {
             return mostrarDeposito(authentication, model);
         }
 
-        // Recorremos los seleccionados y enviamos la orden autenticada
         for (String parIds : segmentosIds) {
             String[] ids = parIds.split("-");
             String donacionId = ids[0];
             String segmentadaId = ids[1];
 
-            String url = "http://localhost:8080/donaciones-service/donaciones/" + donacionId + "/segmentadas/" + segmentadaId + "/estado";
+            String url = donacionesServiceUrl + "/donaciones-service/donaciones/" + donacionId + "/segmentadas/" + segmentadaId + "/estado";
 
             Map<String, String> requestBody = Map.of(
                     "nuevoEstado", "VENCIDA",
                     "motivo", motivo,
-                    "responsable",authentication.getName()
+                    "responsable", authentication.getName()
             );
 
             try {
-                // Usamos el caller autenticado en lugar del RestTemplate crudo
                 webApiCallerService.put(url, requestBody, String.class);
             } catch (Exception e) {
                 System.out.println("Error al marcar vencida: " + e.getMessage());
@@ -170,7 +185,6 @@ public class AdminController {
     public String mostrarAsignacion(Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
-        // El motor devuelve pares (donacion, necesidad); se agrupan por donacion para elegir entre sus candidatas
         Map<Long, List<PropuestaAsignacionResponse>> propuestasPorDonacion = new LinkedHashMap<>();
         try {
             List<PropuestaAsignacionResponse> propuestas = webApiCallerService.getList(
@@ -260,7 +274,6 @@ public class AdminController {
 
         try {
             webApiCallerService.post(logisticaServiceUrl + "/logistica/camiones", request, CamionResponse.class);
-            // El alta siempre crea el camion disponible; si se cargo "fuera de servicio" se cambia despues
             if (!disponible) {
                 cambiarDisponibilidadEnLogistica(patenteNormalizada, false);
             }
@@ -307,7 +320,6 @@ public class AdminController {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
         try {
-            // Apuntamos al puerto 8082 (incentivos-service)
             String url = "http://localhost:8082/incentivos/reportes/mensual";
             model.addAttribute("rankingMensual", webApiCallerService.getList(url, Map[].class));
         } catch (Exception e) {
@@ -345,7 +357,6 @@ public class AdminController {
             return "admin/importar-csv";
         }
 
-        // Se reenvia el archivo con su nombre original; el token del admin lo agrega WebApiCallerService
         MultiValueMap<String, Object> partes = new LinkedMultiValueMap<>();
         try {
             partes.add("archivo", new ByteArrayResource(archivo.getBytes()) {

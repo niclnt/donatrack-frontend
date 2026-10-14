@@ -124,9 +124,126 @@
       input.focus();
     });
 
-    // Al enviar se vuelve a ocultar, para que el navegador no la guarde como texto en el historial de formularios
     if (input.form) {
       input.form.addEventListener("submit", function () { actualizar(false); });
     }
   });
+})();
+
+/* ---- MÓDULO REGISTRAR DONACIÓN (ADMIN & DONANTE) ---- */
+(function () {
+  "use strict";
+
+  /* 1. Búsqueda y Selección Dinámica de Donante (Admin a través del Proxy Controller) */
+  var btnBuscar = document.getElementById("btnBuscarDonante");
+  var inputBuscar = document.getElementById("buscar-donante");
+  var selectTipo = document.getElementById("tipo-persona");
+  var donanteIdInput = document.getElementById("donanteIdInput");
+  var donanteNombre = document.getElementById("donanteNombre");
+  var donanteDetalles = document.getElementById("donanteDetalles");
+  var donanteVacio = document.getElementById("donanteVacio");
+  var cardDonanteSeleccionado = document.getElementById("cardDonanteSeleccionado");
+
+  function seleccionarDonante(id, nombre, documento, email) {
+    if (!donanteIdInput || !cardDonanteSeleccionado) return;
+    donanteIdInput.value = id;
+    if (donanteNombre) donanteNombre.textContent = nombre;
+    if (donanteDetalles) donanteDetalles.textContent = (documento ? "Doc: " + documento + " · " : "") + email;
+
+    if (donanteVacio) donanteVacio.style.display = "none";
+    cardDonanteSeleccionado.style.display = "flex";
+  }
+
+  window.deseleccionarDonante = function () {
+    if (!donanteIdInput || !cardDonanteSeleccionado) return;
+    donanteIdInput.value = "";
+    cardDonanteSeleccionado.style.display = "none";
+    if (donanteVacio) donanteVacio.style.display = "block";
+  };
+
+  if (btnBuscar && inputBuscar) {
+    btnBuscar.addEventListener("click", function () {
+      var query = inputBuscar.value.trim().toLowerCase();
+      var tipo = selectTipo ? selectTipo.value : "HUMANA";
+
+      if (!query) {
+        alert("Ingresá un nombre, DNI, CUIT o email para buscar.");
+        return;
+      }
+
+      // Consulta al proxy interno de Spring Boot
+      var endpoint = "/api/donantes/buscar?tipo=" + encodeURIComponent(tipo);
+
+      fetch(endpoint)
+          .then(function (res) {
+            if (!res.ok) throw new Error("Error al consultar el servicio de donantes");
+            return res.json();
+          })
+          .then(function (donantes) {
+            var encontrado = donantes.find(function (d) {
+              var doc = (d.numDocumento || d.cuit || d.dni || "").toString();
+              var nom = (d.nombre ? d.nombre + " " + (d.apellido || "") : d.razonSocial || "").toLowerCase();
+              var mail = (d.email || d.usuarioEmail || "").toLowerCase();
+
+              return doc.includes(query) || nom.includes(query) || mail.includes(query);
+            });
+
+            if (encontrado) {
+              var nombreCompleto = encontrado.razonSocial || (encontrado.nombre + " " + (encontrado.apellido || ""));
+              var docIdentidad = encontrado.cuit || encontrado.numDocumento || encontrado.dni || "";
+              var correo = encontrado.email || "Sin email registrado";
+
+              seleccionarDonante(encontrado.id, nombreCompleto, docIdentidad, correo);
+            } else {
+              alert("No se encontró ningún donante registrado con esos datos.");
+            }
+          })
+          .catch(function (err) {
+            console.error("Error buscando donante:", err);
+            alert("Ocurrió un error al intentar consultar los donantes.");
+          });
+    });
+  }
+
+  /* 2. Carga Dinámica de Múltiples Bienes (Vista Donante) */
+  var contenedorBienes = document.getElementById("contenedorBienes");
+  var btnAgregarBien = document.getElementById("btnAgregarBien");
+
+  if (contenedorBienes) {
+    window.agregarNuevoBien = function () {
+      var primerBloque = contenedorBienes.querySelector(".bien-bloque");
+      if (!primerBloque) return;
+
+      var nuevoBloque = primerBloque.cloneNode(true);
+
+      nuevoBloque.querySelectorAll("input").forEach(function (i) {
+        if (i.type === "number") i.value = 1;
+        else i.value = "";
+      });
+
+      var catSelect = nuevoBloque.querySelector(".select-categoria");
+      var subSelect = nuevoBloque.querySelector(".select-subcategoria");
+      if (catSelect) catSelect.value = "";
+      if (subSelect) {
+        subSelect.innerHTML = '<option value="">Primero seleccioná una categoría</option>';
+        subSelect.disabled = true;
+      }
+
+      if (!nuevoBloque.querySelector(".btn-quitar-bien")) {
+        var btnQuitar = document.createElement("button");
+        btnQuitar.type = "button";
+        btnQuitar.className = "btn btn--danger btn--sm btn-quitar-bien";
+        btnQuitar.style.cssText = "position: absolute; top: 15px; right: 15px;";
+        btnQuitar.innerText = "✕ Quitar";
+        btnQuitar.onclick = function () { nuevoBloque.remove(); };
+        nuevoBloque.appendChild(btnQuitar);
+      }
+
+      contenedorBienes.appendChild(nuevoBloque);
+    };
+
+    if (btnAgregarBien) {
+      btnAgregarBien.addEventListener("click", window.agregarNuevoBien);
+    }
+  }
 })();
