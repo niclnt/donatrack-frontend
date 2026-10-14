@@ -10,6 +10,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -138,11 +139,11 @@ public class HomeController {
     @PostMapping("/donante/nueva-donacion")
     public String procesarNuevaDonacion(
             @RequestParam String descripcionDonacion,
-            @RequestParam String descripcionBien,
-            @RequestParam Integer cantidad,
-            @RequestParam String unidad,
-            @RequestParam String categoria,
-            @RequestParam String subcategoria,
+            @RequestParam List<String> descripcionBien,
+            @RequestParam List<Integer> cantidad,
+            @RequestParam List<String> unidad,
+            @RequestParam List<String> categoria,
+            @RequestParam List<String> subcategoria,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -158,19 +159,23 @@ public class HomeController {
             return "redirect:/donante/nueva-donacion";
         }
 
-        BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria, false, false);
-        BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategoria);
-        BienDTO.UnidadRef uniRef = new BienDTO.UnidadRef(null, unidad, "UN");
+        // Construimos la lista de todos los bienes cargados en el formulario
+        List<BienDTO> bienes = new ArrayList<>();
+        for (int i = 0; i < descripcionBien.size(); i++) {
+            BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria.get(i), false, false);
+            BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategoria.get(i));
+            BienDTO.UnidadRef uniRef = new BienDTO.UnidadRef(null, unidad.get(i), "UN");
 
-        BienDTO bien = new BienDTO(
-                descripcionBien, catRef, subRef, uniRef, cantidad,
-                null, false, false, 0.0, 0.0
-        );
+            bienes.add(new BienDTO(
+                    descripcionBien.get(i), catRef, subRef, uniRef, cantidad.get(i),
+                    null, false, false, 0.0, 0.0
+            ));
+        }
 
         DonacionCreateRequest request = new DonacionCreateRequest(
                 descripcionDonacion,
                 java.time.LocalDate.now(),
-                java.util.List.of(bien)
+                bienes
         );
 
         String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
@@ -186,7 +191,6 @@ public class HomeController {
         return "redirect:/donante/mis-donaciones";
     }
 
-    // Usamos la clase estática para leer el ID de usuario directamente de la sesión
     private Long extraerId() {
         try {
             Object idObjeto = SesionUsuario.actual().getAttribute(SesionUsuario.USUARIO_ID);
@@ -203,7 +207,6 @@ public class HomeController {
         Long donanteId = SesionUsuario.donanteId();
 
         if (donanteId == null) {
-            // Si no está el donanteId pero sí el id de usuario, intentamos usarlo como fallback de pruebas
             Long usuarioId = extraerId();
             if (usuarioId != null) {
                 return usuarioId;

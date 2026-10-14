@@ -1,126 +1,170 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<!-- reutilizo el head dinamico -->
-<head th:replace="~{fragments/base :: head('Nueva Donación')}"></head>
+<head th:replace="~{fragments/base :: head('Nueva Donación — DonaTrack')}"></head>
 <body>
 <div class="page">
-    <!-- Reutilizo la barra de navegacion -->
     <header th:replace="~{fragments/base :: topbar('nueva-donacion')}"></header>
 
     <main id="main" class="page-body">
-        <div class="container">
+        <div class="container" style="max-width: 800px;">
 
-            <div class="page-head">
+            <div class="page-head" style="margin-bottom: 20px;">
                 <h1>Registrar nueva donación</h1>
                 <a th:href="@{/donante/mis-donaciones}" class="btn btn-outline">← Volver a mis donaciones</a>
             </div>
 
             <div class="card">
-                <!-- Este formulario envia los datos por POST -->
-                <form th:action="@{/donante/nueva-donacion}" method="post">
+                <form th:action="@{/donante/nueva-donacion}" method="post" id="formDonacion">
 
-                    <h3 style="margin-bottom: 10px;">Datos Generales</h3>
-                    <div class="form-group">
-                        <label>Descripción del lote de donación:</label><br>
-                        <input type="text" name="descripcionDonacion" class="form-control" style="width: 100%; padding: 8px;" required>
+                    <h3 style="margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Datos Generales</h3>
+
+                    <div class="form-group" style="margin-bottom: 25px;">
+                        <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">Descripción del lote de donación:</label>
+                        <input type="text" name="descripcionDonacion" class="form-control" placeholder="Ej: Lote de alimentos secos y abrigo" required>
                     </div>
 
-                    <div th:if="${errorCatalogo}"
-                         class="alert alert--error"
-                         role="alert"
-                         th:text="${errorCatalogo}">
+                    <div th:if="${errorCatalogo}" class="alert alert--error" role="alert" th:text="${errorCatalogo}">
                         No se pudieron cargar las categorías.
                     </div>
 
-                    <h3 style="margin-top: 30px; margin-bottom: 10px;">Agregar un Bien (Item)</h3>
-                    <div class="form-group">
-                        <label>¿Qué vas a donar?</label><br>
-                        <input type="text" name="descripcionBien" class="form-control" placeholder="Ej: Fideos, Arroz, Ropa..." style="width: 100%; padding: 8px;" required>
+                    <!-- HEADER DE SECCIÓN DE BIENES Y BOTÓN AGREGAR -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3>Bienes a Donar</h3>
+                        <button type="button" class="btn btn-outline btn--sm" onclick="agregarNuevoBien()">+ Agregar otro bien</button>
                     </div>
 
-                    <div class="form-group" style="display: flex; gap: 10px; margin-top: 15px;">
-                        <div style="flex: 1;">
-                            <label>Cantidad:</label><br>
-                            <input type="number" name="cantidad" class="form-control" value="1" style="width: 100%; padding: 8px;" required>
-                        </div>
-                        <div style="flex: 1;">
-                            <label>Unidad:</label><br>
-                            <select name="unidad" class="form-control" style="width: 100%; padding: 8px;">
-                                <option value="UNIDADES">Unidades</option>
-                                <option value="KG">Kilogramos</option>
-                                <option value="LITROS">Litros</option>
-                            </select>
-                        </div>
-                    </div>
+                    <!-- CONTENEDOR DINÁMICO DE BIENES -->
+                    <div id="contenedorBienes">
 
-                    <div class="form-group" style="display: flex; gap: 10px; margin-top: 15px;">
-                        <div style="flex: 1;">
-                            <label>Categoría:</label><br>
-                            <select name="categoria" id="categoria" class="form-control" style="width: 100%; padding: 8px;" required>
-                                <option value="">Seleccionar categoría</option>
+                        <!-- BLOQUE DE BIEN #1 -->
+                        <div class="bien-bloque card" style="background: var(--surface-2); padding: 20px; margin-bottom: 20px; position: relative;">
 
-                                <option th:each="categoria : ${categorias}" th:value="${categoria.nombre}" th:text="${categoria.nombre}">Categoría</option>
-                            </select>
-                        </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">¿Qué vas a donar?</label>
+                                <input type="text" name="descripcionBien" class="form-control" placeholder="Ej: Fideos Lucchetti 500g" required>
+                            </div>
 
-                        <div style="flex: 1;">
-                            <label>Subcategoría:</label><br>
-                            <select name="subcategoria" id="subcategoria" class="form-control" style="width: 100%; padding: 8px;" required disabled>
-                                <option value="">Primero seleccioná una categoría</option>
-                            </select>
+                            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                                <div style="flex: 1;">
+                                    <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">Cantidad:</label>
+                                    <input type="number" name="cantidad" class="form-control" value="1" min="1" required>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">Unidad:</label>
+                                    <select name="unidad" class="form-control">
+                                        <option value="UNIDADES">Unidades</option>
+                                        <option value="KG">Kilogramos</option>
+                                        <option value="LITROS">Litros</option>
+                                        <option value="CAJAS">Cajas</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 15px;">
+                                <div style="flex: 1;">
+                                    <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">Categoría:</label>
+                                    <select name="categoria" class="form-control select-categoria" required>
+                                        <option value="">Seleccionar categoría</option>
+                                        <option th:each="cat : ${categorias}" th:value="${cat.nombre}" th:text="${cat.nombre}">Categoría</option>
+                                    </select>
+                                </div>
+
+                                <div style="flex: 1;">
+                                    <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">Subcategoría:</label>
+                                    <select name="subcategoria" class="form-control select-subcategoria" required disabled>
+                                        <option value="">Primero seleccioná una categoría</option>
+                                    </select>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
                     <div style="margin-top: 30px;">
-                        <button type="submit" class="btn btn-primary" style="padding: 10px 20px; font-weight: bold;">Confirmar Donación</button>
+                        <button type="submit" class="btn btn--primary" style="padding: 12px 25px; font-weight: bold;">Confirmar Donación</button>
                     </div>
+
                 </form>
             </div>
 
         </div>
     </main>
 </div>
+
 <script th:src="@{/assets/js/app.js}"></script>
 <script th:inline="javascript">
-    const categorias = /*[[${categorias}]]*/ [];
+    const catalogoCategorias = /*[[${categorias}]]*/ [];
 
-    const categoriaSelect = document.getElementById('categoria');
-    const subcategoriaSelect = document.getElementById('subcategoria');
+    // Lógica para vincular selects de Categoría y Subcategoría en un bloque
+    function inicializarEventosCategoria(bloque) {
+        const catSelect = bloque.querySelector('.select-categoria');
+        const subSelect = bloque.querySelector('.select-subcategoria');
 
-    categoriaSelect.addEventListener('change', function () {
-        const categoriaSeleccionada = categorias.find(
-            categoria => categoria.nombre === this.value
-        );
+        catSelect.addEventListener('change', function () {
+            const catEncontrada = catalogoCategorias.find(c => c.nombre === this.value);
+            subSelect.innerHTML = '';
 
-        subcategoriaSelect.innerHTML = '';
+            if (!catEncontrada || !catEncontrada.subcategorias || catEncontrada.subcategorias.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Primero seleccioná una categoría';
+                subSelect.appendChild(opt);
+                subSelect.disabled = true;
+                return;
+            }
 
-        if (!categoriaSeleccionada) {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Primero seleccioná una categoría';
+            const optInicial = document.createElement('option');
+            optInicial.value = '';
+            optInicial.textContent = 'Seleccionar subcategoría';
+            subSelect.appendChild(optInicial);
 
-            subcategoriaSelect.appendChild(option);
-            subcategoriaSelect.disabled = true;
-            return;
-        }
+            catEncontrada.subcategorias.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub.nombre;
+                opt.textContent = sub.nombre;
+                subSelect.appendChild(opt);
+            });
 
-        const optionInicial = document.createElement('option');
-        optionInicial.value = '';
-        optionInicial.textContent = 'Seleccionar subcategoría';
-        subcategoriaSelect.appendChild(optionInicial);
+            subSelect.disabled = false;
+        });
+    }
 
-        categoriaSeleccionada.subcategorias.forEach(subcategoria => {
-            const option = document.createElement('option');
+    // Inicializamos el primer bloque visible al cargar la página
+    document.querySelectorAll('.bien-bloque').forEach(bloque => inicializarEventosCategoria(bloque));
 
-            option.value = subcategoria.nombre;
-            option.textContent = subcategoria.nombre;
+    // Función para agregar un nuevo bien dinámicamente
+    function agregarNuevoBien() {
+        const contenedor = document.getElementById('contenedorBienes');
+        const primerBloque = contenedor.querySelector('.bien-bloque');
+        const nuevoBloque = primerBloque.cloneNode(true);
 
-            subcategoriaSelect.appendChild(option);
+        // Limpiar valores de inputs clonados
+        nuevoBloque.querySelectorAll('input').forEach(i => {
+            if (i.type === 'number') i.value = 1;
+            else i.value = '';
         });
 
-        subcategoriaSelect.disabled =
-            categoriaSeleccionada.subcategorias.length === 0;
-    });
+        // Resetear selects
+        const catSelect = nuevoBloque.querySelector('.select-categoria');
+        const subSelect = nuevoBloque.querySelector('.select-subcategoria');
+        catSelect.value = '';
+        subSelect.innerHTML = '<option value="">Primero seleccioná una categoría</option>';
+        subSelect.disabled = true;
+
+        // Botón de eliminar ítem si hay más de uno
+        if (!nuevoBloque.querySelector('.btn-quitar-bien')) {
+            const btnQuitar = document.createElement('button');
+            btnQuitar.type = 'button';
+            btnQuitar.className = 'btn btn--danger btn--sm btn-quitar-bien';
+            btnQuitar.style.cssText = 'position: absolute; top: 15px; right: 15px;';
+            btnQuitar.innerText = '✕ Quitar';
+            btnQuitar.onclick = function() { nuevoBloque.remove(); };
+            nuevoBloque.appendChild(btnQuitar);
+        }
+
+        contenedor.appendChild(nuevoBloque);
+        inicializarEventosCategoria(nuevoBloque);
+    }
 </script>
 </body>
 </html>

@@ -154,14 +154,16 @@ ul { margin: 0; padding: 0; list-style: none; }
   display: grid; place-items: center;
   font-weight: var(--fw-semibold); font-size: var(--fs-sm);
   border: 1px solid var(--border-strong);
+  cursor: pointer;
 }
 
-/* Botón hamburguesa (responsive) */
+/* Botón hamburguesa (responsive) - OCULTO EN ESCRITORIO */
 .nav-toggle {
-  display: none; width: 48px; height: 48px;
-  background: transparent; border: 1px solid var(--border);
+  display: none; width: 44px; height: 44px;
+  background: var(--surface-2); border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm); color: var(--text);
   font-size: 1.25rem; cursor: pointer; margin-left: auto;
+  align-items: center; justify-content: center;
 }
 
 /* ---- Sidebar (vista administradora) ---- */
@@ -203,6 +205,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .btn--link    { --btn-bg: transparent; --btn-bd: transparent; --btn-fg: var(--primary); min-height: 36px; padding-inline: var(--sp-2); }
 .btn--sm { min-height: 36px; padding: 0 var(--sp-3); font-size: var(--fs-xs); }
 .btn--block { width: 100%; }
+.btn-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--text); }
+.btn-outline:hover { background: var(--surface-2); }
 
 /* ---- Cards ---- */
 .card {
@@ -267,19 +271,38 @@ ul { margin: 0; padding: 0; list-style: none; }
 .table tbody tr:hover { background: var(--surface-2); }
 .table .num { font-variant-numeric: tabular-nums; }
 
-/* ---- Formularios ---- */
+/* ---- Formularios e Inputs Estilizados (Tema Oscuro) ---- */
 .field { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .field__label { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text); }
 .field__hint  { font-size: var(--fs-xs); color: var(--text-dim); }
-.input, .select, .textarea {
-  width: 100%; min-height: 48px; padding: 0 var(--sp-4);
-  background: var(--surface-input); color: var(--text);
-  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
-  font: inherit; font-size: var(--fs-md);
+
+.input, .select, .textarea, .form-control,
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], select {
+  width: 100%; min-height: 44px; padding: 8px var(--sp-4);
+  background: var(--surface-input) !important; color: var(--text) !important;
+  border: 1px solid var(--border-strong) !important; border-radius: var(--radius-sm) !important;
+  font: inherit; font-size: var(--fs-md); outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
+
 .textarea { min-height: 110px; padding: var(--sp-3) var(--sp-4); resize: vertical; }
-.input::placeholder, .textarea::placeholder { color: var(--text-dim); }
-.input:focus, .select:focus, .textarea:focus { border-color: var(--primary); box-shadow: var(--focus-ring); outline: none; }
+
+.input::placeholder, .textarea::placeholder, .form-control::placeholder, input::placeholder {
+  color: var(--text-dim) !important;
+}
+
+.input:focus, .select:focus, .textarea:focus, .form-control:focus, select:focus {
+  border-color: var(--primary) !important; box-shadow: var(--focus-ring) !important; outline: none;
+}
+
+select option {
+  background-color: var(--surface-2) !important; color: var(--text) !important;
+}
+
+select:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
+
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-4); }
 
 /* ---- Grids de contenido ---- */
@@ -366,7 +389,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   .grid--3 { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
 
-  .nav-toggle { display: inline-flex; }
+  .nav-toggle { display: inline-flex !important; }
   .topbar__nav {
     display: none;              /* colapsado por defecto en mobile */
     position: absolute; top: var(--nav-h); left: 0; right: 0;
@@ -430,16 +453,30 @@ ul { margin: 0; padding: 0; list-style: none; }
 .radio input { accent-color: var(--primary); }
 
 /* ---- Campo de contraseña con boton mostrar/ocultar (lo arma app.js) ---- */
-.password-field { position: relative; }
-.password-field .input { padding-right: 52px; }
+.password-field { position: relative !important; display: block; }
+.password-field .input,
+.password-field input[type="password"],
+.password-field input[type="text"] { padding-right: 52px !important; }
+
 .password-toggle {
-  position: absolute; top: 0; right: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 48px; height: 48px; /* hit area minima 48x48 */
-  padding: 0; border: 0; background: transparent; cursor: pointer;
-  color: var(--text-muted); border-radius: var(--radius-sm);
+  position: absolute !important;
+  top: 50% !important;
+  right: 6px !important;
+  transform: translateY(-50%) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  color: var(--text-muted) !important;
+  border-radius: var(--radius-sm) !important;
+  z-index: 10;
 }
-.password-toggle:hover { color: var(--text); }
-.password-toggle:focus-visible { color: var(--text); box-shadow: var(--focus-ring); outline: none; }
+.password-toggle:hover { color: var(--text) !important; background: var(--surface-2) !important; }
+.password-toggle:focus-visible { color: var(--text) !important; box-shadow: var(--focus-ring) !important; outline: none !important; }
 /* Oculta el ojo nativo de Edge para que no aparezcan dos */
 .password-field input::-ms-reveal { display: none; }
