@@ -49,9 +49,11 @@
           <p class="mt-2 muted" style="font-size: var(--fs-xs);" th:if="${misionesFaltantes > 0}">
             Te faltan <strong th:text="${misionesFaltantes}">3</strong> misión(es) para subir de categoría.
           </p>
-          <p class="mt-2" style="font-size: var(--fs-xs); color: var(--success);" th:if="${misionesFaltantes == 0}">
-            ¡Excelente! Has alcanzado la máxima categoría.
-          </p>
+          <div th:if="${misionesFaltantes == 0}"
+               style="display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: rgba(16, 185, 129, 0.15); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3); padding: 6px 12px; border-radius: 20px; font-size: var(--fs-xs); font-weight: 600;">
+            <span>🎉</span>
+            <span>¡Excelente! Has alcanzado la máxima categoría.</span>
+          </div>
         </div>
       </div>
 
