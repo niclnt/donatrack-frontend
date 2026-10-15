@@ -231,7 +231,7 @@
       var subSelect = nuevoBloque.querySelector(".select-subcategoria");
       if (catSelect) catSelect.value = "";
       if (subSelect) {
-        subSelect.innerHTML = '<option value="">Primero seleccioná una categoría</option>';
+        subSelect.innerHTML = '<option value="" disabled selected hidden>Primero seleccioná una categoría</option>';
         subSelect.disabled = true;
       }
 

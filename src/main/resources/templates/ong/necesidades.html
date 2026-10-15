@@ -212,6 +212,9 @@
       const option = document.createElement('option');
       option.value = '';
       option.textContent = 'Primero seleccioná una categoría';
+      option.disabled = true;
+      option.selected = true;
+      option.hidden = true;
 
       subcategoriaSelect.appendChild(option);
       return;

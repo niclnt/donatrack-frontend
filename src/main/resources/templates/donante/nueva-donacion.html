@@ -64,7 +64,7 @@
                                 <div style="flex: 1;">
                                     <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">Categoría:</label>
                                     <select name="categoria" class="form-control select-categoria" required>
-                                        <option value="">Seleccionar categoría</option>
+                                        <option value="" disabled selected hidden>Seleccionar categoría</option>
                                         <option th:each="cat : ${categorias}" th:value="${cat.nombre}" th:text="${cat.nombre}">Categoría</option>
                                     </select>
                                 </div>
@@ -72,7 +72,7 @@
                                 <div style="flex: 1;">
                                     <label style="font-weight: var(--fw-semibold); display: block; margin-bottom: 6px;">Subcategoría:</label>
                                     <select name="subcategoria" class="form-control select-subcategoria" required disabled>
-                                        <option value="">Primero seleccioná una categoría</option>
+                                        <option value="" disabled selected hidden>Primero seleccioná una categoría</option>
                                     </select>
                                 </div>
                             </div>
@@ -108,6 +108,9 @@
                 const opt = document.createElement('option');
                 opt.value = '';
                 opt.textContent = 'Primero seleccioná una categoría';
+                opt.disabled = true;
+                opt.selected = true;
+                opt.hidden = true;
                 subSelect.appendChild(opt);
                 subSelect.disabled = true;
                 return;
@@ -116,6 +119,9 @@
             const optInicial = document.createElement('option');
             optInicial.value = '';
             optInicial.textContent = 'Seleccionar subcategoría';
+            optInicial.disabled = true;
+            optInicial.selected = true;
+            optInicial.hidden = true;
             subSelect.appendChild(optInicial);
 
             catEncontrada.subcategorias.forEach(sub => {
@@ -148,7 +154,7 @@
         const catSelect = nuevoBloque.querySelector('.select-categoria');
         const subSelect = nuevoBloque.querySelector('.select-subcategoria');
         catSelect.value = '';
-        subSelect.innerHTML = '<option value="">Primero seleccioná una categoría</option>';
+        subSelect.innerHTML = '<option value="" disabled selected hidden>Primero seleccioná una categoría</option>';
         subSelect.disabled = true;
 
         // Botón de eliminar ítem si hay más de uno

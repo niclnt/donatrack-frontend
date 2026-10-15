@@ -60,11 +60,19 @@
 
                         <div style="flex: 1;">
                             <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Categoría:</label>
-                            <select name="categoria" class="form-control" style="width: 100%; padding: 8px;">
+                            <select id="filtroCategoria" name="categoria" class="form-control" style="width: 100%; padding: 8px;">
                                 <option value="" th:selected="${categoriaFiltro == null or categoriaFiltro == ''}">Todas las categorías</option>
-                                <option value="ALIMENTOS" th:selected="${categoriaFiltro == 'ALIMENTOS'}">Alimentos</option>
-                                <option value="INDUMENTARIA" th:selected="${categoriaFiltro == 'INDUMENTARIA'}">Indumentaria</option>
-                                <option value="MOBILIARIO" th:selected="${categoriaFiltro == 'MOBILIARIO'}">Mobiliario</option>
+                                <option th:each="categoria : ${categorias}"
+                                        th:value="${categoria.nombre}"
+                                        th:text="${categoria.nombre}"
+                                        th:selected="${categoria.nombre == categoriaFiltro}"></option>
+                            </select>
+                        </div>
+
+                        <div style="flex: 1;">
+                            <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Subcategoria:</label>
+                            <select id="filtroSubcategoria" name="subcategoria" class="form-control" style="width: 100%; padding: 8px;" disabled>
+                                <option value="">Todas las subcategorías</option>
                             </select>
                         </div>
 
@@ -75,17 +83,17 @@
                     </div>
                 </form>
 
-                <!-- 3. La Nueva Tabla Dinámica Aplanada -->
+                <!-- 3. Tabla plana agrupada visualmente por donación -->
                 <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
                     <thead>
                     <tr>
                         <th>
-                            <a th:href="@{/donante/mis-donaciones(orden=${ordenFiltro == 'recientes' ? 'antiguas' : 'recientes'}, busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro})}"
+                            <a th:href="@{/donante/mis-donaciones(orden=${ordenFiltro == 'recientes' ? 'antiguas' : 'recientes'}, busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro}, subcategoria=${subcategoriaFiltro})}"
                                style="color: inherit; text-decoration: none;">DONACIÓN ↕</a>
                         </th>
                         <th>SUBCATEGORÍA</th>
                         <th>
-                            <a th:href="@{/donante/mis-donaciones(orden='categoria', busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro})}"
+                            <a th:href="@{/donante/mis-donaciones(orden='categoria', busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro}, subcategoria=${subcategoriaFiltro})}"
                                style="color: inherit; text-decoration: none;">CATEGORÍA ↕</a>
                         </th>
                         <th>CANTIDAD</th>
@@ -93,10 +101,11 @@
                         <th>ENTIDAD ASIGNADA</th>
                     </tr>
                     </thead>
-                    <tbody th:each="donacion : ${donaciones}">
-                    <!-- Iteramos directamente sobre las segmentadas para hacer una fila por cada una -->
-                    <tr th:each="segmento : ${donacion.donacionesSegmentadas}">
-                        <td th:text="${segmento.fechaDonacion}">12/04/2025</td>
+                    <tbody th:each="donacion : ${donaciones}" class="donation-group">
+                    <tr th:each="segmento, segmentoStat : ${donacion.donacionesSegmentadas}">
+                        <td th:if="${segmentoStat.first}"
+                            th:rowspan="${#lists.size(donacion.donacionesSegmentadas)}"
+                            th:text="${segmento.fechaDonacion}">12/04/2025</td>
                         <td th:text="${segmento.subcategoria.nombre}">Sillas</td>
                         <td><span class="badge" th:text="${segmento.bienes[0].categoria.nombre}">Mobiliario</span></td>
                         <td th:text="${segmento.bienes[0].cantidad} + ' un.'">6 un.</td>
@@ -113,5 +122,36 @@
 
 <!--  Ruta dinamica al JS -->
 <script th:src="@{/assets/js/app.js}"></script>
+<script th:inline="javascript">
+    const catalogoCategorias = /*[[${categorias}]]*/ [];
+    const categoriaSelect = document.getElementById('filtroCategoria');
+    const subcategoriaSelect = document.getElementById('filtroSubcategoria');
+    const subcategoriaSeleccionada = /*[[${subcategoriaFiltro}]]*/ '';
+
+    function cargarSubcategorias() {
+        const categoria = catalogoCategorias.find(
+            item => item.nombre === categoriaSelect.value
+        );
+        const subcategorias = categoria && categoria.subcategorias
+            ? categoria.subcategorias
+            : [];
+
+        subcategoriaSelect.innerHTML = '<option value="">Todas las subcategorías</option>';
+        subcategoriaSelect.disabled = !categoria;
+        subcategorias.forEach(subcategoria => {
+            const option = document.createElement('option');
+            option.value = subcategoria.nombre;
+            option.textContent = subcategoria.nombre;
+            option.selected = subcategoria.nombre === subcategoriaSeleccionada;
+            subcategoriaSelect.appendChild(option);
+        });
+    }
+
+    categoriaSelect.addEventListener('change', function () {
+        subcategoriaSelect.value = '';
+        cargarSubcategorias();
+    });
+    cargarSubcategorias();
+</script>
 </body>
 </html>

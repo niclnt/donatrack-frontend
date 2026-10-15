@@ -76,6 +76,7 @@ public class HomeController {
     public String misDonaciones(
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String subcategoria,
             @RequestParam(required = false) String busqueda,
             @RequestParam(required = false) String orden,
             Authentication authentication,
@@ -99,6 +100,7 @@ public class HomeController {
 
         if (estado != null && !estado.isEmpty()) backendUrl.append("estado=").append(estado).append("&");
         if (categoria != null && !categoria.isEmpty()) backendUrl.append("categoria=").append(categoria).append("&");
+        if (subcategoria != null && !subcategoria.isEmpty()) backendUrl.append("subcategoria=").append(subcategoria).append("&");
         if (busqueda != null && !busqueda.isEmpty()) backendUrl.append("busqueda=").append(busqueda).append("&");
         if (orden != null && !orden.isEmpty()) backendUrl.append("orden=").append(orden).append("&");
 
@@ -111,8 +113,21 @@ public class HomeController {
 
         model.addAttribute("estadoFiltro", estado);
         model.addAttribute("categoriaFiltro", categoria);
+        model.addAttribute("subcategoriaFiltro", subcategoria);
         model.addAttribute("busquedaFiltro", busqueda);
         model.addAttribute("ordenFiltro", orden);
+
+        List<CategoriaCatalogoResponse> categorias;
+        try {
+            categorias = webApiCallerService.getList(
+                    donacionesServiceUrl + "/donaciones/catalogo/categorias",
+                    CategoriaCatalogoResponse[].class
+            );
+        } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
+            categorias = List.of();
+            model.addAttribute("errorCatalogo", "No se pudieron cargar las categorías. Intentá nuevamente más tarde.");
+        }
+        model.addAttribute("categorias", categorias);
 
         return "donante/mis-donaciones";
     }
