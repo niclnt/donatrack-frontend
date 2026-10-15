@@ -85,29 +85,33 @@
 
                 <!-- 3. Tabla plana agrupada visualmente por donación -->
                 <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
-                    <thead>
-                    <tr>
-                        <th>
+                    <tbody th:each="donacion : ${donaciones}" class="donation-group">
+                    <tr class="donation-description">
+                        <td colspan="6">
+                            <span class="donation-description__icon" aria-hidden="true">📄</span>
+                            <span th:text="${donacion.descripcion}">Donación para la colecta de alimentos</span>
+                        </td>
+                    </tr>
+                    <tr class="donation-columns">
+                        <th scope="col">
                             <a th:href="@{/donante/mis-donaciones(orden=${ordenFiltro == 'recientes' ? 'antiguas' : 'recientes'}, busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro}, subcategoria=${subcategoriaFiltro})}"
                                style="color: inherit; text-decoration: none;">DONACIÓN ↕</a>
                         </th>
-                        <th>SUBCATEGORÍA</th>
-                        <th>
+                        <th scope="col">
                             <a th:href="@{/donante/mis-donaciones(orden='categoria', busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro}, subcategoria=${subcategoriaFiltro})}"
                                style="color: inherit; text-decoration: none;">CATEGORÍA ↕</a>
                         </th>
-                        <th>CANTIDAD</th>
-                        <th>ESTADO</th>
-                        <th>ENTIDAD ASIGNADA</th>
+                        <th scope="col">SUBCATEGORÍA</th>
+                        <th scope="col">CANTIDAD</th>
+                        <th scope="col">ESTADO</th>
+                        <th scope="col">ENTIDAD ASIGNADA</th>
                     </tr>
-                    </thead>
-                    <tbody th:each="donacion : ${donaciones}" class="donation-group">
                     <tr th:each="segmento, segmentoStat : ${donacion.donacionesSegmentadas}">
                         <td th:if="${segmentoStat.first}"
                             th:rowspan="${#lists.size(donacion.donacionesSegmentadas)}"
                             th:text="${segmento.fechaDonacion}">12/04/2025</td>
-                        <td th:text="${segmento.subcategoria.nombre}">Sillas</td>
                         <td><span class="badge" th:text="${segmento.bienes[0].categoria.nombre}">Mobiliario</span></td>
+                        <td th:text="${segmento.subcategoria.nombre}">Sillas</td>
                         <td th:text="${segmento.bienes[0].cantidad} + ' un.'">6 un.</td>
                         <td><span class="badge" th:text="${segmento.estadoActual}">Entregada</span></td>
                         <td th:text="${segmento.entidadAsignada != null ? segmento.entidadAsignada : '—'}">Escuela Rural N°10</td>
