@@ -94,8 +94,93 @@
               <span class="muted" style="font-size: var(--fs-sm);">
                 Necesidades: <strong th:text="${entidad.necesidades != null ? entidad.necesidades.size() : 0}">0</strong>
               </span>
-              <!-- Botón de detalle (por ahora no navega a ningún lado, podría hacerlo en el futuro) -->
-              <button class="btn btn--ghost btn--sm">Ver detalle</button>
+              <button class="btn btn--ghost btn--sm"
+                      type="button"
+                      th:attr="data-modal-open='modal-entidad-' + ${entidad.id}"
+                      th:aria-label="'Ver detalle de ' + ${entidad.razonSocial}">
+                Ver detalle
+              </button>
+            </div>
+
+            <div class="modal"
+                 th:id="'modal-entidad-' + ${entidad.id}"
+                 hidden
+                 role="dialog"
+                 aria-modal="true"
+                 th:aria-labelledby="'modal-entidad-' + ${entidad.id} + '-title'">
+              <div class="modal__box modal__box--wide">
+                <div class="modal__header">
+                  <div>
+                    <p class="req-tag">Entidad beneficiaria</p>
+                    <h2 th:id="'modal-entidad-' + ${entidad.id} + '-title'"
+                        class="modal__title"
+                        th:text="${entidad.razonSocial}">
+                      Nombre entidad
+                    </h2>
+                  </div>
+                  <button class="modal__close" type="button" data-modal-close aria-label="Cerrar detalle">×</button>
+                </div>
+
+                <div class="modal__details">
+                  <div>
+                    <span class="modal__label">Ubicación</span>
+                    <p th:if="${entidad.direccion != null}" th:text="${entidad.direccion}">Dirección</p>
+                    <p th:if="${entidad.localidad != null}" th:text="${entidad.localidad}">Localidad</p>
+                    <p th:if="${entidad.ciudad != null or entidad.provincia != null}"
+                       th:text="${(entidad.ciudad ?: '') + (entidad.ciudad != null && entidad.provincia != null ? ', ' : '') + (entidad.provincia ?: '')}">
+                      Ciudad, Provincia
+                    </p>
+                    <p class="muted" th:if="${entidad.direccion == null and entidad.localidad == null and entidad.ciudad == null and entidad.provincia == null}">
+                      Sin ubicación registrada
+                    </p>
+                  </div>
+                  <div>
+                    <span class="modal__label">Contacto</span>
+                    <p th:if="${entidad.mail != null}" th:text="${entidad.mail}">correo@entidad.org</p>
+                    <p th:if="${entidad.telefono != null}" th:text="'Teléfono: ' + ${entidad.telefono}">Teléfono</p>
+                    <p th:if="${entidad.mediosDeContacto != null and not entidad.mediosDeContacto.isEmpty()
+                              and (medio.tipoContacto != 'EMAIL' or entidad.mail == null or medio.valor != entidad.mail)
+                              and (medio.tipoContacto != 'TELEFONO' or entidad.telefono == null or medio.valor != entidad.telefono.toString())}"
+                       th:each="medio : ${entidad.mediosDeContacto}"
+                       th:text="${(medio.tipoContacto != null ? medio.tipoContacto + ': ' : '') + medio.valor}">
+                      Medio de contacto
+                    </p>
+                    <p class="muted" th:if="${entidad.mail == null and entidad.telefono == null and (entidad.mediosDeContacto == null or entidad.mediosDeContacto.isEmpty())}">
+                      Sin información de contacto
+                    </p>
+                  </div>
+                </div>
+
+                <div class="modal__section">
+                  <span class="modal__label">Necesidades registradas</span>
+                  <div class="modal__needs"
+                       th:if="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
+                    <div class="modal__need" th:each="nec : ${entidad.necesidades}">
+                      <div>
+                        <strong th:text="${nec.categoriaNombre + (nec.subcategoriaNombre != null ? ' · ' + nec.subcategoriaNombre : '')}">
+                          Necesidad
+                        </strong>
+                        <p class="muted" th:if="${nec.descripcion != null}" th:text="${nec.descripcion}">Descripción</p>
+                      </div>
+                      <div class="modal__need-meta">
+                        <span th:text="${nec.cantidadRecibida + ' / ' + nec.cantidadSolicitada}">0 / 0</span>
+                        <span class="badge"
+                              th:classappend="${nec.satisfecha} ? ' badge--success' : ' badge--warning'"
+                              th:text="${nec.satisfecha ? 'Satisfecha' : 'Pendiente'}">
+                          Pendiente
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="muted" th:unless="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
+                    Sin necesidades registradas
+                  </p>
+                </div>
+
+                <div class="modal__actions">
+                  <button class="btn btn--ghost" type="button" data-modal-close>Cerrar</button>
+                </div>
+              </div>
             </div>
           </article>
         </div>
