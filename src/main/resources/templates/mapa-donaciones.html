@@ -52,6 +52,9 @@
 
 <script th:src="@{/assets/js/app.js}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:inline="javascript">
+    window.donacionesEntregadas = /*[[${donacionesEntregadas}]]*/ [];
+</script>
 <script th:src="@{/assets/js/mapa-donaciones.js}"></script>
 </body>
 </html>
