@@ -10,6 +10,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.services.MapaDonacionesApiService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,12 +31,15 @@ public class HomeController {
     // Manda el token de la sesion en cada llamada (y lo refresca si vencio)
     private final WebApiCallerService webApiCallerService;
     private final String donacionesServiceUrl;
+    private final MapaDonacionesApiService mapaDonacionesApiService;
 
     public HomeController(
             WebApiCallerService webApiCallerService,
-            @Value("${donaciones.service.url}") String donacionesServiceUrl) {
+            @Value("${donaciones.service.url}") String donacionesServiceUrl,
+            MapaDonacionesApiService mapaDonacionesApiService) {
         this.webApiCallerService = webApiCallerService;
         this.donacionesServiceUrl = donacionesServiceUrl;
+        this.mapaDonacionesApiService = mapaDonacionesApiService;
     }
 
     @GetMapping("/")
@@ -147,7 +151,17 @@ public class HomeController {
     }
 
     @GetMapping("/mapa-donaciones")
-    public String mostrarMapaDonaciones() {
+    public String mostrarMapaDonaciones(Model model) {
+        try {
+            model.addAttribute("donacionesEntregadas",
+                    mapaDonacionesApiService.obtenerDonacionesEntregadas());
+
+        } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
+            model.addAttribute("donacionesEntregadas", List.of());
+            model.addAttribute("errorMapa",
+                    "No se pudieron cargar las donaciones entregadas.");
+        }
+
         return "mapa-donaciones";
     }
 

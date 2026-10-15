@@ -28,6 +28,20 @@
                 Explorá las donaciones entregadas a las entidades
                 beneficiarias de DonaTrack.
             </p>
+            <p class="muted"
+               th:if="${errorMapa != null}"
+               th:text="${errorMapa}">
+            </p>
+
+            <p class="muted"
+               th:if="${errorMapa == null and #lists.isEmpty(donacionesEntregadas)}">
+                Todavía no hay donaciones entregadas para mostrar.
+            </p>
+
+            <p class="muted"
+               th:if="${errorMapa == null and not #lists.isEmpty(donacionesEntregadas)}"
+               th:text="|Donaciones entregadas: ${#lists.size(donacionesEntregadas)}|">
+            </p>
             <div id="mapa" style="height: 450px; margin-top: 24px;">
             </div>
 
