@@ -46,25 +46,70 @@
                 <!-- Una tarjeta por donación con sus necesidades candidatas, en el orden que devuelve el motor -->
                 <section class="card" th:each="grupo : ${propuestasPorDonacion}" style="margin-bottom: var(--sp-6);"
                          th:attr="aria-labelledby='donacion-' + ${grupo.key}">
-                    <div class="card__header">
+                    <div class="card__header" th:with="donacion=${grupo.value[0]}">
                         <div>
-                            <h2 th:id="'donacion-' + ${grupo.key}" th:text="${grupo.value[0].nombreDonacion()}">Fideos secos x 100</h2>
-                            <p class="muted" style="font-size: var(--fs-sm);" th:text="'Donación segmentada #' + ${grupo.key}">Donación segmentada #12</p>
+                            <h2 th:id="'donacion-' + ${grupo.key}" th:text="${donacion.nombreDonacion()}">Fideos secos</h2>
+                            <p class="muted" style="font-size: var(--fs-sm);"
+                               th:text="${'Donación #' + grupo.key
+                                        + (donacion.donante() != null ? ' · de ' + donacion.donante() : '')
+                                        + (donacion.fechaDonacion() != null ? ' · ingresó el ' + #temporals.format(donacion.fechaDonacion(), 'dd/MM/yyyy') : '')}">
+                                Donación #12 · de Ana Gómez · ingresó el 14/10/2026</p>
                         </div>
                         <span class="badge badge--warning">Pendiente de asignación</span>
                     </div>
+
+                    <!-- Qué se dona: cada bien con cantidad, unidad y estado/vencimiento -->
+                    <ul class="muted" style="padding-left: 1.2em; line-height: 1.7; margin-bottom: var(--sp-4);">
+                        <li th:each="bien : ${grupo.value[0].bienes()}"
+                            th:text="${bien.cantidad() + ' ' + (bien.unidad() != null ? bien.unidad() : 'u.') + ' · ' + bien.descripcion()
+                                     + (bien.usado() ? ' · usado' : '')
+                                     + (bien.fechaVencimiento() != null ? ' · vence ' + #temporals.format(bien.fechaVencimiento(), 'dd/MM/yyyy') : '')}">
+                            100 Paquetes · Fideos secos 500 g · vence 01/01/2027</li>
+                    </ul>
 
                     <article class="card card--flat" th:each="propuesta, it : ${grupo.value}"
                              th:style="${it.first} ? 'border-color: var(--primary); margin-bottom: var(--sp-3);' : 'margin-bottom: var(--sp-3);'">
                         <div class="flex justify-between items-center gap-3 wrap">
                             <div>
-                                <h3 th:text="${propuesta.descripcionNecesidad()}">30 bancos y 30 sillas</h3>
-                                <p class="muted" style="font-size: var(--fs-sm);" th:text="'Necesidad #' + ${propuesta.idNecesidad()}">Necesidad #4</p>
+                                <h3 th:text="${propuesta.entidad() != null ? propuesta.entidad() : 'Entidad sin nombre'}">Escuela Rural N°10</h3>
+                                <p style="margin: 4px 0;" th:text="${propuesta.descripcionNecesidad()}">30 bancos y 30 sillas</p>
+                                <p class="muted" style="font-size: var(--fs-sm);"
+                                   th:text="${'Necesidad #' + propuesta.idNecesidad()
+                                            + (propuesta.tipoNecesidad() == 'EXTRAORDINARIA' ? ' · Extraordinaria' : (propuesta.tipoNecesidad() == 'RECURRENTE' ? ' · Recurrente' : ''))
+                                            + (propuesta.detalleNecesidad() != null ? ' (' + propuesta.detalleNecesidad() + ')' : '')}">
+                                    Necesidad #4 · Extraordinaria (inundación)</p>
                             </div>
                             <span th:if="${it.first}" class="badge badge--success">Recomendada</span>
                         </div>
 
+                        <!-- Cuánto le falta a la necesidad y cuánto cubre esta donación -->
                         <div class="flex gap-4 wrap mt-4">
+                            <div class="field">
+                                <span class="field__label">Solicitado</span>
+                                <strong th:text="${propuesta.cantidadSolicitada()}">150</strong>
+                            </div>
+                            <div class="field">
+                                <span class="field__label">Ya recibido</span>
+                                <strong th:text="${propuesta.cantidadRecibida()}">0</strong>
+                            </div>
+                            <div class="field">
+                                <span class="field__label">Falta</span>
+                                <strong th:text="${propuesta.cantidadFaltante()}">150</strong>
+                            </div>
+                            <div class="field">
+                                <span class="field__label">Esta donación</span>
+                                <strong th:text="${propuesta.cantidadDonada()}">100</strong>
+                            </div>
+                        </div>
+                        <p class="mt-4">
+                            <span th:if="${propuesta.cantidadFaltante() == 0}" class="badge badge--info">La necesidad ya está cubierta</span>
+                            <span th:if="${propuesta.cubreTotalmente()}" class="badge badge--success">Cubre todo lo que falta</span>
+                            <span th:if="${propuesta.cantidadFaltante() > 0 and !propuesta.cubreTotalmente()}" class="badge badge--warning"
+                                  th:text="'Cubre ' + ${propuesta.cantidadDonada()} + ' de ' + ${propuesta.cantidadFaltante()} + ' que faltan'">Cubre 100 de 150 que faltan</span>
+                        </p>
+
+                        <p class="field__label mt-4">Puntaje de los algoritmos</p>
+                        <div class="flex gap-4 wrap">
                             <div class="field" th:each="puntaje : ${propuesta.puntajesPorAlgoritmo()}">
                                 <span class="field__label" th:text="${puntaje.key}">Compatibilidad Semantica</span>
                                 <strong th:text="${#numbers.formatDecimal(puntaje.value, 1, 2)}">0.92</strong>

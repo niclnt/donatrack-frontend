@@ -19,6 +19,7 @@ public final class SesionUsuario {
     public static final String ROL_DONANTE_HUMANO = "DONANTE_HUMANO";
     public static final String ROL_DONANTE_JURIDICO = "DONANTE_JURIDICO";
     public static final String ROL_BENEFICIARIO = "BENEFICIARIO";
+    public static final String ROL_CHOFER = "CHOFER";
 
     private SesionUsuario() {
     }

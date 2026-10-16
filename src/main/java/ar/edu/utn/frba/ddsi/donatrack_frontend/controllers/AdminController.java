@@ -153,6 +153,8 @@ public class AdminController {
             @RequestParam String subcategoria,
             @RequestParam Integer cantidad,
             @RequestParam String unidad,
+            @RequestParam Double pesoUnitarioKg,
+            @RequestParam Double volumenUnitarioLitros,
             @RequestParam String estado,
             @RequestParam(required = false) String vencimiento,
             @RequestParam String descripcion,
@@ -168,7 +170,13 @@ public class AdminController {
         LocalDate fechaVenc = (vencimiento != null && !vencimiento.isBlank()) ? LocalDate.parse(vencimiento) : null;
         boolean usado = "Usado en buen estado".equals(estado);
 
-        BienDTO bien = new BienDTO(descripcion, catRef, subRef, uniRef, cantidad, fechaVenc, usado, false, 0.0, 0.0);
+        if (pesoUnitarioKg <= 0 || volumenUnitarioLitros <= 0) {
+            model.addAttribute("error", "El peso y el volumen por unidad tienen que ser mayores a 0 (se usan para planificar la entrega).");
+            return mostrarRegistroDonacion(authentication, model);
+        }
+        // El back guarda el volumen en m3: 1 litro = 0.001 m3
+        BienDTO bien = new BienDTO(descripcion, catRef, subRef, uniRef, cantidad, fechaVenc, usado, false,
+                pesoUnitarioKg, volumenUnitarioLitros / 1000);
         DonacionCreateRequest request = new DonacionCreateRequest(descripcion + " (Recepción por: " + responsable + ")", LocalDate.now(), List.of(bien));
 
         String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;

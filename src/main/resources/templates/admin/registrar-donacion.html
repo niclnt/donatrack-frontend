@@ -138,6 +138,19 @@
                                 </select>
                             </div>
 
+                            <!-- Peso y volumen los exige el motor de ruteo para planificar la entrega -->
+                            <div class="field">
+                                <label class="field__label" for="pesoUnitarioKg">Peso por unidad (kg)</label>
+                                <input class="input" id="pesoUnitarioKg" name="pesoUnitarioKg" type="number" min="0.001" step="0.001" placeholder="Ej: 0.5" required>
+                                <span class="field__hint">Ej: un paquete de fideos de 500 g → 0.5</span>
+                            </div>
+
+                            <div class="field">
+                                <label class="field__label" for="volumenUnitarioLitros">Volumen por unidad (litros)</label>
+                                <input class="input" id="volumenUnitarioLitros" name="volumenUnitarioLitros" type="number" min="0.001" step="0.001" placeholder="Ej: 1" required>
+                                <span class="field__hint">Espacio que ocupa una unidad. Una caja de 30×20×10 cm ≈ 6 litros</span>
+                            </div>
+
                             <div class="field">
                                 <label class="field__label" for="estado">Estado del bien</label>
                                 <select class="select" id="estado" name="estado">

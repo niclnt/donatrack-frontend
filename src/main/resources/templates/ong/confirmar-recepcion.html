@@ -1,104 +1,103 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Confirmar recepción — DonaTrack</title>
-  <link rel="stylesheet" href="../assets/css/styles.css">
-</head>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Confirmar recepción — DonaTrack')}"></head>
 <body>
-  <a class="skip-link" href="#main">Saltar al contenido</a>
+<a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <!-- REQ. 12 — CONFIRMAR RECEPCIÓN CON FOTOS (ENTIDAD BENEFICIARIA) -->
-  <div class="page">
-    <header th:replace="~{fragments/base :: topbar('')}"></header> <!-- TODO: rellenar el topbar('') -->
+<!-- REQ. 12 — CONFIRMAR RECEPCIÓN CON FOTOS (ENTIDAD BENEFICIARIA) -->
+<div class="page">
+    <header th:replace="~{fragments/base :: topbar('recepcion')}"></header>
 
     <main id="main" class="page-body">
-      <div class="container" style="max-width: 980px;">
-       <!--<p class="req-tag">Req. 12 — Confirmar recepción de donación</p>-->
-        <div class="page-head">
-          <div>
-            <h1>Confirmar recepción</h1>
-            <p class="page-head__sub">Registrá la recepción de la donación y adjuntá fotos como evidencia.</p>
-          </div>
-          <a class="btn btn--ghost btn--sm" href="asignadas.html">Volver al listado</a>
+        <div class="container" style="max-width: 980px;">
+            <div class="page-head">
+                <div>
+                    <h1>Confirmar recepción</h1>
+                    <p class="page-head__sub">Cuando llegue el camión, confirmá la recepción y adjuntá fotos de lo que recibiste.</p>
+                </div>
+                <a class="btn btn--ghost btn--sm" th:href="@{/ong/asignadas}">Ver donaciones asignadas</a>
+            </div>
+
+            <div th:if="${exito}" class="alert alert--success" th:text="${exito}">Recepción confirmada.</div>
+            <div th:if="${error}" class="alert alert--error" th:text="${error}">Error.</div>
+
+            <!-- Entregas en camino: se pueden confirmar -->
+            <section aria-labelledby="en-camino-title">
+                <h2 id="en-camino-title" style="margin-bottom: var(--sp-4);">Entregas en camino</h2>
+
+                <div th:if="${enCamino.isEmpty()}" class="empty-state card">
+                    <p class="muted">No tenés entregas en camino en este momento. Cuando un camión salga con una donación para tu entidad, la vas a ver acá.</p>
+                </div>
+
+                <article class="card" th:each="item : ${enCamino}" style="margin-bottom: var(--sp-5);"
+                         th:with="entrega=${item.entrega()}">
+                    <div class="card__header">
+                        <div>
+                            <h3 th:text="${'Entrega del ' + #temporals.format(entrega.fecha(), 'dd/MM/yyyy')}">Entrega del 18/04/2026</h3>
+                            <p class="muted" style="font-size: var(--fs-sm);"
+                               th:text="${'Camión ' + item.patente() + ' · ' + entrega.direccion()}">Camión ABC123 · Calle 123</p>
+                        </div>
+                        <span class="badge badge--warning">En camino</span>
+                    </div>
+
+                    <ul class="muted" style="padding-left: 1.2em; line-height: 1.7;">
+                        <th:block th:each="donacion : ${entrega.donacionesSegmentadas()}">
+                            <li th:each="bien : ${donacion.bienes()}"
+                                th:text="${bien.cantidad() + ' × ' + bien.descripcion() + ' (' + donacion.subcategoria() + ')'}">30 × Camperas (Ropa de abrigo)</li>
+                        </th:block>
+                    </ul>
+
+                    <form th:action="@{/ong/confirmar-recepcion/{id}(id=${entrega.id()})}" method="post" enctype="multipart/form-data" class="mt-4">
+                        <div class="field">
+                            <label class="field__label" th:for="${'fotos-' + entrega.id()}">Fotos de la donación recibida</label>
+                            <input class="input" th:id="${'fotos-' + entrega.id()}" name="fotos" type="file" accept="image/*" multiple required>
+                            <span class="field__hint">Cargá una o más fotos donde se vea el estado de los bienes. Pueden mostrarse públicamente como evidencia de la entrega.</span>
+                        </div>
+                        <div class="card card--flat" style="border-color: rgba(74,222,128,.35); background: rgba(34,197,94,.08); margin: var(--sp-4) 0;">
+                            <strong>Antes de confirmar:</strong>
+                            <p class="muted" style="font-size: var(--fs-sm); margin-top: var(--sp-2);">Verificá que lo recibido coincida con lo detallado arriba. Al confirmar se notifica al donante y la donación pasa a "Entregada".</p>
+                        </div>
+                        <div class="flex" style="justify-content: flex-end;">
+                            <button class="btn btn--primary" type="submit">Confirmar recepción</button>
+                        </div>
+                    </form>
+                </article>
+            </section>
+
+            <!-- Entregas ya recibidas: se ven sus fotos y se pueden agregar más -->
+            <section aria-labelledby="recibidas-title" class="mt-5" th:if="${!recibidas.isEmpty()}">
+                <h2 id="recibidas-title" style="margin-bottom: var(--sp-4);">Entregas recibidas</h2>
+
+                <article class="card" th:each="item : ${recibidas}" style="margin-bottom: var(--sp-5);"
+                         th:with="entrega=${item.entrega()}">
+                    <div class="card__header">
+                        <div>
+                            <h3 th:text="${'Entrega del ' + #temporals.format(entrega.fecha(), 'dd/MM/yyyy')}">Entrega del 18/04/2026</h3>
+                            <p class="muted" style="font-size: var(--fs-sm);" th:text="${'Camión ' + item.patente()}">Camión ABC123</p>
+                        </div>
+                        <span class="badge badge--success">Recibida</span>
+                    </div>
+
+                    <div class="flex gap-3 wrap" th:if="${entrega.fotosEvidencia() != null and !entrega.fotosEvidencia().isEmpty()}">
+                        <a th:each="fotoId : ${entrega.fotosEvidencia()}" th:href="@{/fotos/{id}(id=${fotoId})}" target="_blank" rel="noopener">
+                            <img th:src="@{/fotos/{id}(id=${fotoId})}" alt="Foto de la donación recibida" loading="lazy"
+                                 style="width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        </a>
+                    </div>
+                    <p class="muted" th:if="${entrega.fotosEvidencia() == null or entrega.fotosEvidencia().isEmpty()}">Todavía no hay fotos de esta entrega.</p>
+
+                    <form th:action="@{/ong/confirmar-recepcion/{id}(id=${entrega.id()})}" method="post" enctype="multipart/form-data"
+                          class="mt-4 flex items-center gap-3 wrap">
+                        <label class="sr-only" th:for="${'mas-fotos-' + entrega.id()}">Agregar fotos</label>
+                        <input class="input" th:id="${'mas-fotos-' + entrega.id()}" name="fotos" type="file" accept="image/*" multiple required style="flex: 1;">
+                        <button class="btn btn--ghost btn--sm" type="submit">Agregar fotos</button>
+                    </form>
+                </article>
+            </section>
         </div>
-
-        <section class="grid grid--3" aria-label="Resumen de la donación recibida">
-          <article class="stat">
-            <p class="stat__label">Necesidad cubierta</p>
-            <p class="stat__value" style="font-size: var(--fs-lg);">Ropa de abrigo</p>
-            <span class="badge badge--success mt-4">Pendiente recepción</span>
-          </article>
-          <article class="stat">
-            <p class="stat__label">Donante</p>
-            <p class="stat__value" style="font-size: var(--fs-lg);">Empresa XYZ</p>
-            <p class="dim" style="font-size: var(--fs-xs);">30 unidades</p>
-          </article>
-          <article class="stat">
-            <p class="stat__label">Camión responsable</p>
-            <p class="stat__value" style="font-size: var(--fs-lg);">ABC123</p>
-            <p class="dim" style="font-size: var(--fs-xs);">Entrega realizada 18/04/2025</p>
-          </article>
-        </section>
-
-        <section class="card mt-5" aria-labelledby="confirmacion-title">
-          <div class="card__header">
-            <div>
-              <h2 id="confirmacion-title">Datos de recepción</h2>
-              <p class="muted" style="font-size: var(--fs-sm);">Estos datos generarán el comprobante de entrega para donante y entidad beneficiaria.</p>
-            </div>
-          </div>
-
-          <form onsubmit="event.preventDefault(); donaTrackToast('Recepción confirmada correctamente', 'success');">
-            <div class="form-grid">
-              <div class="field">
-                <label class="field__label" for="responsable">Responsable de recepción</label>
-                <input class="input" id="responsable" name="responsable" type="text" value="Mariana López" required>
-              </div>
-              <div class="field">
-                <label class="field__label" for="fecha">Fecha de recepción</label>
-                <input class="input" id="fecha" name="fecha" type="date" value="2025-04-18" required>
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="fotos">Fotos de la donación recibida</label>
-              <input class="input" id="fotos" name="fotos" type="file" accept="image/*" multiple>
-              <span class="field__hint">Cargá una o más fotos donde se vea el estado de los bienes recibidos.</span>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="observaciones">Observaciones</label>
-              <textarea class="textarea" id="observaciones" name="observaciones" placeholder="Ej: La entrega fue recibida en buen estado y corresponde a lo asignado."></textarea>
-            </div>
-
-            <div class="card card--flat" style="border-color: rgba(74,222,128,.35); background: rgba(34,197,94,.08); margin-bottom: var(--sp-4);">
-              <strong>Antes de confirmar:</strong>
-              <p class="muted" style="font-size: var(--fs-sm); margin-top: var(--sp-2);">Verificá que la cantidad recibida coincida con lo asignado. Esta acción notificará al donante y actualizará el estado de la entrega.</p>
-            </div>
-
-            <div class="flex justify-between items-center wrap gap-3">
-              <button class="btn btn--ghost" type="button" data-toast="Confirmación cancelada">Cancelar</button>
-              <button class="btn btn--primary" type="submit">Confirmar recepción</button>
-            </div>
-          </form>
-        </section>
-      </div>
     </main>
-  </div>
+</div>
 
-  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-    <div class="modal__box">
-      <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Escuela Rural N°10</h2>
-      <p class="muted mt-4">Entidad beneficiaria · Mendoza, Argentina</p>
-      <div class="modal__actions">
-        <button class="btn btn--ghost" data-modal-close>Cerrar</button>
-        <a class="btn btn--danger" href="../login.html">Cerrar sesión</a>
-      </div>
-    </div>
-  </div>
-
-  <script src="../assets/js/app.js"></script>
+<script th:src="@{/assets/js/app.js}"></script>
 </body>
 </html>
