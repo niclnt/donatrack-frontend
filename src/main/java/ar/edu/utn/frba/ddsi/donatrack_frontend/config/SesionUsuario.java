@@ -44,7 +44,7 @@ public final class SesionUsuario {
     }
 
     public static String panelPara(List<String> roles) {
-        if (roles.contains(ROL_ADMIN)) return "/admin/registrar-donacion";
+        if (roles.contains(ROL_ADMIN)) return "/admin/inicio";
         if (roles.contains(ROL_DONANTE_HUMANO) || roles.contains(ROL_DONANTE_JURIDICO)) return "/donante/mis-donaciones";
         if (roles.contains(ROL_BENEFICIARIO)) return "/ong/asignadas";
         return "/403";

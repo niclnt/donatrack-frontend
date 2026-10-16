@@ -175,6 +175,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .08em;
   color: var(--text-dim); padding-inline: var(--sp-3); margin-bottom: var(--sp-3);
 }
+.sidebar a + .sidebar__label { margin-top: var(--sp-5); }
 .sidebar a {
   display: flex; align-items: center; gap: var(--sp-3);
   min-height: 44px; padding: 0 var(--sp-3); margin-bottom: var(--sp-1);

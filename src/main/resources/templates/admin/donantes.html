@@ -5,29 +5,10 @@
 <a class="skip-link" href="#main">Saltar al contenido</a>
 
 <div class="page">
-    <header class="topbar">
-        <a class="brand" th:href="@{/}">◆ DonaTrack</a>
-        <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
-        <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
-            <a th:href="@{/}">Sitio Público</a>
-            <a th:href="@{/donante/mis-donaciones}">Mi Perfil Donante</a>
-        </nav>
-        <div class="topbar__actions">
-            <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button>
-        </div>
-    </header>
+    <header th:replace="~{fragments/base :: topbarAdmin}"></header>
 
     <div class="shell">
-        <aside class="sidebar" aria-label="Navegación de administración">
-            <p class="sidebar__label">Administración</p>
-            <a th:href="@{/admin/registrar-donacion}">Registrar donación</a>
-            <a th:href="@{/admin/donantes}" aria-current="page">Gestión de donantes</a>
-            <a th:href="@{/admin/deposito-vencidas}">Depósito y vencidas</a>
-            <a th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
-            <a th:href="@{/admin/camiones}">Camiones</a>
-            <a th:href="@{/admin/rankings}">Rankings</a>
-            <a th:href="@{/admin/importar-csv}">Importar CSV</a>
-        </aside>
+        <aside th:replace="~{fragments/base :: sidebarAdmin('donantes')}"></aside>
 
         <main id="main" class="shell__main">
             <div class="container" style="max-width: 1120px;">

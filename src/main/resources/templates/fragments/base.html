@@ -68,5 +68,52 @@
     </div>
 </header>
 
+<!-- Barra superior del panel de administración -->
+<header th:fragment="topbarAdmin" class="topbar">
+    <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+    <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+    <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
+        <a th:href="@{/}">Sitio Público</a>
+    </nav>
+    <div class="topbar__actions">
+        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button>
+    </div>
+
+    <!-- Modal de Cuenta + cerrar sesión -->
+    <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
+        <div class="modal__box">
+            <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2>
+            <p class="muted mt-4" sec:authentication="name">admin@mail.com</p>
+            <div class="modal__actions">
+                <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+                <form th:action="@{/logout}" method="post">
+                    <button class="btn btn--danger" type="submit">Cerrar sesión</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Menú lateral del panel de administración -->
+<aside th:fragment="sidebarAdmin(paginaActual)" class="sidebar" aria-label="Navegación de administración">
+    <a th:href="@{/admin/inicio}" th:attr="aria-current=${paginaActual == 'inicio' ? 'page' : null}">Inicio</a>
+
+    <!-- Agrupado segun el ciclo de vida de una donacion -->
+    <p class="sidebar__label">Donaciones</p>
+    <a th:href="@{/admin/registrar-donacion}" th:attr="aria-current=${paginaActual == 'registrar-donacion' ? 'page' : null}">Registrar donación</a>
+    <a th:href="@{/admin/deposito-vencidas}" th:attr="aria-current=${paginaActual == 'deposito-vencidas' ? 'page' : null}">Depósito y vencidas</a>
+    <a th:href="@{/admin/asignar-algoritmo}" th:attr="aria-current=${paginaActual == 'asignar-algoritmo' ? 'page' : null}">Asignación por algoritmo</a>
+
+    <p class="sidebar__label">Donantes</p>
+    <a th:href="@{/admin/donantes}" th:attr="aria-current=${paginaActual == 'donantes' ? 'page' : null}">Gestión de donantes</a>
+    <a th:href="@{/admin/importar-csv}" th:attr="aria-current=${paginaActual == 'importar-csv' ? 'page' : null}">Importar CSV</a>
+
+    <p class="sidebar__label">Logística</p>
+    <a th:href="@{/admin/camiones}" th:attr="aria-current=${paginaActual == 'camiones' ? 'page' : null}">Camiones</a>
+
+    <p class="sidebar__label">Incentivos</p>
+    <a th:href="@{/admin/rankings}" th:attr="aria-current=${paginaActual == 'rankings' ? 'page' : null}">Rankings</a>
+</aside>
+
 </body>
 </html>
