@@ -1,128 +1,193 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/base :: head('Donaciones Asignadas')}"></head>
-
+<head th:replace="~{fragments/base :: head('Donaciones asignadas')}"></head>
 <body>
-  <a class="skip-link" href="#main">Saltar al contenido</a>
+<a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <!-- REQ. 11 — DONACIONES ASIGNADAS (ENTIDAD BENEFICIARIA) -->
-  <div class="page">
-    <header th:replace="~{fragments/base :: topbar('asignadas')}"></header>
+<div class="page">
+  <header th:replace="~{fragments/base :: topbar('asignadas')}"></header>
 
-    <main id="main" class="page-body">
-      <div class="container">
-        <!--<p class="req-tag">Req. 11 — Estado de donaciones asignadas</p>-->
-        <div class="page-head">
+  <main id="main" class="page-body">
+    <div class="container assigned-page">
+      <div class="page-head">
+        <div>
+          <p class="req-tag">Seguimiento de aportes</p>
+          <h1>Donaciones asignadas</h1>
+          <p class="page-head__sub">Consultá el estado de las donaciones vinculadas a tus necesidades materiales.</p>
+        </div>
+        <strong class="assigned-count" id="assignedCount"
+                th:text="${#lists.size(donaciones)} + ' donaciones'">0 donaciones</strong>
+      </div>
+
+      <!-- Tarjeta 1: Filtros -->
+      <section class="card assigned-filters" aria-label="Filtros de donaciones asignadas">
+        <div class="assigned-filters__heading">
           <div>
-            <h1>Donaciones asignadas</h1>
-            <p class="page-head__sub">Consultá el estado de las donaciones vinculadas a tus necesidades materiales.</p>
+            <h2 class="h3">Filtrar donaciones</h2>
+            <p class="muted">Encontrá rápidamente un aporte por estado o categoría.</p>
           </div>
-          <span class="muted"
-                th:text="${#lists.size(donaciones)} + ' donaciones'"> X donaciones</span>
+          <button class="btn btn--ghost btn--sm" id="clearFilters" type="button">Limpiar filtros</button>
+        </div>
+        <div class="filterbar" id="statusFilters" role="group" aria-label="Filtrar por estado">
+          <button class="filter-pill" type="button" data-status="" aria-pressed="true">Todas</button>
+          <button class="filter-pill" type="button" data-status="ASIGNACION_REALIZADA" aria-pressed="false">Asignadas</button>
+          <button class="filter-pill" type="button" data-status="EN_TRASLADO" aria-pressed="false">En camino</button>
+          <button class="filter-pill" type="button" data-status="PENDIENTE_RECEPCION" aria-pressed="false">Pendientes de recepción</button>
+          <button class="filter-pill" type="button" data-status="ENTREGADA" aria-pressed="false">Recibidas</button>
+        </div>
+        <div class="form-grid">
+          <div class="field" style="margin:0;">
+            <label class="field__label" for="categoria">Categoría</label>
+            <select class="select" id="categoria">
+              <option value="">Todas las categorías</option>
+              <option th:each="categoria : ${categorias}" th:value="${categoria.nombre}"
+                      th:text="${categoria.nombre}">Alimentos</option>
+            </select>
+          </div>
+          <div class="field" style="margin:0;">
+            <label class="field__label" for="subcategoria">Subcategoría</label>
+            <select class="select" id="subcategoria" disabled>
+              <option value="">Todas las subcategorías</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tarjeta 2: Listado envuelto en su propio .card -->
+      <section class="card assigned-list mt-5" aria-labelledby="assigned-list-title">
+        <div class="assigned-list__heading">
+          <div>
+            <p class="req-tag">Vinculadas a tus necesidades</p>
+            <h2 id="assigned-list-title">Listado de donaciones</h2>
+          </div>
+          <span class="muted" id="resultCount"></span>
         </div>
 
-        <section class="card" aria-label="Filtros de donaciones asignadas">
-          <div class="flex items-center gap-3 wrap" style="margin-bottom: var(--sp-4);">
-            <span class="muted" style="font-size: var(--fs-sm);">Estado:</span>
-            <div class="filterbar" data-filter-group style="margin:0;" role="group" aria-label="Filtrar por estado">
-              <button class="filter-pill" aria-pressed="true">Todos</button>
-              <button class="filter-pill" aria-pressed="false">Asignada</button>
-              <button class="filter-pill" aria-pressed="false">En camino</button>
-              <button class="filter-pill" aria-pressed="false">Pendiente recepción</button>
-              <button class="filter-pill" aria-pressed="false">Recibida</button>
-            </div>
-          </div>
+        <div id="donationCards" class="needs-list">
+          <article class="card donation-card"
+                   th:each="donacion : ${donaciones}"
+                   th:with="bien=${donacion.bienes[0]}, categoria=${bien.categoria.nombre}, subcategoria=${bien.subcategoria.nombre}"
+                   th:attr="data-status=${donacion.estadoActual},data-category=${categoria},data-subcategory=${subcategoria}">
 
-          <div class="form-grid">
-            <div class="field" style="margin:0;">
-              <label class="field__label" for="categoria">Categoría</label>
-              <select class="select" id="categoria">
-                <option>Todas</option>
-                <option>Alimentos</option>
-                <option>Mobiliario</option>
-                <option>Indumentaria</option>
-              </select>
-            </div>
-            <div class="field" style="margin:0;">
-              <label class="field__label" for="subcategoria">Subcategoría</label>
-              <select class="select" id="subcategoria">
-                <option>Todas</option>
-                <option>Fideos secos</option>
-                <option>Sillas</option>
-                <option>Ropa de abrigo</option>
-              </select>
-            </div>
-          </div>
-        </section>
+            <div class="donation-card__top">
+              <div class="linked-need-group">
+                <span class="linked-need-badge">
+                  <span aria-hidden="true">🔗</span>
+                  <span>Necesidad vinculada</span>
+                </span>
 
-        <section class="card mt-5" data-skeleton aria-labelledby="tabla-asignadas-title">
-          <div data-loader aria-hidden="true">
-            <div class="skeleton skeleton--line" style="width:35%;"></div>
-            <div class="skeleton skeleton--line" style="width:100%;"></div>
-            <div class="skeleton skeleton--line" style="width:100%;"></div>
-            <div class="skeleton skeleton--line" style="width:80%;"></div>
-          </div>
+                <span class="linked-need-desc"
+                      th:if="${donacion.descripcionNecesidad != null}"
+                      th:text="${donacion.descripcionNecesidad}">
+                  Descripcion de la necesidad a la que fue vinculada
+                </span>
+              </div>
 
-          <div data-content>
-            <div class="card__header">
-              <div>
-                <h2 id="tabla-asignadas-title">Listado de donaciones</h2>
-                <p class="muted" style="font-size: var(--fs-sm);">Las acciones dependen del estado actual de la entrega.</p>
+              <span class="muted donation-date">
+                <span aria-hidden="true">📅</span>
+                Asignada el <time th:text="${donacion.fechaDonacion}">xxxx-xx-xx</time>
+              </span>
+            </div>
+
+            <h3 th:text="${bien.descripcion != null ? 'Donación de ' + bien.descripcion : 'Donación'}">Donación de Fideos secos</h3>
+            <div class="donation-card__details">
+              <div><span class="detail-label">Categoría</span><strong th:text="${categoria}">Alimentos</strong></div>
+              <div><span class="detail-label">Subcategoría</span><strong th:text="${subcategoria}">Fideos secos</strong></div>
+              <div><span class="detail-label">Cantidad</span><strong th:text="${bien.cantidad + ' un.'}">10 un.</strong></div>
+              <div><span class="detail-label">Estado</span>
+                <span class="badge badge--info donation-status" th:text="${donacion.estadoActual}">Asignada</span>
               </div>
             </div>
+          </article>
+        </div>
 
-            <div class="table-wrap">
-              <table class="table">
-                <caption class="sr-only">Listado de donaciones asignadas a la entidad beneficiaria</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Fecha asignación</th>
-                    <th scope="col">Subcategoría</th>
-                    <th scope="col">Categoría</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">Estado</th>
-                    <th scope="col">Donante</th>
-                    <th scope="col">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr th:each="donacion : ${donaciones}">
-                    <td class="num" th:text="${donacion.fechaDonacion}">xx/xx/xxxx</td>
-                    <td><strong th:text="${donacion.bienes[0].subcategoria.nombre}">Subcategoria</strong></td>
-                    <td><span class="badge badge--warning" th:text="${donacion.bienes[0].categoria.nombre}">Categoria</span></td>
-                    <td class="num" th:text="${donacion.bienes[0].cantidad}">Cantidad</td>
-                    <td><span class="badge badge--warning" th:text="${donacion.estadoActual}">Estado</span></td>
-                    <td class="muted" th:text="${donacion.donanteId}">Donante</td>
-                    <td><a class="btn btn--sm btn--ghost" th:href="@{/ong/mapa}">Ver en mapa</a></td>
-                  </tr>
-
-                  <tr th:if="${#lists.isEmpty(donaciones)}">
-                    <td colspan="7" class="muted text-center">
-                      No tenés donaciones asignadas.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-    <div class="modal__box">
-      <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Mi cuenta</h2>
-      <p class="muted mt-4" sec:authentication="name">usuario@mail.com</p>
-      <div class="modal__actions">
-        <button class="btn btn--ghost" data-modal-close>Cerrar</button>
-        <form th:action="@{/logout}" method="post">
-          <button class="btn btn--danger" type="submit">Cerrar sesión</button>
-        </form>
-      </div>
+        <div class="card empty-state" id="emptyFiltered" hidden>
+          <div class="empty-state__icon" aria-hidden="true">⌕</div>
+          <h3>No encontramos donaciones</h3>
+          <p class="muted">Probá cambiar los filtros seleccionados.</p>
+        </div>
+        <div class="card empty-state" th:if="${#lists.isEmpty(donaciones)}">
+          <div class="empty-state__icon" aria-hidden="true">📦</div>
+          <h3>No tenés donaciones asignadas</h3>
+          <p class="muted">Las donaciones vinculadas a tus necesidades aparecerán aquí.</p>
+        </div>
+      </section>
     </div>
-  </div>
+  </main>
+</div>
 
-  <script th:src="@{/assets/js/app.js}"></script></body>
+<script th:src="@{/assets/js/app.js}"></script>
+<script th:inline="javascript">
+  const catalogoCategorias = /*[[${categorias}]]*/ [];
+  const cards = [...document.querySelectorAll('.donation-card')];
+  const categorySelect = document.getElementById('categoria');
+  const subcategorySelect = document.getElementById('subcategoria');
+  const emptyFiltered = document.getElementById('emptyFiltered');
+  const count = document.getElementById('assignedCount');
+  const resultCount = document.getElementById('resultCount');
+  const statusLabels = {
+    ASIGNACION_REALIZADA: 'Asignada',
+    EN_TRASLADO: 'En camino',
+    PENDIENTE_RECEPCION: 'Pendiente de recepción',
+    ENTREGADA: 'Recibida'
+  };
+  let selectedStatus = '';
+
+  function loadSubcategories() {
+    const selected = catalogoCategorias.find(categoria => categoria.nombre === categorySelect.value);
+    const subcategorias = selected && selected.subcategorias ? selected.subcategorias : [];
+    subcategorySelect.innerHTML = '<option value="">Todas las subcategorías</option>';
+    subcategorySelect.disabled = !selected;
+    subcategorias.forEach(subcategoria => {
+      const option = document.createElement('option');
+      option.value = subcategoria.nombre;
+      option.textContent = subcategoria.nombre;
+      subcategorySelect.appendChild(option);
+    });
+  }
+
+  function applyFilters() {
+    const category = categorySelect.value;
+    const subcategory = subcategorySelect.value;
+    let visible = 0;
+    cards.forEach(card => {
+      const matches = (!selectedStatus || card.dataset.status === selectedStatus)
+              && (!category || card.dataset.category === category)
+              && (!subcategory || card.dataset.subcategory === subcategory);
+      card.hidden = !matches;
+      if (matches) visible++;
+      const status = card.querySelector('.donation-status');
+      if (status && statusLabels[card.dataset.status]) status.textContent = statusLabels[card.dataset.status];
+    });
+    emptyFiltered.hidden = visible !== 0 || cards.length === 0;
+    count.textContent = visible + (visible === 1 ? ' donación' : ' donaciones');
+    resultCount.textContent = visible + ' resultado' + (visible === 1 ? '' : 's');
+  }
+
+  document.querySelectorAll('#statusFilters .filter-pill').forEach(button => {
+    button.addEventListener('click', () => {
+      selectedStatus = button.dataset.status;
+      document.querySelectorAll('#statusFilters .filter-pill').forEach(pill =>
+              pill.setAttribute('aria-pressed', pill === button ? 'true' : 'false'));
+      applyFilters();
+    });
+  });
+  categorySelect.addEventListener('change', () => {
+    subcategorySelect.value = '';
+    loadSubcategories();
+    applyFilters();
+  });
+  subcategorySelect.addEventListener('change', applyFilters);
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    selectedStatus = '';
+    categorySelect.value = '';
+    loadSubcategories();
+    document.querySelector('#statusFilters .filter-pill').click();
+    applyFilters();
+  });
+  loadSubcategories();
+  applyFilters();
+</script>
+</body>
 </html>

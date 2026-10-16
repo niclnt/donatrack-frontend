@@ -63,7 +63,18 @@ public class EntidadBeneficiariaController {
             DonacionSegmentadaResponse[].class
         );
 
+    List<CategoriaCatalogoResponse> categorias;
+    try {
+      categorias = webApiCallerService.getList(
+          donacionesServiceUrl + "/donaciones/catalogo/categorias",
+          CategoriaCatalogoResponse[].class
+      );
+    } catch (ApiException | ServicioNoDisponibleException e) {
+      categorias = List.of();
+    }
+
     model.addAttribute("donaciones", donaciones);
+    model.addAttribute("categorias", categorias);
     return "ong/asignadas";
   }
 
@@ -248,4 +259,3 @@ public class EntidadBeneficiariaController {
     );
   }
 }
-
