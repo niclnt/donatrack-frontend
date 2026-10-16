@@ -42,6 +42,42 @@ public class AdminController {
         this.logisticaServiceUrl = logisticaServiceUrl;
     }
 
+    // --- PANEL DE INICIO ---
+
+    // Cada contador se carga por separado: si un servicio no responde, se muestra "—" y el resto sigue
+    @GetMapping({"/admin", "/admin/inicio"})
+    public String mostrarInicio(Model model) {
+        try {
+            List<Map> donaciones = webApiCallerService.getList(
+                    donacionesServiceUrl + "/donaciones-service/donaciones?estado=EN_DEPOSITO", Map[].class);
+            model.addAttribute("enDeposito", donaciones.stream()
+                    .mapToInt(d -> d.get("donacionesSegmentadas") instanceof List<?> s ? s.size() : 0)
+                    .sum());
+        } catch (Exception e) {
+            model.addAttribute("enDeposito", null);
+        }
+
+        try {
+            List<PropuestaAsignacionResponse> propuestas = webApiCallerService.getList(
+                    donacionesServiceUrl + "/api/asignaciones/rankings/top", PropuestaAsignacionResponse[].class);
+            model.addAttribute("pendientesAsignacion", propuestas.stream()
+                    .map(PropuestaAsignacionResponse::idDonacionSegmentada).distinct().count());
+        } catch (Exception e) {
+            model.addAttribute("pendientesAsignacion", null);
+        }
+
+        try {
+            List<CamionResponse> camiones = webApiCallerService.getList(
+                    logisticaServiceUrl + "/logistica/camiones", CamionResponse[].class);
+            model.addAttribute("camionesTotal", camiones.size());
+            model.addAttribute("camionesDisponibles", camiones.stream().filter(c -> Boolean.TRUE.equals(c.disponible())).count());
+        } catch (Exception e) {
+            model.addAttribute("camionesTotal", null);
+        }
+
+        return "admin/inicio";
+    }
+
     // --- GESTIÓN SEPARADA DE DONANTES ---
 
     @GetMapping("/admin/donantes")
