@@ -239,6 +239,74 @@ ul { margin: 0; padding: 0; list-style: none; }
 .badge--warning  { background: var(--warning-bg); color: var(--warning); }
 .badge--info     { background: var(--info-bg);    color: var(--info); }
 .badge--danger   { background: var(--danger-bg);  color: var(--danger); }
+
+/* ---- Listado de necesidades ---- */
+.needs-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) repeat(2, minmax(150px, 1fr));
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+}
+.needs-list { display: grid; gap: var(--sp-4); }
+.need-card {
+  background: var(--surface-input);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--sp-5);
+}
+.need-card[hidden] { display: none; }
+.need-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.need-card__category { color: var(--text-muted); font-size: var(--fs-sm); }
+.need-card h3 { font-size: var(--fs-lg); margin-bottom: var(--sp-1); }
+.need-card__situation,
+.need-card__frequency { color: var(--text-muted); }
+.need-card__frequency { font-size: var(--fs-sm); margin-top: var(--sp-1); }
+.need-card__details {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: var(--sp-5);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+}
+.need-card__details > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.need-card__details > div + div {
+  border-left: 1px solid var(--border-strong);
+  padding-left: var(--sp-5);
+}
+.need-card__label {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  letter-spacing: .04em;
+}
+.need-card__progress {
+  width: 100%;
+  max-width: 180px;
+  height: 7px;
+  margin-top: var(--sp-1);
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+}
+.need-card__progress::before {
+  content: "";
+  display: block;
+  width: var(--progress, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
 .badge--category { background: var(--category-bg); color: var(--category); }
 
 .chip {
@@ -426,7 +494,7 @@ select:disabled {
 .modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: var(--sp-4); background: rgba(0,0,0,.6); overflow-y: auto; }
 .modal__box { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: var(--sp-5); box-shadow: var(--shadow-2); }
 .modal__box--wide { max-width: 640px; }
-.modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); }
+.modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-5); }
 .modal__title { font-size: var(--fs-xl); }
 .modal__close { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: var(--radius-sm); color: var(--text-muted); background: transparent; font: inherit; font-size: 1.5rem; line-height: 1; cursor: pointer; }
 .modal__close:hover { color: var(--text); background: var(--surface-2); }
@@ -473,6 +541,9 @@ select:disabled {
   .sidebar { display: none; }
   .grid--3 { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
+  .needs-filters { grid-template-columns: 1fr; }
+  .need-card__details { grid-template-columns: 1fr; gap: var(--sp-3); }
+  .need-card__details > div + div { border-left: 0; border-top: 1px solid var(--border-strong); padding: var(--sp-3) 0 0; }
 
   .nav-toggle { display: inline-flex !important; }
   .topbar__nav {
@@ -491,6 +562,8 @@ select:disabled {
   .container { padding-inline: var(--sp-4); }
   h1 { font-size: var(--fs-xl); }
   .page-head { align-items: flex-start; }
+  .need-card { padding: var(--sp-4); }
+  .need-card__top { align-items: flex-start; flex-direction: column; }
 }
 
 /* ---- Agregados para el front SSR (Entrega 5) ---- */

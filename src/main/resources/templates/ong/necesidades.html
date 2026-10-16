@@ -16,6 +16,9 @@
           <h1>Necesidades materiales</h1>
           <p class="page-head__sub">Registrá necesidades concretas para que puedan vincularse con donaciones compatibles.</p>
         </div>
+        <button class="btn btn--primary" type="button" data-modal-open="modal-necesidad" aria-haspopup="dialog">
+          <span aria-hidden="true">+</span> Nueva necesidad
+        </button>
       </div>
 
       <div th:if="${mensajeExito}"
@@ -40,15 +43,17 @@
         </article>
       </section>
 
-      <section class="card mt-5" aria-labelledby="form-necesidad-title">
-        <div class="card__header">
-          <div>
-            <h2 id="form-necesidad-title">Registrar nueva necesidad</h2>
-            <p class="muted" style="font-size: var(--fs-sm);">Indicá subcategoría y cantidad para que el sistema pueda buscar donaciones compatibles.</p>
+      <div class="modal" id="modal-necesidad" hidden role="dialog" aria-modal="true" aria-labelledby="form-necesidad-title">
+        <div class="modal__box modal__box--wide">
+          <div class="modal__header">
+            <div>
+              <h2 id="form-necesidad-title">Registrar nueva necesidad</h2>
+              <p class="muted" style="font-size: var(--fs-sm);">Indicá subcategoría y cantidad para que el sistema pueda buscar donaciones compatibles.</p>
+            </div>
+            <button class="modal__close" type="button" data-modal-close aria-label="Cerrar formulario">×</button>
           </div>
-        </div>
 
-        <form th:action="@{/ong/necesidades}" method="post">
+          <form th:action="@{/ong/necesidades}" method="post">
           <div class="form-grid">
             <div class="field">
               <label class="field__label" for="tipo-necesidad">Tipo de necesidad</label>
@@ -111,8 +116,9 @@
 
             <button class="btn btn--primary" type="submit">Registrar necesidad</button>
           </div>
-        </form>
-      </section>
+          </form>
+        </div>
+      </div>
 
       <section class="card mt-5" aria-labelledby="necesidades-registradas-title">
         <div class="card__header">
@@ -122,50 +128,56 @@
           </div>
         </div>
 
-        <div class="table-wrap">
-          <table class="table">
-            <caption class="sr-only">Listado de necesidades registradas</caption>
-            <thead>
-            <tr>
-              <th scope="col">Subcategoría</th>
-              <th scope="col">Tipo</th>
-              <th scope="col">Cantidad</th>
-              <th scope="col">Estado</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="necesidad : ${necesidades}">
+        <div class="needs-filters" aria-label="Filtros de necesidades">
+          <label class="sr-only" for="buscar-necesidad">Buscar por descripción</label>
+          <input class="input" id="buscar-necesidad" type="search" placeholder="Buscar por descripción...">
+          <label class="sr-only" for="filtrar-tipo">Tipo de necesidad</label>
+          <select class="select" id="filtrar-tipo">
+            <option value="">Todos los tipos</option>
+            <option value="RECURRENTE">Recurrente</option>
+            <option value="EXTRAORDINARIA">Extraordinaria</option>
+          </select>
+          <label class="sr-only" for="filtrar-categoria">Categoría</label>
+          <select class="select" id="filtrar-categoria">
+            <option value="">Todas las categorías</option>
+            <option th:each="categoria : ${categorias}" th:value="${categoria.nombre}" th:text="${categoria.nombre}">Categoría</option>
+          </select>
+        </div>
 
-              <!-- Col 1: Categoría y Subcategoría agrupadas -->
-              <td>
-                <div class="muted" style="font-size: var(--fs-sm);" th:text="${necesidad.categoriaNombre}">Categoría</div>
-                <strong th:text="${necesidad.subcategoriaNombre}">Subcategoría</strong>
-              </td>
-
-              <!-- Col 2: Tipo -->
-              <td th:text="${necesidad.tipoNecesidad}">Tipo</td>
-
-              <!-- Col 3: Cantidad (Recibida / Solicitada) -->
-              <td class="num">
-                <span th:text="${necesidad.cantidadRecibida}">0</span> /
-                <span th:text="${necesidad.cantidadSolicitada}">0</span>
-              </td>
-
-              <!-- Col 4: Badges de Estado agrupados -->
-              <!-- TODO: traer los estados del backend -->
-              <td>
-                <span th:if="${necesidad.satisfecha}" class="badge badge--success">Satisfecha</span>
-                <span th:unless="${necesidad.satisfecha}" class="badge badge--warning" style="margin-right: 4px;">Pendiente</span>
-              </td>
-
-            </tr>
-
-            <!-- NOTA: Se actualiza el colspan de 6 a 4 -->
-            <tr th:if="${#lists.isEmpty(necesidades)}">
-              <td colspan="4" class="muted text-center">Todavía no registraste necesidades.</td>
-            </tr>
-            </tbody>
-          </table>
+        <div class="needs-list" id="needs-list">
+          <article class="need-card" th:each="necesidad : ${necesidades}"
+                   th:attr="data-description=${necesidad.descripcion},data-type=${necesidad.tipoNecesidad},data-category=${necesidad.categoriaNombre}">
+            <div class="need-card__top">
+              <span class="badge" th:classappend="${necesidad.tipoNecesidad == 'RECURRENTE' ? ' badge--info' : ' badge--danger'}"
+                    th:text="${necesidad.tipoNecesidad == 'RECURRENTE' ? 'RECURRENTE' : 'EXTRAORDINARIA'}">TIPO</span>
+              <span class="need-card__category" th:text="${'📅 Creada el ' + necesidad.fechaCreacion}">Categoría · Subcategoría</span>
+            </div>
+            <h3 th:text="${necesidad.descripcion}">Descripción de la necesidad</h3>
+            <p class="need-card__situation" th:if="${necesidad.situacion != null and !#strings.isEmpty(necesidad.situacion)}"
+               th:text="${'Situación: ' + necesidad.situacion}">Situación</p>
+            <p class="need-card__frequency" th:if="${necesidad.cantidadDias != null}"
+               th:text="${'Se repite cada ' + necesidad.cantidadDias + ' días'}">Frecuencia</p>
+            <div class="need-card__details">
+              <div>
+                <span class="need-card__label">CATEGORÍA</span>
+                <strong th:text="${necesidad.categoriaNombre + ' - ' + necesidad.subcategoriaNombre}">Categoría - Subcategoría</strong>
+              </div>
+              <div>
+                <span class="need-card__label">CUBIERTO</span>
+                <strong><span th:text="${necesidad.cantidadRecibida}">0</span> / <span th:text="${necesidad.cantidadSolicitada}">0</span> un.</strong>
+                <div class="need-card__progress" role="progressbar" aria-label="Porcentaje cubierto"
+                     th:attr="aria-valuenow=${necesidad.cantidadSolicitada > 0 ? (necesidad.cantidadRecibida * 100 / necesidad.cantidadSolicitada) : 0},aria-valuemax=100"
+                     th:style="'--progress: ' + ${necesidad.cantidadSolicitada > 0 ? (necesidad.cantidadRecibida * 100 / necesidad.cantidadSolicitada) : 0} + '%'"></div>
+              </div>
+              <div>
+                <span class="need-card__label">ESTADO</span>
+                <span th:if="${necesidad.satisfecha}" class="badge badge--success">Cubierta</span>
+                <span th:unless="${necesidad.satisfecha}" class="badge badge--warning">Pendiente de cobertura</span>
+              </div>
+            </div>
+          </article>
+          <p class="muted text-center" id="empty-needs" th:if="${#lists.isEmpty(necesidades)}">Todavía no registraste necesidades.</p>
+          <p class="muted text-center" id="no-filter-results" hidden>No hay necesidades que coincidan con los filtros.</p>
         </div>
       </section>
     </div>
@@ -270,6 +282,31 @@
 
   tipoNecesidad.addEventListener('change', actualizarCampoAlternativo);
   actualizarCampoAlternativo();
+
+  const searchInput = document.getElementById('buscar-necesidad');
+  const typeFilter = document.getElementById('filtrar-tipo');
+  const categoryFilter = document.getElementById('filtrar-categoria');
+  const noFilterResults = document.getElementById('no-filter-results');
+  const needCards = Array.from(document.querySelectorAll('.need-card'));
+
+  function filterNeeds() {
+    const search = searchInput.value.trim().toLowerCase();
+    const type = typeFilter.value;
+    const category = categoryFilter.value;
+    let visible = 0;
+    needCards.forEach(card => {
+      const matches = (!search || (card.dataset.description || '').toLowerCase().includes(search))
+        && (!type || card.dataset.type === type)
+        && (!category || card.dataset.category === category);
+      card.hidden = !matches;
+      if (matches) visible++;
+    });
+    noFilterResults.hidden = visible !== 0 || needCards.length === 0;
+  }
+
+  searchInput.addEventListener('input', filterNeeds);
+  typeFilter.addEventListener('change', filterNeeds);
+  categoryFilter.addEventListener('change', filterNeeds);
 </script>
 </body>
 </html>

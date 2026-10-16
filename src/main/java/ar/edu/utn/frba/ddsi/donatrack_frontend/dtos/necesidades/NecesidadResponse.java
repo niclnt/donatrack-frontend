@@ -1,5 +1,7 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.necesidades;
 
+import java.time.LocalDate;
+
 public record NecesidadResponse (
     Long id,
     String categoriaNombre,
@@ -12,6 +14,7 @@ public record NecesidadResponse (
     boolean satisfecha,
     String tipoNecesidad,
     Integer cantidadDias,
-    String situacion
+    String situacion,
+    LocalDate fechaCreacion
 ) {
 }
