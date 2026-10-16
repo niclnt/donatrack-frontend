@@ -21,6 +21,7 @@
         <aside class="sidebar" aria-label="Navegación de administración">
             <p class="sidebar__label">Administración</p>
             <a th:href="@{/admin/registrar-donacion}" aria-current="page">Registrar donación</a>
+            <a th:href="@{/admin/donantes}">Gestión de donantes</a>
             <a th:href="@{/admin/deposito-vencidas}">Depósito y vencidas</a>
             <a th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
             <a th:href="@{/admin/camiones}">Camiones</a>
@@ -44,23 +45,19 @@
 
                     <!-- PASO 1: SELECCIÓN DE DONANTE -->
                     <section class="card" aria-labelledby="donante-title">
-                        <div class="card__header">
+                        <div class="card__header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                             <div>
                                 <h2 id="donante-title">Paso 1 · Persona donante</h2>
-                                <p class="muted" style="font-size: var(--fs-sm);">Buscá un donante existente o registrá uno nuevo antes de cargar los bienes recibidos.</p>
+                                <p class="muted" style="font-size: var(--fs-sm);">Buscá un donante existente para vincular a la donación.</p>
                             </div>
-                        </div>
-
-                        <div class="filterbar" data-filter-group aria-label="Tipo de carga de donante">
-                            <button class="filter-pill" type="button" aria-pressed="true">Buscar existente</button>
-                            <button class="filter-pill" type="button" aria-pressed="false">Registrar nuevo</button>
+                            <a th:href="@{/admin/donantes}" class="btn btn--sm btn-outline">+ Crear nuevo donante</a>
                         </div>
 
                         <div class="form-grid">
                             <div class="field">
                                 <label class="field__label" for="buscar-donante">Buscar por nombre, DNI, CUIT o email</label>
                                 <div style="display: flex; gap: var(--sp-2);">
-                                    <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez">
+                                    <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez, 44098907...">
                                     <button class="btn btn--primary" type="button" id="btnBuscarDonante">Buscar</button>
                                 </div>
                                 <span class="field__hint">Seleccioná el resultado correcto para vincular la donación.</span>

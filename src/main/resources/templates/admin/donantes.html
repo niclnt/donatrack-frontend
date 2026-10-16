@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Gestión de Donantes — DonaTrack')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+    <header class="topbar">
+        <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+        <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+        <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
+            <a th:href="@{/}">Sitio Público</a>
+            <a th:href="@{/donante/mis-donaciones}">Mi Perfil Donante</a>
+        </nav>
+        <div class="topbar__actions">
+            <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button>
+        </div>
+    </header>
+
+    <div class="shell">
+        <aside class="sidebar" aria-label="Navegación de administración">
+            <p class="sidebar__label">Administración</p>
+            <a th:href="@{/admin/registrar-donacion}">Registrar donación</a>
+            <a th:href="@{/admin/donantes}" aria-current="page">Gestión de donantes</a>
+            <a th:href="@{/admin/deposito-vencidas}">Depósito y vencidas</a>
+            <a th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
+            <a th:href="@{/admin/camiones}">Camiones</a>
+            <a th:href="@{/admin/rankings}">Rankings</a>
+            <a th:href="@{/admin/importar-csv}">Importar CSV</a>
+        </aside>
+
+        <main id="main" class="shell__main">
+            <div class="container" style="max-width: 1120px;">
+                <div class="page-head">
+                    <div>
+                        <h1>Gestión de Donantes</h1>
+                        <p class="page-head__sub">Registrá presencialmente las personas humanas u organizaciones donantes con sus datos completos.</p>
+                    </div>
+                </div>
+
+                <section class="card mb-5">
+                    <div class="card__header">
+                        <h2>Registrar nuevo donante</h2>
+                    </div>
+
+                    <!-- Alertas de éxito o error devueltas por el controller -->
+                    <div th:if="${exito}" class="alert alert--success mb-4" th:text="${exito}"></div>
+                    <div th:if="${error}" class="alert alert--error mb-4" th:text="${error}"></div>
+
+                    <form th:action="@{/admin/donantes/crear}" method="post">
+
+                        <div class="field">
+                            <label class="field__label" for="nuevoTipoPersona">Tipo de persona</label>
+                            <select class="select" id="nuevoTipoPersona" name="tipoPersona">
+                                <option value="HUMANA">Persona Humana</option>
+                                <option value="JURIDICA">Organización / Persona Jurídica</option>
+                            </select>
+                        </div>
+
+                        <!-- SECCIÓN PERSONA HUMANA -->
+                        <div id="secPersonaHumana" class="mt-4">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label class="field__label" for="nuevoNombre">Nombre y apellido</label>
+                                    <input class="input" id="nuevoNombre" name="nombre" type="text" placeholder="Ej: Carlos Gómez">
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevoTipoDoc">Tipo de documento</label>
+                                    <select class="select" id="nuevoTipoDoc" name="tipoDoc">
+                                        <option value="DNI">DNI</option>
+                                        <option value="LC">Libreta cívica</option>
+                                        <option value="LE">Libreta de enrolamiento</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevoDoc">Número de documento</label>
+                                    <input class="input" id="nuevoDoc" name="documento" type="text" placeholder="Sin puntos">
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevaEdad">Edad</label>
+                                    <input class="input" id="nuevaEdad" name="edad" type="number" min="1" max="120" placeholder="Ej: 35">
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevoGenero">Género</label>
+                                    <select class="select" id="nuevoGenero" name="genero">
+                                        <option value="">Elegí una opción</option>
+                                        <option value="F">Femenino</option>
+                                        <option value="M">Masculino</option>
+                                        <option value="X">Otro / prefiero no decir</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevaDireccion">Dirección</label>
+                                    <input class="input" id="nuevaDireccion" name="direccion" type="text" placeholder="Calle y número, localidad">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN PERSONA JURÍDICA -->
+                        <div id="secPersonaJuridica" class="mt-4" style="display: none;">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label class="field__label" for="nuevaRazonSocial">Razón social</label>
+                                    <input class="input" id="nuevaRazonSocial" name="razonSocial" type="text" placeholder="Ej: Fundación Esperanza">
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevoTipoJuridico">Tipo de organización</label>
+                                    <select class="select" id="nuevoTipoJuridico" name="tipoJuridico">
+                                        <option value="EMPRESA">Empresa</option>
+                                        <option value="ONG">ONG / Fundación</option>
+                                        <option value="GUBERNAMENTAL">Organismo público</option>
+                                        <option value="INSTITUCION">Institución</option>
+                                    </select>
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevoRubro">Rubro</label>
+                                    <input class="input" id="nuevoRubro" name="rubro" type="text" placeholder="Ej: Alimenticio">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MEDIOS DE CONTACTO -->
+                        <div class="mt-4">
+                            <p class="fieldset__legend" style="font-size: var(--fs-md); font-weight: 600; margin-bottom: var(--sp-2);">¿Cómo querés que le avisemos?</p>
+                            <div class="radio-row mb-3">
+                                <label class="radio"><input type="radio" name="medioPreferido" value="EMAIL" checked> Correo electrónico</label>
+                                <label class="radio"><input type="radio" name="medioPreferido" value="WHATSAPP"> WhatsApp</label>
+                                <label class="radio"><input type="radio" name="medioPreferido" value="TELEFONO"> Teléfono</label>
+                            </div>
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label class="field__label" for="nuevoEmail">Correo electrónico</label>
+                                    <input class="input" id="nuevoEmail" name="mail" type="email" placeholder="carlos.gomez@gmail.com" required>
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="nuevoTelefono">Teléfono <span class="dim">(opcional si elegís correo)</span></label>
+                                    <input class="input" id="nuevoTelefono" name="telefono" type="tel" placeholder="Ej: 1144556677">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5">
+                            <button class="btn btn--primary btn--block" type="submit">
+                                Guardar Donante
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>
