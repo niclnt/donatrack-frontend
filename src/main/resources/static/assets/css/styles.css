@@ -259,6 +259,26 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 .filter-pill[aria-pressed="true"] { background: var(--primary-weak); border-color: var(--primary); color: var(--primary); }
 
+/* ---- Resultados del buscador de donantes (click para seleccionar) ---- */
+.donante-resultados {
+  display: grid; gap: var(--sp-2); margin-top: var(--sp-3);
+  max-height: 320px; overflow-y: auto;
+}
+.donante-opcion {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  width: 100%; padding: var(--sp-3) var(--sp-4); text-align: left;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  color: var(--text); font: inherit; cursor: pointer;
+}
+.donante-opcion:hover { border-color: var(--border-strong); }
+.donante-opcion__nombre { font-weight: var(--fw-semibold); }
+.donante-opcion__detalle { font-size: var(--fs-sm); color: var(--text-muted); }
+.donante-opcion[aria-pressed="true"] { background: var(--primary-weak); border-color: var(--primary); }
+.donante-opcion[aria-pressed="true"] .donante-opcion__nombre { color: var(--primary); }
+.donante-opcion[aria-pressed="true"] .donante-opcion__nombre::before { content: "✓ "; }
+.donante-seleccionado { background: var(--success-bg); border-color: var(--success); }
+.donante-seleccionado .stat__label { color: var(--success); }
+
 /* ---- Tablas ---- */
 .table-wrap { overflow-x: auto; border-radius: var(--radius-md); }
 .table { width: 100%; border-collapse: collapse; min-width: 640px; }
