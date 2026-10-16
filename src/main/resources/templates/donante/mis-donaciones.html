@@ -16,7 +16,6 @@
                     <h1>Mis donaciones</h1>
 
                 </div>
-                <a th:href="@{/donante/nueva-donacion}" class="btn btn-primary">+ Nueva Donación</a>
             </div>
 
             <!-- aca puedo pegar la tabla y el HTML de los filtros que ya tengo armado -->
@@ -30,7 +29,7 @@
                 <div th:if="${donaciones != null and donaciones.isEmpty()}" class="empty-state">
                     <div class="empty-state__icon">📦</div>
                     <h3>Aún no realizaste aportes</h3>
-                    <p>Tus donaciones aparecerán aquí una vez que las registres en el depósito.</p>
+                    <p>Tus donaciones aparecerán aquí una vez que las registren en el depósito.</p>
                 </div>
 
                 <!-- Barra de Filtros Completa -->

@@ -38,10 +38,10 @@
                     </div>
                 </div>
 
-                <form th:action="@{/admin/registrar-donacion}" method="post">
+                <form th:action="@{/admin/registrar-donacion}" method="post" id="formRegistrarDonacion">
 
-                    <!-- ID REAL DEL DONANTE (Se llena mediante JS al buscar/seleccionar) -->
-                    <input type="hidden" name="donanteId" id="donanteIdInput" required>
+                    <!-- ID REAL DEL DONANTE (Se llena mediante JS al hacer click en un resultado) -->
+                    <input type="hidden" name="donanteId" id="donanteIdInput">
 
                     <!-- PASO 1: SELECCIÓN DE DONANTE -->
                     <section class="card" aria-labelledby="donante-title">
@@ -60,7 +60,7 @@
                                     <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez, 44098907...">
                                     <button class="btn btn--primary" type="button" id="btnBuscarDonante">Buscar</button>
                                 </div>
-                                <span class="field__hint">Seleccioná el resultado correcto para vincular la donación.</span>
+                                <span class="field__hint">Hacé click en el resultado correcto para vincular la donación.</span>
                             </div>
                             <div class="field">
                                 <label class="field__label" for="tipo-persona">Tipo de persona</label>
@@ -71,15 +71,19 @@
                             </div>
                         </div>
 
+                        <!-- RESULTADOS DE LA BÚSQUEDA: click en uno para seleccionarlo -->
+                        <p id="resultadosDonantesMsg" class="muted mt-4" style="font-size: var(--fs-sm);" hidden></p>
+                        <div id="resultadosDonantes" class="donante-resultados" role="list" hidden></div>
+
                         <!-- ESTADO 1: NINGÚN DONANTE SELECCIONADO (INICIAL) -->
                         <div id="donanteVacio" class="card text-center dim mt-4" style="background: var(--surface-2); padding: var(--sp-4);">
-                            Ningún donante seleccionado. Usá el buscador para vincular la donación.
+                            Ningún donante seleccionado. Usá el buscador y hacé click en un resultado.
                         </div>
 
                         <!-- ESTADO 2: DONANTE SELECCIONADO (DINÁMICO) -->
-                        <article id="cardDonanteSeleccionado" class="stat mt-4" style="display: none; justify-content: space-between; align-items: center; gap: var(--sp-4); flex-wrap: wrap; background: var(--surface-2);">
+                        <article id="cardDonanteSeleccionado" class="stat donante-seleccionado mt-4" style="display: none; justify-content: space-between; align-items: center; gap: var(--sp-4); flex-wrap: wrap;">
                             <div>
-                                <p class="stat__label">Donante seleccionado</p>
+                                <p class="stat__label">✓ Donante seleccionado</p>
                                 <p class="stat__value" id="donanteNombre" style="font-size: var(--fs-lg);">—</p>
                                 <p class="muted" id="donanteDetalles" style="font-size: var(--fs-sm);">—</p>
                             </div>
@@ -99,71 +103,7 @@
                         <!-- Alertas dinámicas -->
                         <div th:if="${exito}" class="alert alert--success" th:text="${exito}"></div>
                         <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
-
-                        <div class="form-grid">
-                            <div class="field">
-                                <label class="field__label" for="categoria">Categoría</label>
-                                <input class="input" id="categoria" name="categoria" list="lista-categorias" placeholder="Elegí o escribí una nueva..." required>
-                                <datalist id="lista-categorias">
-                                    <option th:each="cat : ${categorias}" th:value="${cat.nombre}"></option>
-                                    <option value="Alimentos"></option>
-                                    <option value="Mobiliario"></option>
-                                    <option value="Indumentaria"></option>
-                                </datalist>
-                            </div>
-
-                            <div class="field">
-                                <label class="field__label" for="subcategoria">Subcategoría</label>
-                                <input class="input" id="subcategoria" name="subcategoria" list="lista-subcategorias" placeholder="Elegí o escribí una nueva..." required>
-                                <datalist id="lista-subcategorias">
-                                    <option value="Fideos secos"></option>
-                                    <option value="Arroz"></option>
-                                    <option value="Sillas"></option>
-                                    <option value="Mesas"></option>
-                                </datalist>
-                            </div>
-
-                            <div class="field">
-                                <label class="field__label" for="cantidad">Cantidad</label>
-                                <input class="input" id="cantidad" name="cantidad" type="number" min="1" placeholder="Ej: 10" required>
-                            </div>
-
-                            <div class="field">
-                                <label class="field__label" for="unidad">Unidad</label>
-                                <select class="select" id="unidad" name="unidad" required>
-                                    <option value="Unidades">Unidades</option>
-                                    <option value="Paquetes">Paquetes</option>
-                                    <option value="Kilogramos">Kilogramos</option>
-                                    <option value="Litros">Litros</option>
-                                </select>
-                            </div>
-
-                            <!-- Peso y volumen los exige el motor de ruteo para planificar la entrega -->
-                            <div class="field">
-                                <label class="field__label" for="pesoUnitarioKg">Peso por unidad (kg)</label>
-                                <input class="input" id="pesoUnitarioKg" name="pesoUnitarioKg" type="number" min="0.001" step="0.001" placeholder="Ej: 0.5" required>
-                                <span class="field__hint">Ej: un paquete de fideos de 500 g → 0.5</span>
-                            </div>
-
-                            <div class="field">
-                                <label class="field__label" for="volumenUnitarioLitros">Volumen por unidad (litros)</label>
-                                <input class="input" id="volumenUnitarioLitros" name="volumenUnitarioLitros" type="number" min="0.001" step="0.001" placeholder="Ej: 1" required>
-                                <span class="field__hint">Espacio que ocupa una unidad. Una caja de 30×20×10 cm ≈ 6 litros</span>
-                            </div>
-
-                            <div class="field">
-                                <label class="field__label" for="estado">Estado del bien</label>
-                                <select class="select" id="estado" name="estado">
-                                    <option value="Nuevo">Nuevo</option>
-                                    <option value="Usado en buen estado">Usado en buen estado</option>
-                                </select>
-                            </div>
-
-                            <div class="field">
-                                <label class="field__label" for="vencimiento">Fecha de vencimiento</label>
-                                <input class="input" id="vencimiento" name="vencimiento" type="date">
-                            </div>
-                        </div>
+                        <div th:if="${errorCatalogo}" class="alert alert--error" th:text="${errorCatalogo}"></div>
 
                         <div class="field">
                             <label class="field__label" for="descripcion">Descripción general</label>
@@ -174,6 +114,82 @@
                             <div class="field">
                                 <label class="field__label" for="responsable">Responsable de recepción</label>
                                 <input class="input" id="responsable" name="responsable" type="text" placeholder="Nombre de quien recibe en depósito" required>
+                            </div>
+                        </div>
+
+                        <!-- HEADER DE SECCIÓN DE BIENES Y BOTÓN AGREGAR -->
+                        <div class="flex justify-between items-center wrap gap-3 mt-4">
+                            <h3>Bienes recibidos</h3>
+                            <button type="button" class="btn btn-outline btn--sm" onclick="agregarNuevoBien()">+ Agregar otro bien</button>
+                        </div>
+
+                        <!-- CONTENEDOR DINÁMICO DE BIENES -->
+                        <div id="contenedorBienes">
+
+                            <!-- BLOQUE DE BIEN #1 -->
+                            <div class="bien-bloque card mt-4" style="background: var(--surface-2); position: relative;">
+                                <div class="form-grid">
+                                    <div class="field">
+                                        <label class="field__label">Descripción del bien</label>
+                                        <input class="input" name="descripcionBien" type="text" placeholder="Ej: Fideos Lucchetti 500g" required>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Categoría</label>
+                                        <select class="select select-categoria" name="categoria" required>
+                                            <option value="" disabled selected hidden>Seleccionar categoría</option>
+                                            <option th:each="cat : ${categorias}" th:value="${cat.nombre}" th:text="${cat.nombre}">Categoría</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Subcategoría</label>
+                                        <select class="select select-subcategoria" name="subcategoria" required disabled>
+                                            <option value="" disabled selected hidden>Primero seleccioná una categoría</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Cantidad</label>
+                                        <input class="input" name="cantidad" type="number" min="1" value="1" required>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Unidad</label>
+                                        <select class="select" name="unidad" required>
+                                            <option value="Unidades">Unidades</option>
+                                            <option value="Paquetes">Paquetes</option>
+                                            <option value="Kilogramos">Kilogramos</option>
+                                            <option value="Litros">Litros</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Peso y volumen los exige el motor de ruteo para planificar la entrega -->
+                                    <div class="field">
+                                        <label class="field__label">Peso por unidad (kg)</label>
+                                        <input class="input" name="pesoUnitarioKg" type="number" min="0.001" step="0.001" placeholder="Ej: 0.5" required>
+                                        <span class="field__hint">Ej: un paquete de fideos de 500 g → 0.5</span>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Volumen por unidad (litros)</label>
+                                        <input class="input" name="volumenUnitarioLitros" type="number" min="0.001" step="0.001" placeholder="Ej: 1" required>
+                                        <span class="field__hint">Una caja de 30×20×10 cm ≈ 6 litros</span>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Estado del bien</label>
+                                        <select class="select" name="estado">
+                                            <option value="Nuevo">Nuevo</option>
+                                            <option value="Usado en buen estado">Usado en buen estado</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Fecha de vencimiento</label>
+                                        <input class="input" name="vencimiento" type="date">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -201,5 +217,66 @@
 </div>
 
 <script th:src="@{/assets/js/app.js}"></script>
+<script th:inline="javascript">
+    const catalogoCategorias = /*[[${categorias}]]*/ [];
+
+    // Vincula los selects de Categoría y Subcategoría de un bloque de bien
+    function inicializarEventosCategoria(bloque) {
+        const catSelect = bloque.querySelector('.select-categoria');
+        const subSelect = bloque.querySelector('.select-subcategoria');
+
+        catSelect.addEventListener('change', function () {
+            const catEncontrada = catalogoCategorias.find(c => c.nombre === this.value);
+            const subcategorias = (catEncontrada && catEncontrada.subcategorias) || [];
+
+            subSelect.innerHTML = '';
+            const optInicial = document.createElement('option');
+            optInicial.value = '';
+            optInicial.textContent = subcategorias.length ? 'Seleccionar subcategoría' : 'Primero seleccioná una categoría';
+            optInicial.disabled = true;
+            optInicial.selected = true;
+            optInicial.hidden = true;
+            subSelect.appendChild(optInicial);
+
+            subcategorias.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub.nombre;
+                opt.textContent = sub.nombre;
+                subSelect.appendChild(opt);
+            });
+
+            subSelect.disabled = subcategorias.length === 0;
+        });
+    }
+
+    document.querySelectorAll('.bien-bloque').forEach(inicializarEventosCategoria);
+
+    // Clona el primer bloque de bien con los campos vacíos
+    function agregarNuevoBien() {
+        const contenedor = document.getElementById('contenedorBienes');
+        const nuevoBloque = contenedor.querySelector('.bien-bloque').cloneNode(true);
+
+        // La cantidad arranca en 1; el resto queda vacío para completarse
+        nuevoBloque.querySelectorAll('input').forEach(i => {
+            i.value = i.name === 'cantidad' ? 1 : '';
+        });
+        nuevoBloque.querySelectorAll('select').forEach(s => { s.selectedIndex = 0; });
+
+        const subSelect = nuevoBloque.querySelector('.select-subcategoria');
+        subSelect.innerHTML = '<option value="" disabled selected hidden>Primero seleccioná una categoría</option>';
+        subSelect.disabled = true;
+
+        const btnQuitar = document.createElement('button');
+        btnQuitar.type = 'button';
+        btnQuitar.className = 'btn btn--danger btn--sm';
+        btnQuitar.style.cssText = 'position: absolute; top: 15px; right: 15px;';
+        btnQuitar.innerText = '✕ Quitar';
+        btnQuitar.onclick = function () { nuevoBloque.remove(); };
+        nuevoBloque.appendChild(btnQuitar);
+
+        contenedor.appendChild(nuevoBloque);
+        inicializarEventosCategoria(nuevoBloque);
+    }
+</script>
 </body>
 </html>

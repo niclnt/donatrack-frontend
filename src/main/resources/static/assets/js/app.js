@@ -147,12 +147,48 @@
   var donanteDetalles = document.getElementById("donanteDetalles");
   var donanteVacio = document.getElementById("donanteVacio");
   var cardDonanteSeleccionado = document.getElementById("cardDonanteSeleccionado");
+  var resultadosDonantes = document.getElementById("resultadosDonantes");
+  var resultadosMsg = document.getElementById("resultadosDonantesMsg");
+  var formRegistrar = document.getElementById("formRegistrarDonacion");
 
-  function seleccionarDonante(id, nombre, documento, email) {
+  // Cantidad maxima de resultados que se listan (el resto se pide refinar la busqueda)
+  var MAX_RESULTADOS = 20;
+
+  function nombreDe(d) {
+    return d.razonSocial || ((d.nombre || "") + " " + (d.apellido || "")).trim() || "Sin nombre";
+  }
+
+  function documentoDe(d) {
+    return (d.cuit || d.numeroDocumento || d.numDocumento || d.dni || d.documento || "").toString();
+  }
+
+  function mailDe(d) {
+    return d.email || d.usuarioEmail || d.correo || d.mail || "";
+  }
+
+  function detalleDe(d) {
+    var doc = documentoDe(d);
+    return (doc ? "Doc: " + doc + " · " : "") + (mailDe(d) || "Sin email");
+  }
+
+  function mostrarMensajeResultados(texto) {
+    if (!resultadosMsg) return;
+    resultadosMsg.textContent = texto || "";
+    resultadosMsg.hidden = !texto;
+  }
+
+  function seleccionarDonante(d, opcion) {
     if (!donanteIdInput || !cardDonanteSeleccionado) return;
-    donanteIdInput.value = id;
-    if (donanteNombre) donanteNombre.textContent = nombre;
-    if (donanteDetalles) donanteDetalles.textContent = (documento ? "Doc: " + documento + " · " : "") + email;
+    donanteIdInput.value = d.id;
+    if (donanteNombre) donanteNombre.textContent = nombreDe(d);
+    if (donanteDetalles) donanteDetalles.textContent = detalleDe(d);
+
+    // Resalta la opcion elegida y apaga las demas
+    if (resultadosDonantes) {
+      resultadosDonantes.querySelectorAll(".donante-opcion").forEach(function (b) {
+        b.setAttribute("aria-pressed", b === opcion ? "true" : "false");
+      });
+    }
 
     if (donanteVacio) donanteVacio.style.display = "none";
     cardDonanteSeleccionado.style.display = "flex";
@@ -163,99 +199,99 @@
     donanteIdInput.value = "";
     cardDonanteSeleccionado.style.display = "none";
     if (donanteVacio) donanteVacio.style.display = "block";
+    if (resultadosDonantes) {
+      resultadosDonantes.querySelectorAll(".donante-opcion").forEach(function (b) {
+        b.setAttribute("aria-pressed", "false");
+      });
+    }
+    if (inputBuscar) inputBuscar.focus();
   };
 
-  if (btnBuscar && inputBuscar) {
-    btnBuscar.addEventListener("click", function () {
-      var query = inputBuscar.value.trim().toLowerCase();
-      var tipo = selectTipo ? selectTipo.value : "HUMANA";
+  function renderizarResultados(encontrados) {
+    resultadosDonantes.innerHTML = "";
+    encontrados.slice(0, MAX_RESULTADOS).forEach(function (d) {
+      var opcion = document.createElement("button");
+      opcion.type = "button";
+      opcion.className = "donante-opcion";
+      opcion.setAttribute("role", "listitem");
+      opcion.setAttribute("aria-pressed", String(donanteIdInput.value) === String(d.id) ? "true" : "false");
 
-      if (!query) {
-        alert("Ingresá un nombre, DNI, CUIT o email para buscar.");
-        return;
-      }
+      var nombre = document.createElement("span");
+      nombre.className = "donante-opcion__nombre";
+      nombre.textContent = nombreDe(d);
+      var detalle = document.createElement("span");
+      detalle.className = "donante-opcion__detalle";
+      detalle.textContent = detalleDe(d);
 
-      var endpoint = "/admin/donantes/buscar?tipo=" + encodeURIComponent(tipo);
+      opcion.appendChild(nombre);
+      opcion.appendChild(detalle);
+      opcion.addEventListener("click", function () { seleccionarDonante(d, opcion); });
+      resultadosDonantes.appendChild(opcion);
+    });
+    resultadosDonantes.hidden = encontrados.length === 0;
+  }
 
-      fetch(endpoint)
-          .then(function (res) {
-            if (!res.ok) throw new Error("Error al consultar el servicio de donantes");
-            return res.json();
-          })
-          .then(function (donantes) {
-            if (!donantes || donantes.length === 0) {
-              alert("No hay ningún donante registrado de tipo " + tipo + " en la base de datos.");
-              return;
-            }
+  function buscarDonantes() {
+    var query = inputBuscar.value.trim().toLowerCase();
+    var tipo = selectTipo ? selectTipo.value : "HUMANA";
 
-            var encontrado = donantes.find(function (d) {
-              var doc = (d.numeroDocumento || d.numDocumento || d.cuit || d.dni || d.documento || "").toString().toLowerCase();
-              var nombreCompleto = ((d.nombre || "") + " " + (d.apellido || "") + " " + (d.razonSocial || "")).toLowerCase();
-              var mail = (d.email || d.usuarioEmail || d.correo || d.mail || "").toLowerCase();
+    if (!query) {
+      mostrarMensajeResultados("Ingresá un nombre, DNI, CUIT o email para buscar.");
+      return;
+    }
 
-              return doc.includes(query) || nombreCompleto.includes(query) || mail.includes(query);
-            });
-
-            if (encontrado) {
-              var nombreDisplay = encontrado.razonSocial || ((encontrado.nombre || "") + " " + (encontrado.apellido || "")).trim();
-              var docDisplay = encontrado.cuit || encontrado.numeroDocumento || encontrado.numDocumento || encontrado.dni || encontrado.documento || "";
-              var mailDisplay = encontrado.email || encontrado.usuarioEmail || encontrado.mail || "Sin email";
-
-              seleccionarDonante(encontrado.id, nombreDisplay, docDisplay, mailDisplay);
-            } else {
-              alert("No se encontró ningún donante registrado con esos datos.");
-            }
-          })
-          .catch(function (err) {
-            console.error("Error buscando donante:", err);
-            alert("Ocurrió un error al intentar consultar los donantes.");
+    mostrarMensajeResultados("Buscando...");
+    fetch("/admin/donantes/buscar?tipo=" + encodeURIComponent(tipo))
+        .then(function (res) {
+          if (!res.ok) throw new Error("Error al consultar el servicio de donantes");
+          return res.json();
+        })
+        .then(function (donantes) {
+          var encontrados = (donantes || []).filter(function (d) {
+            var texto = [nombreDe(d), documentoDe(d), mailDe(d)].join(" ").toLowerCase();
+            return texto.includes(query);
           });
+
+          renderizarResultados(encontrados);
+
+          if (encontrados.length === 0) {
+            mostrarMensajeResultados("No se encontró ningún donante de tipo " + tipo.toLowerCase() + " con esos datos.");
+          } else if (encontrados.length > MAX_RESULTADOS) {
+            mostrarMensajeResultados("Se muestran " + MAX_RESULTADOS + " de " + encontrados.length + " resultados. Refiná la búsqueda si no está el que buscás.");
+          } else {
+            mostrarMensajeResultados(encontrados.length + " resultado(s). Hacé click en uno para seleccionarlo.");
+          }
+        })
+        .catch(function (err) {
+          console.error("Error buscando donante:", err);
+          renderizarResultados([]);
+          mostrarMensajeResultados("Ocurrió un error al intentar consultar los donantes.");
+        });
+  }
+
+  if (btnBuscar && inputBuscar && resultadosDonantes) {
+    btnBuscar.addEventListener("click", buscarDonantes);
+    // Enter en el buscador busca en vez de enviar el formulario
+    inputBuscar.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        buscarDonantes();
+      }
     });
   }
 
-  /* 2. Carga Dinámica de Múltiples Bienes (Vista Donante) */
-  var contenedorBienes = document.getElementById("contenedorBienes");
-  var btnAgregarBien = document.getElementById("btnAgregarBien");
-
-  if (contenedorBienes) {
-    window.agregarNuevoBien = function () {
-      var primerBloque = contenedorBienes.querySelector(".bien-bloque");
-      if (!primerBloque) return;
-
-      var nuevoBloque = primerBloque.cloneNode(true);
-
-      nuevoBloque.querySelectorAll("input").forEach(function (i) {
-        if (i.type === "number") i.value = 1;
-        else i.value = "";
-      });
-
-      var catSelect = nuevoBloque.querySelector(".select-categoria");
-      var subSelect = nuevoBloque.querySelector(".select-subcategoria");
-      if (catSelect) catSelect.value = "";
-      if (subSelect) {
-        subSelect.innerHTML = '<option value="" disabled selected hidden>Primero seleccioná una categoría</option>';
-        subSelect.disabled = true;
+  // El id del donante es un hidden: el navegador no lo valida solo
+  if (formRegistrar && donanteIdInput) {
+    formRegistrar.addEventListener("submit", function (e) {
+      if (!donanteIdInput.value) {
+        e.preventDefault();
+        mostrarMensajeResultados("Seleccioná un donante antes de registrar la donación.");
+        if (inputBuscar) inputBuscar.focus();
       }
-
-      if (!nuevoBloque.querySelector(".btn-quitar-bien")) {
-        var btnQuitar = document.createElement("button");
-        btnQuitar.type = "button";
-        btnQuitar.className = "btn btn--danger btn--sm btn-quitar-bien";
-        btnQuitar.style.cssText = "position: absolute; top: 15px; right: 15px;";
-        btnQuitar.innerText = "✕ Quitar";
-        btnQuitar.onclick = function () { nuevoBloque.remove(); };
-        nuevoBloque.appendChild(btnQuitar);
-      }
-
-      contenedorBienes.appendChild(nuevoBloque);
-    };
-
-    if (btnAgregarBien) {
-      btnAgregarBien.addEventListener("click", window.agregarNuevoBien);
-    }
+    });
   }
 
-  /* 3. Alta de Nuevo Donante (Vista Gestión de Donantes) */
+  /* 2. Alta de Nuevo Donante (Vista Gestión de Donantes) */
   var selectNuevoTipo = document.getElementById("nuevoTipoPersona");
   var secHumana = document.getElementById("secPersonaHumana");
   var secJuridica = document.getElementById("secPersonaJuridica");

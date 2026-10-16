@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.catalogo.CategoriaCatalogoResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.asignacion.PropuestaAsignacionResponse;
@@ -135,64 +136,114 @@ public class AdminController {
     public String mostrarRegistroDonacion(Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
-        try {
-            String categoriasUrl = donacionesServiceUrl + "/donaciones/catalogo/categorias";
-            model.addAttribute("categorias", webApiCallerService.getList(categoriasUrl, Map[].class));
-        } catch (Exception e) {
-            model.addAttribute("categorias", List.of());
-            System.out.println("Error cargando categorías: " + e.getMessage());
-        }
-
+        cargarCategorias(model);
         return "admin/registrar-donacion";
     }
 
+    // Los campos de cada bien llegan repetidos (uno por bloque del formulario). Se leen del
+    // MultiValueMap y no como @RequestParam List<String>: con un solo bien Spring partiria
+    // por comas un valor como "Fideos, arroz"
     @PostMapping("/admin/registrar-donacion")
     public String procesarRegistroDonacion(
-            @RequestParam Long donanteId,
-            @RequestParam String categoria,
-            @RequestParam String subcategoria,
-            @RequestParam Integer cantidad,
-            @RequestParam String unidad,
-            @RequestParam Double pesoUnitarioKg,
-            @RequestParam Double volumenUnitarioLitros,
-            @RequestParam String estado,
-            @RequestParam(required = false) String vencimiento,
+            @RequestParam(required = false) Long donanteId,
             @RequestParam String descripcion,
             @RequestParam String responsable,
+            @RequestParam MultiValueMap<String, String> params,
             Authentication authentication,
             Model model) {
 
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
-        BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categoria, false, false);
-        BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategoria);
-        BienDTO.UnidadRef uniRef = new BienDTO.UnidadRef(null, unidad, "UN");
-        LocalDate fechaVenc = (vencimiento != null && !vencimiento.isBlank()) ? LocalDate.parse(vencimiento) : null;
-        boolean usado = "Usado en buen estado".equals(estado);
-
-        if (pesoUnitarioKg <= 0 || volumenUnitarioLitros <= 0) {
-            model.addAttribute("error", "El peso y el volumen por unidad tienen que ser mayores a 0 (se usan para planificar la entrega).");
+        if (donanteId == null) {
+            model.addAttribute("error", "Seleccioná un donante antes de registrar la donación.");
             return mostrarRegistroDonacion(authentication, model);
         }
-        // El back guarda el volumen en m3: 1 litro = 0.001 m3
-        BienDTO bien = new BienDTO(descripcion, catRef, subRef, uniRef, cantidad, fechaVenc, usado, false,
-                pesoUnitarioKg, volumenUnitarioLitros / 1000);
-        DonacionCreateRequest request = new DonacionCreateRequest(descripcion + " (Recepción por: " + responsable + ")", LocalDate.now(), List.of(bien));
+
+        List<BienDTO> bienes;
+        try {
+            bienes = armarBienes(params);
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            return mostrarRegistroDonacion(authentication, model);
+        }
+
+        DonacionCreateRequest request = new DonacionCreateRequest(descripcion + " (Recepción por: " + responsable + ")", LocalDate.now(), bienes);
 
         String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
 
         try {
             webApiCallerService.post(backendUrl, request, String.class);
-            model.addAttribute("exito", "Donación registrada correctamente en depósito.");
+            model.addAttribute("exito", "Donación registrada correctamente en depósito (" + bienes.size() + " bien(es)).");
         } catch (Exception e) {
             model.addAttribute("error", "Error al registrar la donación: " + e.getMessage());
         }
 
-        try {
-            model.addAttribute("categorias", webApiCallerService.getList(donacionesServiceUrl + "/donaciones/catalogo/categorias", Map[].class));
-        } catch (Exception ignored) {}
-
+        cargarCategorias(model);
         return "admin/registrar-donacion";
+    }
+
+    private List<BienDTO> armarBienes(MultiValueMap<String, String> params) {
+        List<String> descripciones = params.getOrDefault("descripcionBien", List.of());
+        List<String> categorias = params.getOrDefault("categoria", List.of());
+        List<String> subcategorias = params.getOrDefault("subcategoria", List.of());
+        List<String> cantidades = params.getOrDefault("cantidad", List.of());
+        List<String> unidades = params.getOrDefault("unidad", List.of());
+        List<String> pesos = params.getOrDefault("pesoUnitarioKg", List.of());
+        List<String> volumenes = params.getOrDefault("volumenUnitarioLitros", List.of());
+        List<String> estados = params.getOrDefault("estado", List.of());
+        List<String> vencimientos = params.getOrDefault("vencimiento", List.of());
+
+        int total = descripciones.size();
+        if (total == 0) {
+            throw new IllegalArgumentException("Cargá al menos un bien.");
+        }
+        boolean incompletos = List.of(categorias, subcategorias, cantidades, unidades, pesos, volumenes, estados, vencimientos)
+                .stream().anyMatch(lista -> lista.size() != total);
+        if (incompletos) {
+            throw new IllegalArgumentException("Completá categoría, subcategoría, cantidad, unidad, peso y volumen de cada bien.");
+        }
+
+        List<BienDTO> bienes = new ArrayList<>();
+        for (int i = 0; i < total; i++) {
+            int cantidad;
+            double peso;
+            double volumenLitros;
+            LocalDate fechaVenc;
+            try {
+                cantidad = Integer.parseInt(cantidades.get(i));
+                peso = Double.parseDouble(pesos.get(i));
+                volumenLitros = Double.parseDouble(volumenes.get(i));
+                String venc = vencimientos.get(i);
+                fechaVenc = (venc != null && !venc.isBlank()) ? LocalDate.parse(venc) : null;
+            } catch (RuntimeException e) {
+                throw new IllegalArgumentException("Hay datos inválidos en el bien #" + (i + 1) + ".");
+            }
+
+            // Peso y volumen los exige el motor de ruteo: sin ellos la donacion nunca se puede planificar
+            if (cantidad < 1 || peso <= 0 || volumenLitros <= 0) {
+                throw new IllegalArgumentException("En el bien #" + (i + 1) + " la cantidad, el peso y el volumen por unidad tienen que ser mayores a 0.");
+            }
+
+            BienDTO.CategoriaRef catRef = new BienDTO.CategoriaRef(null, categorias.get(i), false, false);
+            BienDTO.SubcategoriaRef subRef = new BienDTO.SubcategoriaRef(null, subcategorias.get(i));
+            BienDTO.UnidadRef uniRef = new BienDTO.UnidadRef(null, unidades.get(i), "UN");
+            boolean usado = "Usado en buen estado".equals(estados.get(i));
+
+            // El back guarda el volumen en m3: 1 litro = 0.001 m3
+            bienes.add(new BienDTO(descripciones.get(i), catRef, subRef, uniRef, cantidad, fechaVenc, usado, false,
+                    peso, volumenLitros / 1000));
+        }
+        return bienes;
+    }
+
+    private void cargarCategorias(Model model) {
+        try {
+            model.addAttribute("categorias", webApiCallerService.getList(
+                    donacionesServiceUrl + "/donaciones/catalogo/categorias", CategoriaCatalogoResponse[].class));
+        } catch (Exception e) {
+            model.addAttribute("categorias", List.of());
+            model.addAttribute("errorCatalogo", "No se pudieron cargar las categorías. Intentá nuevamente más tarde.");
+        }
     }
 
     // --- REQ 16: DEPÓSITO Y VENCIDAS ---
