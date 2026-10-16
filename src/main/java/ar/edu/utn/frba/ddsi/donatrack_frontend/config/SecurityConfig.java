@@ -3,10 +3,13 @@ package ar.edu.utn.frba.ddsi.donatrack_frontend.config;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.providers.CustomAuthProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import java.util.List;
@@ -22,7 +25,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Recursos estaticos y paginas publicas
                         .requestMatchers("/", "/login", "/registro", "/registro/**","/legales", "/privacidad", "/mapa-donaciones", "/403", "/404", "/error", "/css/**", "/js/**", "/img/**", "/assets/**").permitAll()
+                        // Fotos de las entregas recibidas: se ven sin login (landing, mapa publico)
+                        .requestMatchers("/fotos/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(SesionUsuario.ROL_ADMIN)
+                        // Proxy del buscador de donantes del admin (devuelve datos de todos los donantes)
+                        .requestMatchers("/api/donantes/**").hasRole(SesionUsuario.ROL_ADMIN)
+                        // Incentivos es solo para personas humanas (va antes de /donante/**)
+                        .requestMatchers("/donante/incentivos", "/donante/incentivos/**").hasRole(SesionUsuario.ROL_DONANTE_HUMANO)
                         .requestMatchers("/donante/**").hasAnyRole(SesionUsuario.ROL_DONANTE_HUMANO, SesionUsuario.ROL_DONANTE_JURIDICO)
                         .requestMatchers("/ong/**").hasRole(SesionUsuario.ROL_BENEFICIARIO)
                         .anyRequest().authenticated()
@@ -30,7 +39,7 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler(redireccionPorRol())
-                        .failureUrl("/login?error")
+                        .failureHandler(motivoDelFallo())
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -46,6 +55,16 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    // Distingue auth caido y chofer de credenciales incorrectas
+    private AuthenticationFailureHandler motivoDelFallo() {
+        return (request, response, e) -> {
+            String motivo = e instanceof AuthenticationServiceException ? "servicio"
+                    : e instanceof DisabledException ? "chofer"
+                    : "error";
+            response.sendRedirect("/login?" + motivo);
+        };
     }
 
     // Despues del login, cada rol va a su panel

@@ -7,12 +7,14 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.services.AuthApiService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -32,9 +34,12 @@ public class CustomAuthProvider implements AuthenticationProvider {
 
     private final AuthApiService authApiService;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final String donacionesServiceUrl;
 
-    public CustomAuthProvider(AuthApiService authApiService) {
+    public CustomAuthProvider(AuthApiService authApiService,
+                              @Value("${donaciones.service.url}") String donacionesServiceUrl) {
         this.authApiService = authApiService;
+        this.donacionesServiceUrl = donacionesServiceUrl;
     }
 
     @Override
@@ -50,7 +55,9 @@ public class CustomAuthProvider implements AuthenticationProvider {
             respuesta = authApiService.login(username, password);
         } catch (ServicioNoDisponibleException e) {
             log.error("[AUTH-PROVIDER] Servicio de Auth NO disponible: {}", e.getMessage());
-            throw new AuthenticationServiceException(e.getMessage(), e);
+            // "Internal": Spring la propaga directo, sin probar el AuthenticationManager por defecto
+            // (que respondia "credenciales incorrectas" y tapaba este error)
+            throw new InternalAuthenticationServiceException(e.getMessage(), e);
         }
 
         if (respuesta == null) {
@@ -60,6 +67,11 @@ public class CustomAuthProvider implements AuthenticationProvider {
 
         List<String> roles = respuesta.roles() == null ? List.of() : respuesta.roles();
         List<String> permisos = respuesta.permisos() == null ? List.of() : respuesta.permisos();
+
+        // El chofer usa la app movil (reporte de posiciones); la web no tiene pantallas para el
+        if (roles.contains(SesionUsuario.ROL_CHOFER) && roles.size() == 1) {
+            throw new DisabledException("Los choferes ingresan desde la aplicación móvil");
+        }
 
         log.info("[AUTH-PROVIDER] Login exitoso en Auth-Service.");
         log.info("[AUTH-PROVIDER] USUARIO_ID recibido: {}", respuesta.usuarioId());
@@ -80,8 +92,9 @@ public class CustomAuthProvider implements AuthenticationProvider {
         if (esDonante) {
             log.info("[AUTH-PROVIDER] El usuario tiene rol de DONANTE. Consultando a donaciones-service...");
             try {
-                String DONACIONES_SERVICE_URL = "http://localhost:8080";
-                String urlConsulta = DONACIONES_SERVICE_URL + "/donantes/personaHumana/usuario/" + respuesta.usuarioId();
+                // Humana y juridica tienen endpoints distintos; el id de donante es unico entre ambas
+                String tipo = roles.contains(SesionUsuario.ROL_DONANTE_JURIDICO) ? "personaJuridica" : "personaHumana";
+                String urlConsulta = donacionesServiceUrl + "/donantes/" + tipo + "/usuario/" + respuesta.usuarioId();
 
                 log.info("[AUTH-PROVIDER] Realizando GET a: {}", urlConsulta);
 

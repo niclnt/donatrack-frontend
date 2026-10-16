@@ -5,7 +5,6 @@
 
   /* --- Nav responsive (hamburguesa) --- */
   document.querySelectorAll("[data-nav-toggle]").forEach(function (btn) {
-    //var menu = document.getElementById(btn.getAttribute("aria-controls")); No permitia usar el menu hamburguesa desde visitante (no logueado)
     var barra = btn.closest(".topbar");
     var menu = null;
     if (barra){
@@ -99,8 +98,7 @@
     });
   });
 
-  /* Mostrar/ocultar contraseña: agrega un boton con ojo a cada campo de contraseña.
-     Sin JS el campo sigue funcionando como un password comun. */
+  /* Mostrar/ocultar contraseña: agrega un boton con ojo a cada campo de contraseña. */
   var ICONO_OJO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   var ICONO_OJO_TACHADO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
@@ -136,11 +134,11 @@
   });
 })();
 
-/* ---- MÓDULO REGISTRAR DONACIÓN (ADMIN & DONANTE) ---- */
+/* ---- MÓDULO REGISTRAR DONACIÓN & DONANTES ---- */
 (function () {
   "use strict";
 
-  /* 1. Búsqueda y Selección Dinámica de Donante (Admin a través del Proxy Controller) */
+  /* 1. Búsqueda y Selección Dinámica de Donante (Vista Registrar Donación) */
   var btnBuscar = document.getElementById("btnBuscarDonante");
   var inputBuscar = document.getElementById("buscar-donante");
   var selectTipo = document.getElementById("tipo-persona");
@@ -177,8 +175,7 @@
         return;
       }
 
-      // Consulta al proxy interno de Spring Boot
-      var endpoint = "/api/donantes/buscar?tipo=" + encodeURIComponent(tipo);
+      var endpoint = "/admin/donantes/buscar?tipo=" + encodeURIComponent(tipo);
 
       fetch(endpoint)
           .then(function (res) {
@@ -186,20 +183,25 @@
             return res.json();
           })
           .then(function (donantes) {
-            var encontrado = donantes.find(function (d) {
-              var doc = (d.numDocumento || d.cuit || d.dni || "").toString();
-              var nom = (d.nombre ? d.nombre + " " + (d.apellido || "") : d.razonSocial || "").toLowerCase();
-              var mail = (d.email || d.usuarioEmail || "").toLowerCase();
+            if (!donantes || donantes.length === 0) {
+              alert("No hay ningún donante registrado de tipo " + tipo + " en la base de datos.");
+              return;
+            }
 
-              return doc.includes(query) || nom.includes(query) || mail.includes(query);
+            var encontrado = donantes.find(function (d) {
+              var doc = (d.numeroDocumento || d.numDocumento || d.cuit || d.dni || d.documento || "").toString().toLowerCase();
+              var nombreCompleto = ((d.nombre || "") + " " + (d.apellido || "") + " " + (d.razonSocial || "")).toLowerCase();
+              var mail = (d.email || d.usuarioEmail || d.correo || d.mail || "").toLowerCase();
+
+              return doc.includes(query) || nombreCompleto.includes(query) || mail.includes(query);
             });
 
             if (encontrado) {
-              var nombreCompleto = encontrado.razonSocial || (encontrado.nombre + " " + (encontrado.apellido || ""));
-              var docIdentidad = encontrado.cuit || encontrado.numDocumento || encontrado.dni || "";
-              var correo = encontrado.email || "Sin email registrado";
+              var nombreDisplay = encontrado.razonSocial || ((encontrado.nombre || "") + " " + (encontrado.apellido || "")).trim();
+              var docDisplay = encontrado.cuit || encontrado.numeroDocumento || encontrado.numDocumento || encontrado.dni || encontrado.documento || "";
+              var mailDisplay = encontrado.email || encontrado.usuarioEmail || encontrado.mail || "Sin email";
 
-              seleccionarDonante(encontrado.id, nombreCompleto, docIdentidad, correo);
+              seleccionarDonante(encontrado.id, nombreDisplay, docDisplay, mailDisplay);
             } else {
               alert("No se encontró ningún donante registrado con esos datos.");
             }
@@ -251,5 +253,134 @@
     if (btnAgregarBien) {
       btnAgregarBien.addEventListener("click", window.agregarNuevoBien);
     }
+  }
+
+  /* 3. Alta de Nuevo Donante (Vista Gestión de Donantes) */
+  var selectNuevoTipo = document.getElementById("nuevoTipoPersona");
+  var secHumana = document.getElementById("secPersonaHumana");
+  var secJuridica = document.getElementById("secPersonaJuridica");
+
+  if (selectNuevoTipo) {
+    selectNuevoTipo.addEventListener("change", function () {
+      if (this.value === "JURIDICA") {
+        if (secHumana) secHumana.style.display = "none";
+        if (secJuridica) secJuridica.style.display = "block";
+      } else {
+        if (secHumana) secHumana.style.display = "block";
+        if (secJuridica) secJuridica.style.display = "none";
+      }
+    });
+  }
+
+  function mostrarAlertaVisual(mensaje, esError) {
+    var contenedor = document.getElementById("alertaMensaje");
+    if (window.donaTrackToast) {
+      window.donaTrackToast(mensaje, esError ? "error" : "success");
+    }
+    if (contenedor) {
+      contenedor.className = esError ? "alert alert--error" : "alert alert--success";
+      contenedor.textContent = mensaje;
+      contenedor.style.display = "block";
+      setTimeout(function () { contenedor.style.display = "none"; }, 5000);
+    }
+  }
+
+  var btnGuardarDonanteSolo = document.getElementById("btnGuardarDonanteSolo");
+  if (btnGuardarDonanteSolo) {
+    btnGuardarDonanteSolo.addEventListener("click", function () {
+      var tipo = selectNuevoTipo ? selectNuevoTipo.value : "HUMANA";
+      var email = document.getElementById("nuevoEmail").value.trim();
+      var telefono = document.getElementById("nuevoTelefono").value.trim();
+
+      var radios = document.getElementsByName("medioPreferido");
+      var medioPreferidoVal = "EMAIL";
+      for (var r of radios) {
+        if (r.checked) medioPreferidoVal = r.value;
+      }
+
+      if (!email) {
+        mostrarAlertaVisual("El correo electrónico es obligatorio.", true);
+        return;
+      }
+
+      var mediosDeContacto = [
+        { valor: email, tipoContacto: "EMAIL" }
+      ];
+      if (telefono) {
+        mediosDeContacto.push({ valor: telefono, tipoContacto: "TELEFONO" });
+      }
+
+      var medioContactoPreferidoObj = {
+        valor: medioPreferidoVal === "EMAIL" ? email : (telefono || email),
+        tipoContacto: medioPreferidoVal === "EMAIL" ? "EMAIL" : "TELEFONO"
+      };
+
+      var bodyData = {
+        tipoPersona: tipo,
+        mail: email,
+        mediosDeContacto: mediosDeContacto,
+        medioDeContactoPreferido: medioContactoPreferidoObj
+      };
+
+      if (tipo === "HUMANA") {
+        var nombre = document.getElementById("nuevoNombre").value.trim();
+        var tipoDoc = document.getElementById("nuevoTipoDoc").value;
+        var doc = document.getElementById("nuevoDoc").value.trim();
+        var edadVal = document.getElementById("nuevaEdad").value;
+        var genero = document.getElementById("nuevoGenero").value;
+        var direccion = document.getElementById("nuevaDireccion").value.trim();
+
+        if (!nombre || !doc || !edadVal || !genero) {
+          mostrarAlertaVisual("Por favor completá Nombre, Documento, Edad y Género.", true);
+          return;
+        }
+
+        bodyData.nombre = nombre;
+        bodyData.tipoDoc = tipoDoc;
+        bodyData.documento = doc;
+        bodyData.edad = parseInt(edadVal, 10);
+        bodyData.genero = genero;
+        bodyData.direccion = direccion;
+      } else {
+        var razonSocial = document.getElementById("nuevaRazonSocial").value.trim();
+        var tipoJuridico = document.getElementById("nuevoTipoJuridico").value;
+        var rubro = document.getElementById("nuevoRubro").value.trim();
+
+        if (!razonSocial || !rubro) {
+          mostrarAlertaVisual("Por favor completá Razón Social y Rubro.", true);
+          return;
+        }
+
+        bodyData.razonSocial = razonSocial;
+        bodyData.tipoJuridico = tipoJuridico;
+        bodyData.rubro = rubro;
+      }
+
+      fetch("/admin/donantes/crear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData)
+      })
+          .then(function (res) {
+            if (!res.ok) {
+              return res.json().then(function(errData) {
+                throw new Error(errData.error || errData.message || "Error al procesar el alta");
+              });
+            }
+            return res.json();
+          })
+          .then(function (donanteCreado) {
+            mostrarAlertaVisual("¡Donante registrado exitosamente en el sistema!", false);
+
+            ["nuevoNombre", "nuevoDoc", "nuevaEdad", "nuevoEmail", "nuevoTelefono", "nuevaDireccion", "nuevaRazonSocial", "nuevoRubro"].forEach(function(id) {
+              var el = document.getElementById(id);
+              if (el) el.value = "";
+            });
+          })
+          .catch(function (err) {
+            console.error("Error al registrar donante:", err);
+            mostrarAlertaVisual("Ocurrió un error al intentar registrar el donante: " + err.message, true);
+          });
+    });
   }
 })();

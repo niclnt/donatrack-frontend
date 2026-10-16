@@ -7,34 +7,23 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.importacion.ResultadoImporta
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
-import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 public class AdminController {
@@ -50,6 +39,94 @@ public class AdminController {
         this.webApiCallerService = webApiCallerService;
         this.donacionesServiceUrl = donacionesServiceUrl;
         this.logisticaServiceUrl = logisticaServiceUrl;
+    }
+
+    // --- GESTIÓN SEPARADA DE DONANTES ---
+
+    @GetMapping("/admin/donantes")
+    public String mostrarGestionDonantes(Authentication authentication, Model model) {
+        if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+        return "admin/donantes";
+    }
+
+    @PostMapping("/admin/donantes/crear")
+    public String crearDonanteForm(
+            @RequestParam String tipoPersona,
+            @RequestParam String mail,
+            @RequestParam(required = false) String telefono,
+            @RequestParam(defaultValue = "EMAIL") String medioPreferido,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String tipoDoc,
+            @RequestParam(required = false) String documento,
+            @RequestParam(required = false) Integer edad,
+            @RequestParam(required = false) String genero,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(required = false) String razonSocial,
+            @RequestParam(required = false) String tipoJuridico,
+            @RequestParam(required = false) String rubro,
+            Authentication authentication,
+            RedirectAttributes redirect) {
+
+        if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+
+        Map<String, Object> medioEmail = Map.of("valor", mail, "tipoContacto", "EMAIL");
+        Map<String, Object> medioPref = "EMAIL".equalsIgnoreCase(medioPreferido)
+                ? medioEmail
+                : Map.of("valor", telefono != null ? telefono : mail, "tipoContacto", "TELEFONO");
+
+        List<Map<String, Object>> medios = new ArrayList<>();
+        medios.add(medioEmail);
+        if (telefono != null && !telefono.isBlank()) {
+            medios.add(Map.of("valor", telefono, "tipoContacto", "TELEFONO"));
+        }
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("mail", mail);
+        requestBody.put("mediosDeContacto", medios);
+        requestBody.put("medioDeContactoPreferido", medioPref);
+
+        String endpoint;
+        if ("JURIDICA".equalsIgnoreCase(tipoPersona)) {
+            endpoint = "/donantes/personaJuridica";
+            requestBody.put("razonSocial", razonSocial);
+            requestBody.put("tipoJuridico", tipoJuridico);
+            requestBody.put("rubro", rubro);
+        } else {
+            endpoint = "/donantes/personaHumana";
+            requestBody.put("nombre", nombre);
+            requestBody.put("tipoDoc", tipoDoc);
+            requestBody.put("documento", documento);
+            requestBody.put("edad", edad);
+            requestBody.put("genero", genero);
+            requestBody.put("direccion", direccion);
+        }
+
+        try {
+            String url = donacionesServiceUrl + endpoint;
+            webApiCallerService.post(url, requestBody, Map.class);
+            redirect.addFlashAttribute("exito", "¡Donante registrado correctamente!");
+        } catch (Exception e) {
+            redirect.addFlashAttribute("error", "Error al registrar donante: " + e.getMessage());
+        }
+
+        return "redirect:/admin/donantes";
+    }
+
+    @GetMapping("/admin/donantes/buscar")
+    @ResponseBody
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> buscarDonantesProxy(@RequestParam(defaultValue = "HUMANA") String tipo) {
+        String endpoint = tipo.equalsIgnoreCase("JURIDICA")
+                ? "/donantes/personaJuridica"
+                : "/donantes/personaHumana";
+
+        try {
+            List rawList = webApiCallerService.getList(donacionesServiceUrl + endpoint, Map[].class);
+            return (List<Map<String, Object>>) rawList;
+        } catch (Exception e) {
+            System.out.println("Error buscando donantes en proxy: " + e.getMessage());
+            return List.of();
+        }
     }
 
     // --- REQ 15: REGISTRAR DONACIÓN ---
@@ -76,6 +153,8 @@ public class AdminController {
             @RequestParam String subcategoria,
             @RequestParam Integer cantidad,
             @RequestParam String unidad,
+            @RequestParam Double pesoUnitarioKg,
+            @RequestParam Double volumenUnitarioLitros,
             @RequestParam String estado,
             @RequestParam(required = false) String vencimiento,
             @RequestParam String descripcion,
@@ -91,7 +170,13 @@ public class AdminController {
         LocalDate fechaVenc = (vencimiento != null && !vencimiento.isBlank()) ? LocalDate.parse(vencimiento) : null;
         boolean usado = "Usado en buen estado".equals(estado);
 
-        BienDTO bien = new BienDTO(descripcion, catRef, subRef, uniRef, cantidad, fechaVenc, usado, false, 0.0, 0.0);
+        if (pesoUnitarioKg <= 0 || volumenUnitarioLitros <= 0) {
+            model.addAttribute("error", "El peso y el volumen por unidad tienen que ser mayores a 0 (se usan para planificar la entrega).");
+            return mostrarRegistroDonacion(authentication, model);
+        }
+        // El back guarda el volumen en m3: 1 litro = 0.001 m3
+        BienDTO bien = new BienDTO(descripcion, catRef, subRef, uniRef, cantidad, fechaVenc, usado, false,
+                pesoUnitarioKg, volumenUnitarioLitros / 1000);
         DonacionCreateRequest request = new DonacionCreateRequest(descripcion + " (Recepción por: " + responsable + ")", LocalDate.now(), List.of(bien));
 
         String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
@@ -110,22 +195,6 @@ public class AdminController {
         return "admin/registrar-donacion";
     }
 
-    @GetMapping("/api/donantes/buscar")
-    @ResponseBody
-    @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> buscarDonantesProxy(@RequestParam(defaultValue = "HUMANA") String tipo) {
-        String endpoint = tipo.equalsIgnoreCase("JURIDICA")
-                ? "/donantes/personaJuridica"
-                : "/donantes/personaHumana";
-
-        try {
-            List rawList = webApiCallerService.getList(donacionesServiceUrl + endpoint, Map[].class);
-            return (List<Map<String, Object>>) rawList;
-        } catch (Exception e) {
-            System.out.println("Error buscando donantes en proxy: " + e.getMessage());
-            return List.of();
-        }
-    }
     // --- REQ 16: DEPÓSITO Y VENCIDAS ---
 
     @GetMapping("/admin/deposito-vencidas")

@@ -31,6 +31,12 @@
           <div th:if="${param.error}" class="alert alert-danger" style="margin-bottom: 15px; color: #d73a49; font-weight: bold;">
             Correo o contraseña incorrectos.
           </div>
+          <div th:if="${param.servicio}" class="alert alert--error" style="margin-bottom: 15px;">
+            No pudimos verificar tus datos en este momento. Probá de nuevo en unos minutos.
+          </div>
+          <div th:if="${param.chofer}" class="alert alert--info" style="margin-bottom: 15px;">
+            Los choferes ingresan desde la aplicación móvil.
+          </div>
 
           <div class="field">
             <label class="field__label" for="username">Correo electrónico</label>

@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
@@ -56,8 +57,14 @@ public class WebApiCallerService {
     }
 
     public <T> T post(String url, Object body, Class<T> tipo) {
+        return post(url, body, tipo, Map.of());
+    }
+
+    // Con encabezados extra (ej. X-Entidad-Id que pide logistica)
+    public <T> T post(String url, Object body, Class<T> tipo, Map<String, String> encabezados) {
         return conToken(token -> conCuerpo(restClient.post().uri(url)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token), body)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(h -> encabezados.forEach(h::set)), body)
                 .retrieve().body(tipo));
     }
 
@@ -74,8 +81,13 @@ public class WebApiCallerService {
 
     // Para subir archivos (ej. importacion CSV)
     public <T> T postMultipart(String url, MultiValueMap<String, ?> partes, Class<T> tipo) {
+        return postMultipart(url, partes, tipo, Map.of());
+    }
+
+    public <T> T postMultipart(String url, MultiValueMap<String, ?> partes, Class<T> tipo, Map<String, String> encabezados) {
         return conToken(token -> restClient.post().uri(url)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .headers(h -> encabezados.forEach(h::set))
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(partes)
                 .retrieve().body(tipo));
@@ -91,6 +103,15 @@ public class WebApiCallerService {
     public <T> List<T> getListPublica(String url, Class<T[]> tipoArray) {
         try {
             return comoLista(traducirErrores(token -> restClient.get().uri(url).retrieve().body(tipoArray)));
+        } catch (TokenRechazadoException e) {
+            throw new ApiException(401, "El recurso requiere iniciar sesión");
+        }
+    }
+
+    // Para archivos publicos (fotos de entregas): devuelve el contenido con su Content-Type
+    public ResponseEntity<byte[]> getArchivoPublico(String url) {
+        try {
+            return traducirErrores(token -> restClient.get().uri(url).retrieve().toEntity(byte[].class));
         } catch (TokenRechazadoException e) {
             throw new ApiException(401, "El recurso requiere iniciar sesión");
         }

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -44,8 +45,9 @@ public class HomeController {
 
     @GetMapping("/")
     public String inicio(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            return "redirect:/donante/mis-donaciones";
+        // Con sesion, cada rol va a su panel (/panel decide segun el rol)
+        if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+            return "redirect:/panel";
         }
         return "index";
     }
@@ -188,6 +190,8 @@ public class HomeController {
             @RequestParam List<String> unidad,
             @RequestParam List<String> categoria,
             @RequestParam List<String> subcategoria,
+            @RequestParam List<Double> pesoUnitarioKg,
+            @RequestParam List<Double> volumenUnitarioLitros,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -203,6 +207,16 @@ public class HomeController {
             return "redirect:/donante/nueva-donacion";
         }
 
+        // Peso y volumen los exige el motor de ruteo: sin ellos la donacion nunca se puede planificar
+        boolean faltanMedidas = pesoUnitarioKg.size() != descripcionBien.size()
+                || volumenUnitarioLitros.size() != descripcionBien.size()
+                || pesoUnitarioKg.stream().anyMatch(p -> p == null || p <= 0)
+                || volumenUnitarioLitros.stream().anyMatch(v -> v == null || v <= 0);
+        if (faltanMedidas) {
+            redirectAttributes.addFlashAttribute("errorCatalogo", "Completá el peso y el volumen por unidad de cada bien (mayores a 0).");
+            return "redirect:/donante/nueva-donacion";
+        }
+
         // Construimos la lista de todos los bienes cargados en el formulario
         List<BienDTO> bienes = new ArrayList<>();
         for (int i = 0; i < descripcionBien.size(); i++) {
@@ -212,7 +226,7 @@ public class HomeController {
 
             bienes.add(new BienDTO(
                     descripcionBien.get(i), catRef, subRef, uniRef, cantidad.get(i),
-                    null, false, false, 0.0, 0.0
+                    null, false, false, pesoUnitarioKg.get(i), volumenUnitarioLitros.get(i) / 1000 // litros -> m3
             ));
         }
 
@@ -235,26 +249,11 @@ public class HomeController {
         return "redirect:/donante/mis-donaciones";
     }
 
-    private Long extraerId() {
-        try {
-            Object idObjeto = SesionUsuario.actual().getAttribute(SesionUsuario.USUARIO_ID);
-            if (idObjeto != null) {
-                return Long.valueOf(idObjeto.toString());
-            }
-        } catch (Exception e) {
-            System.out.println("Error al extraer ID de SesionUsuario: " + e.getMessage());
-        }
-        return 1L; // Fallback de seguridad
-    }
-
+    // Sin fallback al usuarioId: es un id del auth-service y apuntaria a otro donante
     private Long extraerDonanteId() {
         Long donanteId = SesionUsuario.donanteId();
 
         if (donanteId == null) {
-            Long usuarioId = extraerId();
-            if (usuarioId != null) {
-                return usuarioId;
-            }
             throw new IllegalStateException(
                     "No hay un donante autenticado en la sesión"
             );
