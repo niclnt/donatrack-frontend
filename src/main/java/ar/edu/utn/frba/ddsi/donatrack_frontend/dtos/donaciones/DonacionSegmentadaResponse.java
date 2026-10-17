@@ -12,6 +12,7 @@ public record DonacionSegmentadaResponse(
         String estadoActual,
         List<BienDTO> bienes,
         LocalDate fechaDonacion,
-        String entidadAsignada
+        String entidadAsignada,
+        String descripcionNecesidad
 ) {
 }
