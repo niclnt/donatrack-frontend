@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<!--  Llamamos al fragmento del head y le pasamos el título -->
+<!-- Llamamos al fragmento del head -->
 <head th:replace="~{fragments/base :: head('Mis donaciones')}"></head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
 
 <div class="page">
-    <!--  Llamo a la barra de navegacion y le aviso que estoy en 'mis-donaciones' -->
     <header th:replace="~{fragments/base :: topbar('mis-donaciones')}"></header>
 
     <main id="main" class="page-body">
@@ -14,41 +13,32 @@
             <div class="page-head" style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>Mis donaciones</h1>
-
                 </div>
             </div>
 
-            <!-- aca puedo pegar la tabla y el HTML de los filtros que ya tengo armado -->
             <div class="card">
                 <!-- 1. Manejo de Errores -->
                 <div th:if="${error != null}" class="alert alert-danger">
                     <p th:text="${error}">Mensaje de error</p>
                 </div>
 
-                <!-- 2. Estado Vacío -->
-                <div th:if="${donaciones != null and donaciones.isEmpty()}" class="empty-state">
-                    <div class="empty-state__icon">📦</div>
-                    <h3>Aún no realizaste aportes</h3>
-                    <p>Tus donaciones aparecerán aquí una vez que las registren en el depósito.</p>
-                </div>
-
-                <!-- Barra de Filtros Completa -->
-                <form th:action="@{/donante/mis-donaciones}" method="get" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                <!-- Barra de Filtros Completa (Auto-submitable) -->
+                <form id="formFiltros" th:action="@{/donante/mis-donaciones}" method="get" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
 
                     <!-- Fila Superior: Búsqueda y Ordenamiento -->
                     <div style="display: flex; gap: 15px;">
-                        <input type="text" name="busqueda" class="form-control" placeholder="Buscar por descripción..." th:value="${busquedaFiltro}" style="flex: 2; padding: 8px;">
-                        <select name="orden" class="form-control" style="flex: 1; padding: 8px;">
+                        <input type="text" id="inputBusqueda" name="busqueda" class="form-control" placeholder="Buscar por descripción..." th:value="${busquedaFiltro}" style="flex: 2; padding: 8px;">
+                        <select name="orden" class="form-control filtro-auto" style="flex: 1; padding: 8px;">
                             <option value="recientes" th:selected="${ordenFiltro == 'recientes' or ordenFiltro == null}">Más recientes primero</option>
                             <option value="antiguas" th:selected="${ordenFiltro == 'antiguas'}">Más antiguas primero</option>
                         </select>
                     </div>
 
-                    <!-- Fila Inferior: Estado, Categoría y Botones -->
+                    <!-- Fila Inferior: Estado, Categoría, Subcategoría y Limpiar -->
                     <div style="display: flex; gap: 15px; align-items: flex-end;">
                         <div style="flex: 1;">
                             <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Estado:</label>
-                            <select name="estado" class="form-control" style="width: 100%; padding: 8px;">
+                            <select name="estado" class="form-control filtro-auto" style="width: 100%; padding: 8px;">
                                 <option value="" th:selected="${estadoFiltro == null or estadoFiltro == ''}">Todos los estados</option>
                                 <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En Depósito</option>
                                 <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignada</option>
@@ -59,7 +49,7 @@
 
                         <div style="flex: 1;">
                             <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Categoría:</label>
-                            <select id="filtroCategoria" name="categoria" class="form-control" style="width: 100%; padding: 8px;">
+                            <select id="filtroCategoria" name="categoria" class="form-control filtro-auto" style="width: 100%; padding: 8px;">
                                 <option value="" th:selected="${categoriaFiltro == null or categoriaFiltro == ''}">Todas las categorías</option>
                                 <option th:each="categoria : ${categorias}"
                                         th:value="${categoria.nombre}"
@@ -70,31 +60,37 @@
 
                         <div style="flex: 1;">
                             <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Subcategoria:</label>
-                            <select id="filtroSubcategoria" name="subcategoria" class="form-control" style="width: 100%; padding: 8px;" disabled>
+                            <select id="filtroSubcategoria" name="subcategoria" class="form-control filtro-auto" style="width: 100%; padding: 8px;" disabled>
                                 <option value="">Todas las subcategorías</option>
                             </select>
                         </div>
 
                         <div>
-                            <button type="submit" class="btn btn-primary" style="padding: 9px 20px;"> Buscar</button>
                             <a th:href="@{/donante/mis-donaciones}" class="btn btn-outline" style="padding: 9px 20px; text-decoration: none;">Limpiar</a>
                         </div>
                     </div>
                 </form>
+
+                <!-- 2. Estado Vacío -->
+                <div th:if="${donaciones != null and donaciones.isEmpty()}" class="empty-state">
+                    <div class="empty-state__icon">📦</div>
+                    <h3>Aún no realizaste aportes</h3>
+                    <p>Tus donaciones aparecerán aquí una vez que las registren en el depósito.</p>
+                </div>
 
                 <!-- 3. Tabla plana agrupada visualmente por donación -->
                 <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
                     <tbody th:each="donacion : ${donaciones}" class="donation-group">
                     <tr class="donation-description">
                         <td colspan="6">
-                            <span class="donation-description__icon" aria-hidden="true">📄</span>
-                            <span th:text="${donacion.descripcion}">Donación para la colecta de alimentos</span>
+                            <span class="donation-description__icon" aria-hidden="true">📦</span>
+                            <strong th:text="${donacion.descripcion}">Donación para la colecta de alimentos</strong>
                         </td>
                     </tr>
                     <tr class="donation-columns">
                         <th scope="col">
                             <a th:href="@{/donante/mis-donaciones(orden=${ordenFiltro == 'recientes' ? 'antiguas' : 'recientes'}, busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro}, subcategoria=${subcategoriaFiltro})}"
-                               style="color: inherit; text-decoration: none;">DONACIÓN ↕</a>
+                               style="color: inherit; text-decoration: none;">FECHA ↕</a>
                         </th>
                         <th scope="col">
                             <a th:href="@{/donante/mis-donaciones(orden='categoria', busqueda=${busquedaFiltro}, estado=${estadoFiltro}, categoria=${categoriaFiltro}, subcategoria=${subcategoriaFiltro})}"
@@ -109,10 +105,25 @@
                         <td th:if="${segmentoStat.first}"
                             th:rowspan="${#lists.size(donacion.donacionesSegmentadas)}"
                             th:text="${segmento.fechaDonacion}">12/04/2025</td>
-                        <td><span class="badge" th:text="${segmento.bienes[0].categoria.nombre}">Mobiliario</span></td>
+                        <td>
+                            <span class="badge-categoria" th:data-categoria="${segmento.bienes[0].categoria.nombre}" th:text="${segmento.bienes[0].categoria.nombre}">Mobiliario</span>
+                        </td>
                         <td th:text="${segmento.subcategoria.nombre}">Sillas</td>
                         <td th:text="${segmento.bienes[0].cantidad} + ' un.'">6 un.</td>
-                        <td><span class="badge" th:text="${segmento.estadoActual}">Entregada</span></td>
+                        <td>
+                            <span class="badge-status"
+                                  th:classappend="${segmento.estadoActual == 'EN_DEPOSITO' ? 'status-deposito' :
+                                                   (segmento.estadoActual == 'ASIGNACION_REALIZADA' ? 'status-asignado' :
+                                                   (segmento.estadoActual == 'EN_TRASLADO' ? 'status-traslado' : 'status-entregado'))}">
+                                <span th:switch="${segmento.estadoActual}">
+                                    <span th:case="'EN_DEPOSITO'">• En depósito</span>
+                                    <span th:case="'ASIGNACION_REALIZADA'">• Asignación realizada</span>
+                                    <span th:case="'EN_TRASLADO'">• En traslado</span>
+                                    <span th:case="'ENTREGADA'">• Entregada</span>
+                                    <span th:case="*">• [[${segmento.estadoActual}]]</span>
+                                </span>
+                            </span>
+                        </td>
                         <td th:text="${segmento.entidadAsignada != null ? segmento.entidadAsignada : '—'}">Escuela Rural N°10</td>
                     </tr>
                     </tbody>
@@ -123,13 +134,14 @@
     </main>
 </div>
 
-<!--  Ruta dinamica al JS -->
+<!-- JS de Funcionalidades y Filtros Reactivos -->
 <script th:src="@{/assets/js/app.js}"></script>
 <script th:inline="javascript">
     const catalogoCategorias = /*[[${categorias}]]*/ [];
     const categoriaSelect = document.getElementById('filtroCategoria');
     const subcategoriaSelect = document.getElementById('filtroSubcategoria');
     const subcategoriaSeleccionada = /*[[${subcategoriaFiltro}]]*/ '';
+    const formFiltros = document.getElementById('formFiltros');
 
     function cargarSubcategorias() {
         const categoria = catalogoCategorias.find(
@@ -150,11 +162,77 @@
         });
     }
 
+    // --- FILTROS REACTIVOS (AUTO-SUBMIT) ---
+
+    // 1. Escuchar cambios en todos los select
+    document.querySelectorAll('.filtro-auto').forEach(select => {
+        select.addEventListener('change', function () {
+            if (this.id === 'filtroCategoria') {
+                subcategoriaSelect.value = ''; // Limpiar subcategoría al cambiar de categoría
+            }
+            formFiltros.submit();
+        });
+    });
+
+    // 2. Debounce para el campo de texto de búsqueda (400ms)
+    const inputBusqueda = document.getElementById('inputBusqueda');
+    let timerBusqueda = null;
+
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener('input', function () {
+            clearTimeout(timerBusqueda);
+            timerBusqueda = setTimeout(() => {
+                formFiltros.submit();
+            }, 400);
+        });
+
+        // Mantener cursor al final del input si recarga la página por búsqueda
+        if (inputBusqueda.value) {
+            inputBusqueda.focus();
+            inputBusqueda.setSelectionRange(inputBusqueda.value.length, inputBusqueda.value.length);
+        }
+    }
+
     categoriaSelect.addEventListener('change', function () {
-        subcategoriaSelect.value = '';
         cargarSubcategorias();
     });
     cargarSubcategorias();
+
+    // --- OPCIÓN 3: Colores dinámicos por Hashing ---
+    const paletaColores = [
+        { bg: 'rgba(239, 68, 68, 0.18)', text: '#fca5a5', border: 'rgba(239, 68, 68, 0.35)' },   // Rojo / Rosa
+        { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },  // Ámbar
+        { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },  // Esmeralda
+        { bg: 'rgba(59, 130, 246, 0.18)', text: '#93c5fd', border: 'rgba(59, 130, 246, 0.35)' },  // Azul
+        { bg: 'rgba(139, 92, 246, 0.18)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },  // Violeta
+        { bg: 'rgba(236, 72, 153, 0.18)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' },  // Magenta
+        { bg: 'rgba(20, 184, 166, 0.18)', text: '#5eead4', border: 'rgba(20, 184, 166, 0.35)' },  // Turquesa
+        { bg: 'rgba(249, 115, 22, 0.18)', text: '#fdba74', border: 'rgba(249, 115, 22, 0.35)' }   // Naranja
+    ];
+
+    function aplicarColoresCategorias() {
+        document.querySelectorAll('.badge-categoria').forEach(badge => {
+            const nombre = badge.getAttribute('data-categoria') || badge.textContent.trim();
+            if (!nombre) return;
+
+            let hash = 0;
+            for (let i = 0; i < nombre.length; i++) {
+                hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+            }
+
+            const color = paletaColores[Math.abs(hash) % paletaColores.length];
+            badge.style.backgroundColor = color.bg;
+            badge.style.color = color.text;
+            badge.style.border = `1px solid ${color.border}`;
+            badge.style.padding = '3px 8px';
+            badge.style.borderRadius = '6px';
+            badge.style.fontSize = '0.82em';
+            badge.style.fontWeight = '500';
+            badge.style.display = 'inline-block';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', aplicarColoresCategorias);
 </script>
 </body>
 </html>

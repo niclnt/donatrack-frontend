@@ -1,11 +1,7 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Entidades beneficiarias — DonaTrack</title>
-  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
-</head>
+<head th:replace="~{fragments/base :: head('Entidades')}"></head>
+
 <body>
   <a class="skip-link" href="#main">Saltar al contenido</a>
 
@@ -29,25 +25,14 @@
           <p class="muted">No hay entidades beneficiarias registradas aún.</p>
         </div>
 
-        <!-- Cards de entidades — iteramos con th:each -->
-        <!--
-          th:each itera la lista 'entidades' que el controller pasó al modelo.
-          Cada 'entidad' es un EntidadBeneficiariaResponse con: razonSocial, ciudad,
-          provincia, necesidades (List<NecesidadResponse>), mail, etc.
-        -->
+        <!-- Cards de entidades -->
         <div class="grid grid--3" th:unless="${entidades.isEmpty()}">
           <article class="card entity" th:each="entidad : ${entidades}">
             <div class="entity__top">
-              <!-- Ícono genérico para todas las entidades (podría derivarse del tipo si el backend lo expone) -->
+              <!-- Ícono genérico para todas las entidades -->
               <span class="entity__icon" aria-hidden="true">🏢</span>
               <div>
-                <!-- th:text reemplaza el contenido del tag con el valor de la expresión -->
                 <p class="entity__name" th:text="${entidad.razonSocial}">Nombre entidad</p>
-                <!--
-                  Armamos el subtítulo concatenando ciudad y provincia.
-                  El operador ?: es el "Elvis operator" de Thymeleaf: si el valor
-                  es null o vacío, usa el literal de la derecha como fallback.
-                -->
                 <p class="entity__meta"
                    th:text="${(entidad.ciudad ?: '') + (entidad.ciudad != null && entidad.provincia != null ? ', ' : '') + (entidad.provincia ?: '')}">
                   Ciudad, Provincia
@@ -55,21 +40,12 @@
               </div>
             </div>
 
-            <!--
-              Mostramos el mail si está disponible.
-              th:if evalúa la condición; si es falso, el elemento directamente no se renderiza.
-            -->
             <p class="entity__desc" th:if="${entidad.mail != null}" th:text="${entidad.mail}"></p>
             <p class="entity__desc muted" th:unless="${entidad.mail != null}">Sin información de contacto</p>
 
             <!--
-              Necesidades como chips/tags.
               Cada necesidad tiene: categoriaNombre, subcategoriaNombre, satisfecha,
               cantidadSolicitada, cantidadRecibida, tipoNecesidad (PUNTUAL/RECURRENTE).
-
-              Mostramos cada necesidad como un chip.
-              Si ya está satisfecha (satisfecha = true) → chip normal verde.
-              Si no está satisfecha → chip de alerta (chip--alert).
             -->
             <div class="entity__tags" th:if="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
               <span th:each="nec : ${entidad.necesidades}"
@@ -84,13 +60,7 @@
             </p>
 
             <div class="entity__foot">
-              <!--
-                Contamos cuántas necesidades NO están satisfechas todavía.
-                #lists.size() es una función de utilidad de Thymeleaf.
-                Filtramos con streams: necesidades.stream().filter(!satisfecha).count()
-                Como Thymeleaf no tiene stream().filter() nativo, usamos el total de necesidades
-                y mostramos las pendientes contando satisfecha=false.
-              -->
+
               <span class="muted" style="font-size: var(--fs-sm);">
                 Necesidades: <strong th:text="${entidad.necesidades != null ? entidad.necesidades.size() : 0}">0</strong>
               </span>

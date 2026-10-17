@@ -714,3 +714,29 @@ select:disabled {
   gap: var(--sp-2);
   flex-wrap: wrap;
 }
+
+.badge-status {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.82em;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-deposito {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-asignado, .status-entregado {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-traslado {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
