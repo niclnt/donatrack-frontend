@@ -1,164 +1,434 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/base :: head('Entidades')}"></head>
-
 <body>
-  <a class="skip-link" href="#main">Saltar al contenido</a>
+<a class="skip-link" href="#main">Saltar al contenido</a>
 
-  <!-- REQ. 6 — ENTIDADES BENEFICIARIAS (PERSONA DONANTE) -->
-  <div class="page">
-    <header th:replace="~{fragments/base :: topbar('entidades')}"></header>
+<div class="page">
+  <header th:replace="~{fragments/base :: topbar('entidades')}"></header>
 
-    <main id="main" class="page-body">
-      <div class="container">
-        <div class="page-head">
-          <h1>Entidades beneficiarias</h1>
-          <!-- Mostramos la cantidad real de entidades traídas del backend -->
-          <span class="muted" th:text="${entidades.size()} + ' entidades registradas'">0 entidades registradas</span>
+  <main id="main" class="page-body">
+    <div class="container">
+      <!-- Encabezado con título y badge de conteo -->
+      <div class="entities-header">
+        <h1>Entidades beneficiarias</h1>
+        <span class="entities-count-badge" id="entitiesCountBadge"
+              th:text="${entidades != null ? entidades.size() + ' registradas' : '0 registradas'}">
+            0 registradas
+          </span>
+      </div>
+
+      <!-- Mensaje de error si el servicio no está disponible -->
+      <div th:if="${errorEntidades}" class="alert alert--warning" th:text="${errorEntidades}" style="margin-bottom: 20px;"></div>
+
+      <!-- Barra de Filtros Superior (100% ancho del contenedor) -->
+      <section class="entities-filterbar" aria-label="Filtros de entidades">
+        <div class="filter-search">
+          <input type="text" id="filterSearch" placeholder="Buscar por nombre o localidad..." aria-label="Buscar por nombre o localidad">
         </div>
-
-        <!-- Mensaje de error si el servicio no está disponible -->
-        <div th:if="${errorEntidades}" class="alert alert--warning" th:text="${errorEntidades}"></div>
-
-        <!-- Lista vacía -->
-        <div th:if="${entidades.isEmpty()}" class="empty-state">
-          <p class="muted">No hay entidades beneficiarias registradas aún.</p>
+        <div class="filter-select-wrap">
+          <select id="filterZona" aria-label="Filtrar por zona">
+            <option value="">Todas las zonas</option>
+          </select>
         </div>
+        <div class="filter-select-wrap">
+          <select id="filterNecesidades" aria-label="Filtrar por necesidades">
+            <option value="">Todas las entidades</option>
+            <option value="con-pendientes">Con necesidades pendientes</option>
+            <option value="sin-pendientes">Sin necesidades pendientes</option>
+          </select>
+        </div>
+        <div class="filter-select-wrap">
+          <select id="filterCategoria" aria-label="Filtrar por categoría">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+        <button type="button" id="btnClearFilters" class="btn-clear">Limpiar</button>
+      </section>
 
-        <!-- Cards de entidades -->
-        <div class="grid grid--3" th:unless="${entidades.isEmpty()}">
-          <article class="card entity" th:each="entidad : ${entidades}">
-            <div class="entity__top">
-              <!-- Ícono genérico para todas las entidades -->
-              <span class="entity__icon" aria-hidden="true">🏢</span>
-              <div>
-                <p class="entity__name" th:text="${entidad.razonSocial}">Nombre entidad</p>
-                <p class="entity__meta"
-                   th:text="${(entidad.ciudad ?: '') + (entidad.ciudad != null && entidad.provincia != null ? ', ' : '') + (entidad.provincia ?: '')}">
-                  Ciudad, Provincia
+      <!-- Estado vacío si el backend no devolvió entidades -->
+      <div th:if="${entidades == null or entidades.isEmpty()}" class="empty-state">
+        <div class="empty-state__icon" aria-hidden="true">🏢</div>
+        <h3>No hay entidades beneficiarias registradas aún</h3>
+        <p class="muted">Las organizaciones comunitarias aparecerán listadas aquí.</p>
+      </div>
+
+      <!-- Mensaje cuando los filtros no coinciden con ninguna entidad -->
+      <div id="noFilterResults" class="empty-state" style="display: none; margin-top: 30px;">
+        <div class="empty-state__icon" aria-hidden="true">⌕</div>
+        <h3>No encontramos entidades con esos filtros</h3>
+        <p class="muted">Probá ajustando la búsqueda o limpiá los filtros seleccionados.</p>
+      </div>
+
+      <!-- Grid de Cards de Entidades (100% ancho, coincidiendo con la barra de filtros) -->
+      <div class="entities-grid" id="entitiesGrid" th:if="${entidades != null and not entidades.isEmpty()}">
+        <article class="entity-card"
+                 th:each="entidad : ${entidades}"
+                 th:with="activas=${entidad.necesidades != null ? entidad.necesidades.?[!satisfecha] : {}},
+                            zonaCalc=${(entidad.localidad ?: entidad.ciudad ?: '') + (entidad.provincia != null ? (entidad.localidad != null or entidad.ciudad != null ? ', ' : '') + entidad.provincia : '')}"
+                 th:attr="data-name=${entidad.razonSocial},
+                            data-location=${(entidad.localidad ?: '') + ' ' + (entidad.ciudad ?: '') + ' ' + (entidad.provincia ?: '')},
+                            data-zona=${zonaCalc},
+                            data-has-active=${activas.size() > 0 ? 'true' : 'false'},
+                            data-categories=${entidad.necesidades != null ? #strings.listJoin(entidad.necesidades.![categoriaNombre], ',') : ''}">
+
+          <div>
+            <!-- Header de la Card: Avatar + Nombre + Ubicación -->
+            <div class="entity-card__header">
+              <div class="entity-card__avatar"
+                   th:attr="data-name=${entidad.razonSocial}"
+                   th:text="${entidad.razonSocial != null && entidad.razonSocial.length() >= 2 ? #strings.toUpperCase(#strings.substring(entidad.razonSocial, 0, 2)) : 'EB'}">
+                EB
+              </div>
+              <div class="entity-card__title-box">
+                <h2 class="entity-card__name" th:text="${entidad.razonSocial}" th:title="${entidad.razonSocial}">
+                  Nombre entidad
+                </h2>
+                <p class="entity-card__location"
+                   th:text="${zonaCalc != null && !zonaCalc.isEmpty() ? 'Ubicación: ' + zonaCalc : 'Ubicación: No especificada'}">
+                  Ubicación: Lomas de Zamora, BA
                 </p>
               </div>
             </div>
 
-            <p class="entity__desc" th:if="${entidad.mail != null}" th:text="${entidad.mail}"></p>
-            <p class="entity__desc muted" th:unless="${entidad.mail != null}">Sin información de contacto</p>
-
-            <!--
-              Cada necesidad tiene: categoriaNombre, subcategoriaNombre, satisfecha,
-              cantidadSolicitada, cantidadRecibida, tipoNecesidad (PUNTUAL/RECURRENTE).
-            -->
-            <div class="entity__tags" th:if="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
-              <span th:each="nec : ${entidad.necesidades}"
-                    th:class="${nec.satisfecha} ? 'chip chip--ok' : 'chip chip--alert'"
-                    th:text="${nec.categoriaNombre + (nec.subcategoriaNombre != null ? ' · ' + nec.subcategoriaNombre : '') + (nec.tipoNecesidad == 'RECURRENTE' ? ' (recurrente)' : '')}">
-                Necesidad
-              </span>
-            </div>
-            <p class="muted" style="font-size: var(--fs-sm);"
-               th:unless="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
-              Sin necesidades registradas
+            <!-- Contacto -->
+            <p class="entity-card__contact"
+               th:text="'Contacto: ' + ${(entidad.mail != null && !entidad.mail.isEmpty() ? entidad.mail : (entidad.telefono != null ? entidad.telefono : 'No informado'))}">
+              Contacto: contacto@entidad.org
             </p>
 
-            <div class="entity__foot">
-
-              <span class="muted" style="font-size: var(--fs-sm);">
-                Necesidades: <strong th:text="${entidad.necesidades != null ? entidad.necesidades.size() : 0}">0</strong>
-              </span>
-              <button class="btn btn--ghost btn--sm"
-                      type="button"
-                      th:attr="data-modal-open='modal-entidad-' + ${entidad.id}"
-                      th:aria-label="'Ver detalle de ' + ${entidad.razonSocial}">
-                Ver detalle
-              </button>
+            <!-- Badge de estado de necesidades -->
+            <div class="entity-badge-needs entity-badge-needs--active" th:if="${activas.size() > 0}">
+              <span aria-hidden="true">•</span>
+              <span th:text="${activas.size()} + ' ' + (${activas.size() == 1} ? 'necesidad activa' : 'necesidades activas')">
+                  3 necesidades activas
+                </span>
+            </div>
+            <div class="entity-badge-needs entity-badge-needs--empty" th:if="${activas.size() == 0}">
+              <span aria-hidden="true">•</span>
+              <span>Sin necesidades activas</span>
             </div>
 
-            <div class="modal"
-                 th:id="'modal-entidad-' + ${entidad.id}"
-                 hidden
-                 role="dialog"
-                 aria-modal="true"
-                 th:aria-labelledby="'modal-entidad-' + ${entidad.id} + '-title'">
-              <div class="modal__box modal__box--wide">
-                <div class="modal__header">
-                  <div>
-                    <p class="req-tag">Entidad beneficiaria</p>
-                    <h2 th:id="'modal-entidad-' + ${entidad.id} + '-title'"
-                        class="modal__title"
-                        th:text="${entidad.razonSocial}">
-                      Nombre entidad
-                    </h2>
+            <!-- Listado de necesidades activas (Muestra todas las necesidades activas) -->
+            <div class="entity-card__needs-list" th:if="${activas.size() > 0}">
+              <div class="entity-need-item"
+                   th:each="nec : ${activas}"
+                   th:attr="data-category=${nec.categoriaNombre}">
+                <div class="entity-need-item__row">
+                  <div class="entity-need-item__info">
+                      <span class="entity-category-pill"
+                            th:data-cat="${nec.categoriaNombre}"
+                            th:text="${nec.categoriaNombre}">Alimentos</span>
+                    <span class="entity-need-item__desc"
+                          th:text="${nec.descripcion != null && !nec.descripcion.isEmpty() ? nec.descripcion : (nec.subcategoriaNombre ?: 'Insumo')}"
+                          th:title="${nec.descripcion != null && !nec.descripcion.isEmpty() ? nec.descripcion : (nec.subcategoriaNombre ?: 'Insumo')}">
+                        Fideos secos
+                      </span>
                   </div>
-                  <button class="modal__close" type="button" data-modal-close aria-label="Cerrar detalle">×</button>
+                  <span class="entity-need-item__ratio"
+                        th:text="${nec.cantidadRecibida + ' / ' + nec.cantidadSolicitada}">
+                      4 / 10
+                    </span>
                 </div>
-
-                <div class="modal__details">
-                  <div>
-                    <span class="modal__label">Ubicación</span>
-                    <p th:if="${entidad.direccion != null}" th:text="${entidad.direccion}">Dirección</p>
-                    <p th:if="${entidad.localidad != null}" th:text="${entidad.localidad}">Localidad</p>
-                    <p th:if="${entidad.ciudad != null or entidad.provincia != null}"
-                       th:text="${(entidad.ciudad ?: '') + (entidad.ciudad != null && entidad.provincia != null ? ', ' : '') + (entidad.provincia ?: '')}">
-                      Ciudad, Provincia
-                    </p>
-                    <p class="muted" th:if="${entidad.direccion == null and entidad.localidad == null and entidad.ciudad == null and entidad.provincia == null}">
-                      Sin ubicación registrada
-                    </p>
+                <div class="entity-progress-bar">
+                  <div class="entity-progress-bar__fill"
+                       th:style="'width: ' + ${(nec.cantidadSolicitada > 0 ? (nec.cantidadRecibida * 100 / nec.cantidadSolicitada > 100 ? 100 : nec.cantidadRecibida * 100 / nec.cantidadSolicitada) : 0)} + '%;'">
                   </div>
-                  <div>
-                    <span class="modal__label">Contacto</span>
-                    <p th:if="${entidad.mail != null}" th:text="${entidad.mail}">correo@entidad.org</p>
-                    <p th:if="${entidad.telefono != null}" th:text="'Teléfono: ' + ${entidad.telefono}">Teléfono</p>
-                    <p th:if="${entidad.mediosDeContacto != null and not entidad.mediosDeContacto.isEmpty()
-                              and (medio.tipoContacto != 'EMAIL' or entidad.mail == null or medio.valor != entidad.mail)
-                              and (medio.tipoContacto != 'TELEFONO' or entidad.telefono == null or medio.valor != entidad.telefono.toString())}"
-                       th:each="medio : ${entidad.mediosDeContacto}"
-                       th:text="${(medio.tipoContacto != null ? medio.tipoContacto + ': ' : '') + medio.valor}">
-                      Medio de contacto
-                    </p>
-                    <p class="muted" th:if="${entidad.mail == null and entidad.telefono == null and (entidad.mediosDeContacto == null or entidad.mediosDeContacto.isEmpty())}">
-                      Sin información de contacto
-                    </p>
-                  </div>
-                </div>
-
-                <div class="modal__section">
-                  <span class="modal__label">Necesidades registradas</span>
-                  <div class="modal__needs"
-                       th:if="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
-                    <div class="modal__need" th:each="nec : ${entidad.necesidades}">
-                      <div>
-                        <strong th:text="${nec.categoriaNombre + (nec.subcategoriaNombre != null ? ' · ' + nec.subcategoriaNombre : '')}">
-                          Necesidad
-                        </strong>
-                        <p class="muted" th:if="${nec.descripcion != null}" th:text="${nec.descripcion}">Descripción</p>
-                      </div>
-                      <div class="modal__need-meta">
-                        <span th:text="${nec.cantidadRecibida + ' / ' + nec.cantidadSolicitada}">0 / 0</span>
-                        <span class="badge"
-                              th:classappend="${nec.satisfecha} ? ' badge--success' : ' badge--warning'"
-                              th:text="${nec.satisfecha ? 'Satisfecha' : 'Pendiente'}">
-                          Pendiente
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <p class="muted" th:unless="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
-                    Sin necesidades registradas
-                  </p>
-                </div>
-
-                <div class="modal__actions">
-                  <button class="btn btn--ghost" type="button" data-modal-close>Cerrar</button>
                 </div>
               </div>
             </div>
-          </article>
-        </div>
 
+            <!-- Mensaje si no tiene necesidades activas -->
+            <div class="entity-card__no-needs" th:if="${activas.size() == 0}">
+              La entidad no registra pedidos de insumos actualmente.
+            </div>
+          </div>
+
+          <!-- Botón inferior para abrir modal -->
+          <button type="button"
+                  class="entity-card__action-btn"
+                  th:attr="data-modal-open='modal-entidad-' + ${entidad.id}">
+            Ver detalle
+          </button>
+        </article>
       </div>
-    </main>
-  </div>
 
-  <script th:src="@{/assets/js/app.js}"></script>
+      <!-- Capa de Modales (FUERA del grid de cards para evitar bugs de transform/flicker) -->
+      <div class="entities-modals-layer" th:if="${entidades != null and not entidades.isEmpty()}">
+        <div class="modal"
+             th:each="entidad : ${entidades}"
+             th:id="'modal-entidad-' + ${entidad.id}"
+             hidden
+             role="dialog"
+             aria-modal="true"
+             th:aria-labelledby="'modal-entidad-' + ${entidad.id} + '-title'">
+          <div class="modal__box modal__box--wide modal__box--entity">
+            <div class="modal__header">
+              <div>
+                <p class="req-tag">Entidad beneficiaria</p>
+                <h2 th:id="'modal-entidad-' + ${entidad.id} + '-title'"
+                    class="modal__title"
+                    th:text="${entidad.razonSocial}">
+                  Nombre entidad
+                </h2>
+              </div>
+              <button class="modal__close" type="button" data-modal-close aria-label="Cerrar detalle">×</button>
+            </div>
+
+            <div class="modal__details">
+              <div>
+                <span class="modal__label">Ubicación</span>
+                <p th:if="${entidad.direccion != null}" th:text="${entidad.direccion}">Dirección</p>
+                <p th:if="${entidad.localidad != null}" th:text="${entidad.localidad}">Localidad</p>
+                <p th:if="${entidad.ciudad != null or entidad.provincia != null}"
+                   th:text="${(entidad.ciudad ?: '') + (entidad.ciudad != null && entidad.provincia != null ? ', ' : '') + (entidad.provincia ?: '')}">
+                  Ciudad, Provincia
+                </p>
+                <p class="muted" th:if="${entidad.direccion == null and entidad.localidad == null and entidad.ciudad == null and entidad.provincia == null}">
+                  Sin ubicación registrada
+                </p>
+              </div>
+              <div>
+                <span class="modal__label">Contacto</span>
+                <p th:if="${entidad.mail != null}" th:text="${entidad.mail}">correo@entidad.org</p>
+                <p th:if="${entidad.telefono != null}" th:text="'Teléfono: ' + ${entidad.telefono}">Teléfono</p>
+                <p th:if="${entidad.mediosDeContacto != null and not entidad.mediosDeContacto.isEmpty()
+                            and (medio.tipoContacto != 'EMAIL' or entidad.mail == null or medio.valor != entidad.mail)
+                            and (medio.tipoContacto != 'TELEFONO' or entidad.telefono == null or medio.valor != entidad.telefono.toString())}"
+                   th:each="medio : ${entidad.mediosDeContacto}"
+                   th:text="${(medio.tipoContacto != null ? medio.tipoContacto + ': ' : '') + medio.valor}">
+                  Medio de contacto
+                </p>
+                <p class="muted" th:if="${entidad.mail == null and entidad.telefono == null and (entidad.mediosDeContacto == null or entidad.mediosDeContacto.isEmpty())}">
+                  Sin información de contacto
+                </p>
+              </div>
+            </div>
+
+            <div class="modal__section">
+              <div class="modal__section-heading">
+                <span class="modal__section-title">Necesidades registradas</span>
+              </div>
+              <div class="modal__needs" th:if="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
+                <div class="modal__need" th:each="nec : ${entidad.necesidades}">
+                  <div class="modal__need-content">
+                    <div class="modal__need-heading">
+                      <span class="entity-category-pill"
+                            th:data-cat="${nec.categoriaNombre}"
+                            th:text="${nec.categoriaNombre}">Alimentos</span>
+                      <strong class="modal__need-title"
+                              th:text="${nec.subcategoriaNombre != null ? nec.subcategoriaNombre : 'Necesidad'}">
+                        Necesidad
+                      </strong>
+                    </div>
+                    <p class="modal__need-description muted"
+                       th:if="${nec.descripcion != null and not nec.descripcion.isEmpty()}"
+                       th:text="${nec.descripcion}">Descripción</p>
+                    <div class="modal__need-progress">
+                      <span class="modal__need-progress-label">Progreso recibido:</span>
+                      <div class="entity-progress-bar">
+                        <div class="entity-progress-bar__fill"
+                             th:style="'width: ' + ${(nec.cantidadSolicitada > 0 ? (nec.cantidadRecibida * 100 / nec.cantidadSolicitada > 100 ? 100 : nec.cantidadRecibida * 100 / nec.cantidadSolicitada) : 0)} + '%;'">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="modal__need-meta">
+                    <span class="modal__need-ratio"
+                          th:text="${nec.cantidadRecibida + ' / ' + nec.cantidadSolicitada + ' un.'}">0 / 0 un.</span>
+                    <span class="badge"
+                          th:classappend="${nec.satisfecha} ? ' badge--success' : ' badge--warning'"
+                          th:text="${nec.satisfecha ? 'Satisfecha' : 'Pendiente'}">
+                        Pendiente
+                      </span>
+                  </div>
+                </div>
+              </div>
+              <p class="muted" th:unless="${entidad.necesidades != null and not entidad.necesidades.isEmpty()}">
+                Sin necesidades registradas
+              </p>
+            </div>
+
+            <div class="modal__actions">
+              <button class="btn btn--ghost" type="button" data-modal-close>Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+<script>
+  (function () {
+    const cards = Array.from(document.querySelectorAll('.entity-card'));
+    if (!cards.length) return;
+
+    const inputSearch = document.getElementById('filterSearch');
+    const selectZona = document.getElementById('filterZona');
+    const selectNecesidades = document.getElementById('filterNecesidades');
+    const selectCategoria = document.getElementById('filterCategoria');
+    const btnClear = document.getElementById('btnClearFilters');
+    const countBadge = document.getElementById('entitiesCountBadge');
+    const noResults = document.getElementById('noFilterResults');
+
+    // Paletas de color elegantes para los avatares
+    const avatarPalettes = [
+      { bg: 'rgba(99, 102, 241, 0.18)', text: '#a5b4fc', border: 'rgba(99, 102, 241, 0.35)' },
+      { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
+      { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
+      { bg: 'rgba(139, 92, 246, 0.18)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },
+      { bg: 'rgba(244, 63, 94, 0.18)', text: '#fda4af', border: 'rgba(244, 63, 94, 0.35)' },
+      { bg: 'rgba(6, 182, 212, 0.18)', text: '#67e8f9', border: 'rgba(6, 182, 212, 0.35)' },
+      { bg: 'rgba(249, 115, 22, 0.18)', text: '#fdba74', border: 'rgba(249, 115, 22, 0.35)' }
+    ];
+
+    // Paletas semánticas para categorías
+    const categoryPalettes = {
+      'alimentos': { bg: 'rgba(220, 38, 38, 0.22)', text: '#fca5a5', border: 'rgba(239, 68, 68, 0.35)' },
+      'vestimenta': { bg: 'rgba(2, 132, 199, 0.22)', text: '#7dd3fc', border: 'rgba(2, 132, 199, 0.35)' },
+      'higiene': { bg: 'rgba(16, 185, 129, 0.22)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
+      'cocina': { bg: 'rgba(139, 92, 246, 0.22)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },
+      'electrodomésticos': { bg: 'rgba(245, 158, 11, 0.22)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
+      'electrodomesticos': { bg: 'rgba(245, 158, 11, 0.22)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
+      'limpieza': { bg: 'rgba(20, 184, 166, 0.22)', text: '#5eead4', border: 'rgba(20, 184, 166, 0.35)' },
+      'salud': { bg: 'rgba(236, 72, 153, 0.22)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' }
+    };
+
+    function hashString(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return Math.abs(hash);
+    }
+
+    function computeInitials(name) {
+      if (!name) return 'EB';
+      const stopwords = ['de', 'del', 'los', 'las', 'el', 'la', 'y', 'en'];
+      const words = name.trim().split(/\s+/).filter(w => !stopwords.includes(w.toLowerCase()));
+      if (words.length >= 2) {
+        return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+
+    // Estilizar avatares y píldoras de categoría dinámicamente
+    cards.forEach(card => {
+      const avatar = card.querySelector('.entity-card__avatar');
+      if (avatar) {
+        const name = avatar.getAttribute('data-name') || '';
+        avatar.textContent = computeInitials(name);
+        const palette = avatarPalettes[hashString(name) % avatarPalettes.length];
+        avatar.style.backgroundColor = palette.bg;
+        avatar.style.color = palette.text;
+        avatar.style.border = '1px solid ' + palette.border;
+      }
+
+      card.querySelectorAll('.entity-category-pill').forEach(pill => {
+        const cat = (pill.getAttribute('data-cat') || pill.textContent).trim().toLowerCase();
+        const p = categoryPalettes[cat] || avatarPalettes[hashString(cat) % avatarPalettes.length];
+        pill.style.backgroundColor = p.bg;
+        pill.style.color = p.text;
+        pill.style.border = '1px solid ' + p.border;
+      });
+    });
+
+    // Poblar opciones únicas de Zona y Categoría
+    const zonasSet = new Set();
+    const categoriasSet = new Set();
+
+    cards.forEach(card => {
+      const z = (card.getAttribute('data-zona') || '').trim();
+      if (z && z !== 'No especificada') zonasSet.add(z);
+
+      const cats = (card.getAttribute('data-categories') || '').split(',');
+      cats.forEach(c => {
+        const clean = c.trim();
+        if (clean) categoriasSet.add(clean);
+      });
+    });
+
+    Array.from(zonasSet).sort().forEach(zona => {
+      const opt = document.createElement('option');
+      opt.value = zona;
+      opt.textContent = zona;
+      selectZona.appendChild(opt);
+    });
+
+    Array.from(categoriasSet).sort().forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      selectCategoria.appendChild(opt);
+    });
+
+    // Filtrado interactivo
+    function applyFilters() {
+      const query = (inputSearch.value || '').trim().toLowerCase();
+      const selectedZona = selectZona.value;
+      const selectedNecesidad = selectNecesidades.value;
+      const selectedCategoria = (selectCategoria.value || '').trim().toLowerCase();
+
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const name = (card.getAttribute('data-name') || '').toLowerCase();
+        const location = (card.getAttribute('data-location') || '').toLowerCase();
+        const zona = card.getAttribute('data-zona') || '';
+        const hasActive = card.getAttribute('data-has-active') === 'true';
+        const categories = (card.getAttribute('data-categories') || '').toLowerCase();
+
+        // 1. Texto (nombre o localidad)
+        const matchesQuery = !query || name.includes(query) || location.includes(query);
+
+        // 2. Zona
+        const matchesZona = !selectedZona || zona.includes(selectedZona);
+
+        // 3. Estado de necesidades
+        let matchesNecesidad = true;
+        if (selectedNecesidad === 'con-pendientes') {
+          matchesNecesidad = hasActive;
+        } else if (selectedNecesidad === 'sin-pendientes') {
+          matchesNecesidad = !hasActive;
+        }
+
+        // 4. Categoría
+        const matchesCategoria = !selectedCategoria || categories.includes(selectedCategoria);
+
+        const isVisible = matchesQuery && matchesZona && matchesNecesidad && matchesCategoria;
+        card.style.display = isVisible ? 'flex' : 'none';
+
+        if (isVisible) visibleCount++;
+      });
+
+      // Actualizar contador y estado vacío
+      if (countBadge) {
+        countBadge.textContent = visibleCount + (visibleCount === 1 ? ' visible' : ' registradas');
+      }
+      if (noResults) {
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+    }
+
+    inputSearch.addEventListener('input', applyFilters);
+    selectZona.addEventListener('change', applyFilters);
+    selectNecesidades.addEventListener('change', applyFilters);
+    selectCategoria.addEventListener('change', applyFilters);
+
+    btnClear.addEventListener('click', function () {
+      inputSearch.value = '';
+      selectZona.value = '';
+      selectNecesidades.value = '';
+      selectCategoria.value = '';
+      applyFilters();
+    });
+
+    // Ejecutar filtrado inicial
+    applyFilters();
+  })();
+</script>
 </body>
 </html>
