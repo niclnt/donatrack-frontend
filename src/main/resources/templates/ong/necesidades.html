@@ -31,11 +31,11 @@
       <section class="grid grid--stats" aria-label="Resumen de necesidades">
         <article class="stat">
           <p class="stat__label">Necesidades activas</p>
-          <p class="stat__value" th:text="${#lists.size(necesidades)}">0</p>
+          <p class="stat__value" th:text="${#lists.size(necesidades.?[!satisfecha])}">0</p>
         </article>
         <article class="stat">
-          <p class="stat__label">Pendientes de cobertura</p>
-          <p class="stat__value" th:text="${#lists.size(necesidades.?[!satisfecha])}">0</p>
+          <p class="stat__label">Total registradas</p>
+          <p class="stat__value" th:text="${#lists.size(necesidades)}">0</p>
         </article>
         <article class="stat">
           <p class="stat__label">Cubiertas este mes</p>

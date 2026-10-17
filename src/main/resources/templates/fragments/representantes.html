@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Listado + alta de representantes de una persona jurídica.
+     accionBase: URL que recibe el alta (POST); la baja va a accionBase/{id}/quitar -->
+<div th:fragment="gestion(accionBase, representantes)">
+
+    <div class="table-wrap">
+        <table class="table">
+            <caption class="sr-only">Representantes habilitados</caption>
+            <thead>
+            <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Documento</th>
+                <th scope="col">Email</th>
+                <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${representantes}">
+                <td><strong th:text="${r.nombre()}">Carlos Gómez</strong></td>
+                <td th:text="${(r.tipoDoc() != null ? r.tipoDoc() + ' ' : '') + r.documento()}">DNI 30111222</td>
+                <td th:text="${r.mail() != null ? r.mail() : '—'}">carlos@mail.com</td>
+                <td>
+                    <form th:action="@{__${accionBase}__/{id}/quitar(id=${r.id()})}" method="post">
+                        <button type="submit" class="btn btn--ghost btn--sm">Quitar</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(representantes)}">
+                <td colspan="4" class="muted" style="text-align: center; padding: 20px;">Todavía no hay representantes cargados.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <form th:action="@{__${accionBase}__}" method="post" class="mt-5">
+        <h3>Agregar representante</h3>
+        <p class="muted" style="font-size: var(--fs-sm);">Si la persona ya está registrada en DonaTrack alcanza con su documento.</p>
+
+        <div class="form-grid mt-3">
+            <div class="field">
+                <label class="field__label" for="repTipoDoc">Tipo de documento</label>
+                <select class="select" id="repTipoDoc" name="tipoDoc">
+                    <option value="DNI">DNI</option>
+                    <option value="LC">Libreta cívica</option>
+                    <option value="LE">Libreta de enrolamiento</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="field__label" for="repDocumento">Número de documento</label>
+                <input class="input" id="repDocumento" name="documento" type="text" placeholder="Sin puntos" required>
+            </div>
+        </div>
+
+        <details class="mt-4">
+            <summary style="cursor: pointer; font-weight: 600;">¿No está registrada? Completá sus datos para darla de alta</summary>
+            <p class="muted mt-2" style="font-size: var(--fs-sm);">Se le crea un usuario y le llega un correo de bienvenida con su contraseña temporal.</p>
+            <div class="form-grid mt-3">
+                <div class="field">
+                    <label class="field__label" for="repNombre">Nombre y apellido</label>
+                    <input class="input" id="repNombre" name="nombre" type="text" placeholder="Ej: Carlos Gómez">
+                </div>
+                <div class="field">
+                    <label class="field__label" for="repEdad">Edad</label>
+                    <input class="input" id="repEdad" name="edad" type="number" min="1" max="120" placeholder="Ej: 35">
+                </div>
+                <div class="field">
+                    <label class="field__label" for="repGenero">Género</label>
+                    <select class="select" id="repGenero" name="genero">
+                        <option value="">Elegí una opción</option>
+                        <option value="F">Femenino</option>
+                        <option value="M">Masculino</option>
+                        <option value="X">Otro / prefiero no decir</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field__label" for="repDireccion">Dirección</label>
+                    <input class="input" id="repDireccion" name="direccion" type="text" placeholder="Calle y número, localidad">
+                </div>
+                <div class="field">
+                    <label class="field__label" for="repMail">Correo electrónico</label>
+                    <input class="input" id="repMail" name="mail" type="email" placeholder="carlos.gomez@gmail.com">
+                </div>
+                <div class="field">
+                    <label class="field__label" for="repTelefono">Teléfono <span class="dim">(opcional)</span></label>
+                    <input class="input" id="repTelefono" name="telefono" type="tel" placeholder="Ej: 1144556677">
+                </div>
+            </div>
+        </details>
+
+        <div class="mt-4">
+            <button class="btn btn--primary" type="submit">Agregar representante</button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

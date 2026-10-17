@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Representantes')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<!-- SOLO PERSONA JURÍDICA: personas habilitadas a donar en nombre de la organización -->
+<div class="page">
+    <header th:replace="~{fragments/base :: topbar('representantes')}"></header>
+
+    <main id="main" class="page-body">
+        <div class="container" style="max-width: 980px;">
+            <div class="page-head">
+                <div>
+                    <h1>Representantes</h1>
+                    <p class="page-head__sub">Personas habilitadas a acercar donaciones al depósito en nombre de tu organización.</p>
+                </div>
+            </div>
+
+            <div th:if="${exito}" class="alert alert--success mb-4" th:text="${exito}"></div>
+            <div th:if="${error}" class="alert alert--error mb-4" th:text="${error}"></div>
+
+            <section class="card">
+                <div th:replace="~{fragments/representantes :: gestion('/donante/representantes', ${representantes})}"></div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

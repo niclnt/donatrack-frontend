@@ -7,6 +7,8 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.asignacion.PropuestaAsignaci
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.importacion.ResultadoImportacionResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.representantes.RepresentanteRequest;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.representantes.RepresentanteResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
@@ -80,10 +82,59 @@ public class AdminController {
 
     // --- GESTIÓN SEPARADA DE DONANTES ---
 
+    // pj: persona juridica elegida en la seccion de representantes
     @GetMapping("/admin/donantes")
-    public String mostrarGestionDonantes(Authentication authentication, Model model) {
+    public String mostrarGestionDonantes(@RequestParam(required = false) Long pj, Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+
+        try {
+            List<Map> organizaciones = new ArrayList<>(webApiCallerService.getList(
+                    donacionesServiceUrl + "/donantes/personaJuridica", Map[].class));
+            organizaciones.sort(Comparator.comparing(o -> String.valueOf(o.get("razonSocial")), String.CASE_INSENSITIVE_ORDER));
+            model.addAttribute("organizaciones", organizaciones);
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            model.addAttribute("organizaciones", List.of());
+            model.addAttribute("errorRep", "No se pudieron cargar las organizaciones: " + e.getMessage());
+        }
+
+        if (pj != null) {
+            model.addAttribute("pjSeleccionada", pj);
+            try {
+                model.addAttribute("representantes", webApiCallerService.getList(
+                        representantesUrl(pj), RepresentanteResponse[].class));
+            } catch (ApiException | ServicioNoDisponibleException e) {
+                model.addAttribute("representantes", List.of());
+                model.addAttribute("errorRep", "No se pudieron cargar los representantes: " + e.getMessage());
+            }
+        }
         return "admin/donantes";
+    }
+
+    @PostMapping("/admin/donantes/{pj}/representantes")
+    public String agregarRepresentante(@PathVariable Long pj, @ModelAttribute RepresentanteRequest request,
+                                       RedirectAttributes redirect) {
+        try {
+            webApiCallerService.post(representantesUrl(pj), request, RepresentanteResponse[].class);
+            redirect.addFlashAttribute("exitoRep", "Representante agregado correctamente.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("errorRep", e.getMessage());
+        }
+        return "redirect:/admin/donantes?pj=" + pj + "#representantes";
+    }
+
+    @PostMapping("/admin/donantes/{pj}/representantes/{id}/quitar")
+    public String quitarRepresentante(@PathVariable Long pj, @PathVariable Long id, RedirectAttributes redirect) {
+        try {
+            webApiCallerService.delete(representantesUrl(pj) + "/" + id);
+            redirect.addFlashAttribute("exitoRep", "Representante quitado.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("errorRep", e.getMessage());
+        }
+        return "redirect:/admin/donantes?pj=" + pj + "#representantes";
+    }
+
+    private String representantesUrl(Long personaJuridicaId) {
+        return donacionesServiceUrl + "/donantes/personaJuridica/" + personaJuridicaId + "/representantes";
     }
 
     @PostMapping("/admin/donantes/crear")
@@ -182,6 +233,7 @@ public class AdminController {
     @PostMapping("/admin/registrar-donacion")
     public String procesarRegistroDonacion(
             @RequestParam(required = false) Long donanteId,
+            @RequestParam(required = false) Long representanteId,
             @RequestParam String descripcion,
             @RequestParam String responsable,
             @RequestParam MultiValueMap<String, String> params,
@@ -203,7 +255,7 @@ public class AdminController {
             return mostrarRegistroDonacion(authentication, model);
         }
 
-        DonacionCreateRequest request = new DonacionCreateRequest(descripcion + " (Recepción por: " + responsable + ")", LocalDate.now(), bienes);
+        DonacionCreateRequest request = new DonacionCreateRequest(descripcion + " (Recepción por: " + responsable + ")", LocalDate.now(), bienes, representanteId);
 
         String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
 

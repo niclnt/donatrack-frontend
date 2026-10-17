@@ -150,6 +150,8 @@
   var resultadosDonantes = document.getElementById("resultadosDonantes");
   var resultadosMsg = document.getElementById("resultadosDonantesMsg");
   var formRegistrar = document.getElementById("formRegistrarDonacion");
+  var bloqueRepresentante = document.getElementById("bloqueRepresentante");
+  var selectRepresentante = document.getElementById("representanteId");
 
   // Cantidad maxima de resultados que se listan (el resto se pide refinar la busqueda)
   var MAX_RESULTADOS = 20;
@@ -192,6 +194,31 @@
 
     if (donanteVacio) donanteVacio.style.display = "none";
     cardDonanteSeleccionado.style.display = "flex";
+    cargarRepresentantes(d);
+  }
+
+  // Las personas juridicas donan a traves de un representante: se elige entre los que tiene cargados
+  function cargarRepresentantes(d) {
+    if (!bloqueRepresentante || !selectRepresentante) return;
+    var esJuridica = Array.isArray(d && d.representantes);
+    var representantes = esJuridica ? d.representantes : [];
+
+    selectRepresentante.innerHTML = "";
+    var inicial = document.createElement("option");
+    inicial.value = "";
+    inicial.textContent = representantes.length ? "Seleccionar representante" : "La organización no tiene representantes cargados";
+    selectRepresentante.appendChild(inicial);
+    representantes.forEach(function (r) {
+      var opt = document.createElement("option");
+      opt.value = r.id;
+      opt.textContent = r.nombre + (r.documento ? " (" + (r.tipoDoc || "Doc") + " " + r.documento + ")" : "");
+      selectRepresentante.appendChild(opt);
+    });
+
+    // Si tiene representantes es obligatorio elegir uno; si no tiene, se registra sin representante
+    selectRepresentante.disabled = representantes.length === 0;
+    selectRepresentante.required = representantes.length > 0;
+    bloqueRepresentante.hidden = !esJuridica;
   }
 
   window.deseleccionarDonante = function () {
@@ -199,6 +226,7 @@
     donanteIdInput.value = "";
     cardDonanteSeleccionado.style.display = "none";
     if (donanteVacio) donanteVacio.style.display = "block";
+    cargarRepresentantes(null);
     if (resultadosDonantes) {
       resultadosDonantes.querySelectorAll(".donante-opcion").forEach(function (b) {
         b.setAttribute("aria-pressed", "false");

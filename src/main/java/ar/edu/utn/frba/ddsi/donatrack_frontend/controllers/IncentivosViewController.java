@@ -91,13 +91,22 @@ public class IncentivosViewController {
             String categoriaActual = "COLABORADOR";
             int misionesCompletadasCat = 0;
             int totalMisionesCat = 3; // Misiones estándar necesarias por categoría
+            boolean esCategoriaMaxima = false;
+            String siguienteCategoria = null;
 
             if (metricasMap != null) {
                 if (metricasMap.get("categoriaActual") != null) {
                     categoriaActual = metricasMap.get("categoriaActual").toString();
                 }
-                if (metricasMap.get("misionesCompletadasPeriodoActual") != null) {
-                    misionesCompletadasCat = ((Number) metricasMap.get("misionesCompletadasPeriodoActual")).intValue();
+                if (metricasMap.get("misionesCompletadasCategoriaActual") != null) {
+                    misionesCompletadasCat = ((Number) metricasMap.get("misionesCompletadasCategoriaActual")).intValue();
+                }
+                if (metricasMap.get("totalMisionesCategoriaActual") != null) {
+                    totalMisionesCat = ((Number) metricasMap.get("totalMisionesCategoriaActual")).intValue();
+                }
+                esCategoriaMaxima = Boolean.TRUE.equals(metricasMap.get("esCategoriaMaxima"));
+                if (metricasMap.get("siguienteCategoria") != null) {
+                    siguienteCategoria = metricasMap.get("siguienteCategoria").toString();
                 }
             }
 
@@ -140,6 +149,8 @@ public class IncentivosViewController {
             model.addAttribute("misionesCompletadasCat", misionesCompletadasCat);
             model.addAttribute("totalMisionesCat", totalMisionesCat);
             model.addAttribute("misionesFaltantes", misionesFaltantes);
+            model.addAttribute("esCategoriaMaxima", esCategoriaMaxima);
+            model.addAttribute("siguienteCategoria", siguienteCategoria);
             model.addAttribute("misiones", misiones);
             model.addAttribute("insignias", insignias != null ? insignias : List.of());
 

@@ -127,6 +127,38 @@
                         </div>
                     </form>
                 </section>
+
+                <!-- REPRESENTANTES DE PERSONAS JURÍDICAS -->
+                <section class="card mb-5" id="representantes" aria-labelledby="representantes-title">
+                    <div class="card__header">
+                        <div>
+                            <h2 id="representantes-title">Representantes de personas jurídicas</h2>
+                            <p class="muted" style="font-size: var(--fs-sm);">Elegí la organización para ver y cargar las personas habilitadas a donar en su nombre.</p>
+                        </div>
+                    </div>
+
+                    <div th:if="${exitoRep}" class="alert alert--success mb-4" th:text="${exitoRep}"></div>
+                    <div th:if="${errorRep}" class="alert alert--error mb-4" th:text="${errorRep}"></div>
+
+                    <form th:action="@{/admin/donantes}" method="get">
+                        <div class="field">
+                            <label class="field__label" for="pjSeleccion">Organización</label>
+                            <div style="display: flex; gap: var(--sp-2);">
+                                <select class="select" id="pjSeleccion" name="pj" required>
+                                    <option value="" disabled th:selected="${pjSeleccionada == null}">Seleccionar organización</option>
+                                    <option th:each="org : ${organizaciones}"
+                                            th:value="${org.id}"
+                                            th:text="${org.razonSocial}"
+                                            th:selected="${pjSeleccionada != null and org.id != null and org.id.toString() == pjSeleccionada.toString()}">Fundación Esperanza</option>
+                                </select>
+                                <button class="btn btn--primary" type="submit">Ver</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="mt-4" th:if="${pjSeleccionada != null}"
+                         th:insert="~{fragments/representantes :: gestion(${'/admin/donantes/' + pjSeleccionada + '/representantes'}, ${representantes})}"></div>
+                </section>
             </div>
         </main>
     </div>

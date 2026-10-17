@@ -32,6 +32,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/donantes/**").hasRole(SesionUsuario.ROL_ADMIN)
                         // Incentivos es solo para personas humanas (va antes de /donante/**)
                         .requestMatchers("/donante/incentivos", "/donante/incentivos/**").hasRole(SesionUsuario.ROL_DONANTE_HUMANO)
+                        // Representantes es solo para personas juridicas
+                        .requestMatchers("/donante/representantes", "/donante/representantes/**").hasRole(SesionUsuario.ROL_DONANTE_JURIDICO)
                         .requestMatchers("/donante/**").hasAnyRole(SesionUsuario.ROL_DONANTE_HUMANO, SesionUsuario.ROL_DONANTE_JURIDICO)
                         .requestMatchers("/ong/**").hasRole(SesionUsuario.ROL_BENEFICIARIO)
                         .anyRequest().authenticated()

@@ -29,6 +29,7 @@
         <a th:href="@{/donante/mis-donaciones}" th:attr="aria-current=${paginaActual == 'mis-donaciones' ? 'page' : null}">Mis donaciones</a>
         <a th:href="@{/donante/entidades}" th:attr="aria-current=${paginaActual == 'entidades' ? 'page' : null}">Entidades</a>
         <a sec:authorize="hasRole('DONANTE_HUMANO')" th:href="@{/donante/incentivos}" th:attr="aria-current=${paginaActual == 'incentivos' ? 'page' : null}">Incentivos</a>
+        <a sec:authorize="hasRole('DONANTE_JURIDICO')" th:href="@{/donante/representantes}" th:attr="aria-current=${paginaActual == 'representantes' ? 'page' : null}">Representantes</a>
         <a th:href="@{/donante/mapa}" th:attr="aria-current=${paginaActual == 'mapa' ? 'page' : null}">Mapa</a>
         <a th:href="@{/donante/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
     </nav>

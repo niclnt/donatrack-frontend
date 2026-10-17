@@ -70,6 +70,15 @@
                             </div>
                             <button class="btn btn--sm btn-outline" type="button" onclick="deseleccionarDonante()">Cambiar donante</button>
                         </article>
+
+                        <!-- Solo para personas jurídicas: quién acerca la donación (lo completa app.js) -->
+                        <div id="bloqueRepresentante" class="field mt-4" hidden>
+                            <label class="field__label" for="representanteId">Representante que entrega la donación</label>
+                            <select class="select" id="representanteId" name="representanteId" disabled></select>
+                            <span class="field__hint" id="representanteHint">
+                                Si no está en la lista, cargalo en <a th:href="@{/admin/donantes}">Gestión de donantes → Representantes</a>.
+                            </span>
+                        </div>
                     </section>
 
                     <!-- PASO 2: DATOS DE LA DONACIÓN -->
@@ -125,9 +134,11 @@
 
                                     <div class="field">
                                         <label class="field__label">Subcategoría</label>
-                                        <select class="select select-subcategoria" name="subcategoria" required disabled>
-                                            <option value="" disabled selected hidden>Primero seleccioná una categoría</option>
-                                        </select>
+                                        <!-- Input con sugerencias: se puede elegir una existente o escribir una nueva -->
+                                        <input class="input input-subcategoria" name="subcategoria" type="text" autocomplete="off"
+                                               placeholder="Primero seleccioná una categoría" required disabled>
+                                        <datalist class="lista-subcategorias"></datalist>
+                                        <span class="field__hint">Si no está en la lista, escribila y se crea.</span>
                                     </div>
 
                                     <div class="field">
@@ -189,32 +200,32 @@
 <script th:inline="javascript">
     const catalogoCategorias = /*[[${categorias}]]*/ [];
 
-    // Vincula los selects de Categoría y Subcategoría de un bloque de bien
+    let contadorBloques = 0;
+
+    // Vincula el select de Categoría con las sugerencias de Subcategoría de un bloque de bien
     function inicializarEventosCategoria(bloque) {
         const catSelect = bloque.querySelector('.select-categoria');
-        const subSelect = bloque.querySelector('.select-subcategoria');
+        const subInput = bloque.querySelector('.input-subcategoria');
+        const subLista = bloque.querySelector('.lista-subcategorias');
+
+        // Cada bloque necesita su propio datalist (se referencia por id)
+        subLista.id = 'subcategorias-' + (contadorBloques++);
+        subInput.setAttribute('list', subLista.id);
 
         catSelect.addEventListener('change', function () {
             const catEncontrada = catalogoCategorias.find(c => c.nombre === this.value);
             const subcategorias = (catEncontrada && catEncontrada.subcategorias) || [];
 
-            subSelect.innerHTML = '';
-            const optInicial = document.createElement('option');
-            optInicial.value = '';
-            optInicial.textContent = subcategorias.length ? 'Seleccionar subcategoría' : 'Primero seleccioná una categoría';
-            optInicial.disabled = true;
-            optInicial.selected = true;
-            optInicial.hidden = true;
-            subSelect.appendChild(optInicial);
-
+            subLista.innerHTML = '';
             subcategorias.forEach(sub => {
                 const opt = document.createElement('option');
                 opt.value = sub.nombre;
-                opt.textContent = sub.nombre;
-                subSelect.appendChild(opt);
+                subLista.appendChild(opt);
             });
 
-            subSelect.disabled = subcategorias.length === 0;
+            subInput.value = '';
+            subInput.disabled = !this.value;
+            subInput.placeholder = subcategorias.length ? 'Elegí o escribí una subcategoría' : 'Escribí una subcategoría';
         });
     }
 
@@ -231,9 +242,10 @@
         });
         nuevoBloque.querySelectorAll('select').forEach(s => { s.selectedIndex = 0; });
 
-        const subSelect = nuevoBloque.querySelector('.select-subcategoria');
-        subSelect.innerHTML = '<option value="" disabled selected hidden>Primero seleccioná una categoría</option>';
-        subSelect.disabled = true;
+        const subInput = nuevoBloque.querySelector('.input-subcategoria');
+        subInput.placeholder = 'Primero seleccioná una categoría';
+        subInput.disabled = true;
+        nuevoBloque.querySelector('.lista-subcategorias').innerHTML = '';
 
         const btnQuitar = document.createElement('button');
         btnQuitar.type = 'button';
