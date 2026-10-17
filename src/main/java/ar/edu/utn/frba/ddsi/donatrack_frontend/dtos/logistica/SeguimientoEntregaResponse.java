@@ -9,6 +9,7 @@ public record SeguimientoEntregaResponse(
         String entregaId,
         String patente,
         String estadoEntrega,
-        String direccionDestino
+        String direccionDestino,
+        PosicionResponse ultimaPosicion // null si el camion todavia no reporto posicion
 ) {
 }
