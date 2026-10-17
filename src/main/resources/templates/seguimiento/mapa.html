@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguimiento de entregas — DonaTrack</title>
+    <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+    <link rel="icon" th:href="@{/assets/favicon/favicon-32x32.png}" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        .seguimiento { grid-template-columns: 340px 1fr; align-items: start; }
+        @media (max-width: 900px) { .seguimiento { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<!-- REQ. 9 (donante) y REQ. 14 (entidad beneficiaria) — Seguimiento de entregas activas -->
+<div class="page">
+    <header th:replace="~{fragments/base :: topbar('mapa')}"></header>
+
+    <main id="main" class="page-body">
+        <div class="container">
+            <div class="page-head">
+                <div>
+                    <h1>Seguimiento de entregas</h1>
+                    <p class="page-head__sub" th:text="${subtitulo}">Seguimiento en tiempo real.</p>
+                </div>
+                <p class="dim" style="font-size: var(--fs-xs);" id="estado-actualizacion" aria-live="polite"></p>
+            </div>
+
+            <div th:if="${error}" class="alert alert--error" th:text="${error}">Error.</div>
+
+            <div class="grid seguimiento">
+                <aside class="card" aria-labelledby="entregas-title">
+                    <div class="card__header">
+                        <div>
+                            <h2 id="entregas-title">Entregas activas</h2>
+                            <p class="muted" style="font-size: var(--fs-sm);">Hacé click en una entrega para ubicar su camión.</p>
+                        </div>
+                    </div>
+
+                    <p th:if="${entregas.isEmpty()}" class="muted">
+                        No hay camiones en ruta con entregas para vos en este momento.
+                    </p>
+
+                    <div class="grid" style="gap: var(--sp-3);">
+                        <article class="card card--flat" th:each="e : ${entregas}"
+                                 th:attr="data-entrega=${e.entregaId()},data-estado=${e.estadoEntrega()}"
+                                 style="cursor: pointer;">
+                            <div class="flex justify-between items-center gap-3">
+                                <strong th:text="|Camión ${e.patente()}|">Camión ABC123</strong>
+                                <th:block th:switch="${e.estadoEntrega()}">
+                                    <span th:case="'EN_TRASLADO'" class="badge badge--warning">En camino</span>
+                                    <span th:case="'ENTREGADA'" class="badge badge--success">Entregada</span>
+                                    <span th:case="'NO_RECIBIDA'" class="badge badge--danger">No recibida</span>
+                                    <span th:case="*" class="badge badge--info">Pendiente</span>
+                                </th:block>
+                            </div>
+                            <p class="muted mt-4" style="font-size: var(--fs-sm);" th:text="|Destino: ${e.direccionDestino()}|">Destino: Av. Rivadavia 4200</p>
+                            <p class="dim mt-4" style="font-size: var(--fs-xs);" data-ultima
+                               th:with="p=${e.ultimaPosicion()}"
+                               th:text="${p == null ? 'El camión todavía no reportó su posición'
+                                        : (p.segundosDesdeActualizacion() < 60 ? 'Última posición: hace instantes'
+                                        : 'Última posición: hace ' + (p.segundosDesdeActualizacion() / 60) + ' min')
+                                          + (p.desactualizado() ? ' (señal desactualizada)' : '')}">
+                                Última posición: hace instantes
+                            </p>
+                            <a th:if="${esEntidad and e.estadoEntrega() == 'EN_TRASLADO'}" class="btn btn--primary btn--sm mt-4"
+                               th:href="@{/ong/confirmar-recepcion}">Confirmar al llegar</a>
+                        </article>
+                    </div>
+                </aside>
+
+                <section class="card" aria-label="Mapa con la posición de los camiones" style="min-width: 0;">
+                    <div id="mapa" th:attr="data-url=@{${urlDatos}}" style="height: 520px; border-radius: var(--radius-md);"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:src="@{/assets/js/mapa-seguimiento.js}"></script>
+</body>
+</html>
