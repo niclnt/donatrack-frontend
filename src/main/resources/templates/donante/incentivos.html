@@ -57,12 +57,21 @@
         </div>
       </div>
 
-      <!-- 1. Mis Insignias Obtenidas (Ahora antes de la Misión) -->
+      <!-- 1. Mis Insignias Obtenidas (Ahora con renderizado de logoUrl) -->
       <h3 style="margin-bottom: var(--sp-4);">Mis Insignias Obtenidas</h3>
       <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-6);">
 
         <div class="card text-center p-4 flex flex-col items-center justify-center" th:each="insignia : ${insignias}">
-          <div style="font-size: 2.5rem; margin-bottom: var(--sp-2);" aria-hidden="true">🎖️</div>
+          <div style="margin-bottom: var(--sp-2);" aria-hidden="true">
+            <img th:if="${insignia.logoUrl != null and !#strings.isEmpty(insignia.logoUrl)}"
+                 th:src="${insignia.logoUrl}"
+                 th:alt="${insignia.nombre}"
+                 style="width: 80px; height: 80px; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
+
+            <span th:if="${insignia.logoUrl == null or #strings.isEmpty(insignia.logoUrl)}"
+                  style="font-size: 2.5rem;">🎖️</span>
+          </div>
+
           <strong style="font-size: var(--fs-md);" th:text="${insignia.nombre}">Manos a la Obra</strong>
           <p class="muted mt-2" style="font-size: var(--fs-xs);" th:text="${insignia.descripcion}">Otorgada por completar tu primera misión.</p>
         </div>
