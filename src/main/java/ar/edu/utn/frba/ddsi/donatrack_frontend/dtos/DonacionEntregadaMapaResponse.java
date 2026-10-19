@@ -9,6 +9,11 @@ public record DonacionEntregadaMapaResponse(
         Double latitud,
         Double longitud,
         LocalDate fechaEntrega,
-        List<String> bienes
+        List<String> bienes,
+        List<String> fotos // ids de las fotos de la recepcion (vienen de logistica, no de donaciones)
 ) {
+    public DonacionEntregadaMapaResponse conFotos(List<String> fotos) {
+        return new DonacionEntregadaMapaResponse(id, entidadBeneficiaria, latitud, longitud, fechaEntrega, bienes,
+                fotos != null ? fotos : List.of());
+    }
 }

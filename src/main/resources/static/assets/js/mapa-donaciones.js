@@ -55,6 +55,29 @@ donaciones.forEach(function (donacion) {
     contenido.appendChild(fecha);
     contenido.appendChild(bienes);
 
+    // Fotos que cargo la entidad al recibir la donacion (publicas, sin login)
+    if (Array.isArray(donacion.fotos) && donacion.fotos.length > 0) {
+        var galeria = document.createElement("div");
+        galeria.style.cssText = "display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;";
+        donacion.fotos.forEach(function (fotoId) {
+            var enlace = document.createElement("a");
+            enlace.href = "/fotos/" + encodeURIComponent(fotoId);
+            enlace.target = "_blank";
+            enlace.rel = "noopener";
+            enlace.setAttribute("aria-label", "Ver foto de la entrega en tamaño completo");
+
+            var img = document.createElement("img");
+            img.src = "/fotos/" + encodeURIComponent(fotoId);
+            img.alt = "Foto de la donación entregada a " + nombreEntidad;
+            img.loading = "lazy";
+            img.style.cssText = "width: 72px; height: 72px; object-fit: cover; border-radius: 6px;";
+
+            enlace.appendChild(img);
+            galeria.appendChild(enlace);
+        });
+        contenido.appendChild(galeria);
+    }
+
     // Creamos el marcador y le asociamos el popup
     var marcador = L.marker([donacion.latitud, donacion.longitud])
         .addTo(mapa)

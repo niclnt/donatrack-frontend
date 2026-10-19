@@ -38,10 +38,18 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String inicio(Authentication authentication) {
+    public String inicio(Authentication authentication, Model model) {
         // Con sesion, cada rol va a su panel (/panel decide segun el rol)
         if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
             return "redirect:/panel";
+        }
+
+        // Ejemplos destacados: lo entregado en el ultimo mes
+        try {
+            model.addAttribute("donacionesRecientes", mapaDonacionesApiService.obtenerEntregadasRecientes(30, 6));
+        } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
+            model.addAttribute("donacionesRecientes", List.of());
+            model.addAttribute("errorRecientes", "No pudimos cargar las donaciones recientes. Intentá más tarde.");
         }
         return "index";
     }

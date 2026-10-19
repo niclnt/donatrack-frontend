@@ -31,33 +31,54 @@
                 </div>
             </div>
 
-            <!-- Ejemplos destacados del último mes -->
-            <h2 style="margin-bottom: 20px;">Donaciones entregadas recientemente</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+            <!-- Ejemplos destacados del último mes (donaciones entregadas reales, con las fotos de la recepción) -->
+            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Donaciones entregadas en el último mes</h2>
+                <a th:href="@{/mapa-donaciones}" class="btn btn--link">Ver todas en el mapa y sus fotos →</a>
+            </div>
 
-                <div class="card" style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span class="badge" style="background: #2ea043; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em;">Entregada con éxito</span>
-                        <small class="muted">Hace 2 días</small>
-                    </div>
-                    <h3 style="margin: 0 0 5px 0;">30 Bancos y Sillas</h3>
-                    <p class="muted" style="margin: 0 0 15px 0;">Destino: Escuela Rural N°10</p>
-                    <a th:href="@{/donante/entidades}" style="color: #58a6ff; text-decoration: none; font-size: 0.9em;">Ver entidades asociadas →</a>
-                </div>
+            <div th:if="${errorRecientes != null}" class="alert alert--error" th:text="${errorRecientes}">
+                No pudimos cargar las donaciones recientes.
+            </div>
+            <div class="card muted text-center" style="padding: 20px;"
+                 th:if="${errorRecientes == null and #lists.isEmpty(donacionesRecientes)}">
+                Todavía no hay donaciones entregadas este mes.
+            </div>
 
-                <div class="card" style="padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span class="badge" style="background: #2ea043; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8em;">Entregada con éxito</span>
-                        <small class="muted">Hace 1 semana</small>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"
+                 th:unless="${#lists.isEmpty(donacionesRecientes)}">
+
+                <article class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;"
+                         th:each="donacion : ${donacionesRecientes}"
+                         th:with="tieneFotos=${donacion.fotos() != null and !donacion.fotos().isEmpty()}">
+
+                    <a th:if="${tieneFotos}" th:href="@{/fotos/{id}(id=${donacion.fotos()[0]})}" target="_blank" rel="noopener"
+                       th:attr="aria-label=|Ver foto de la entrega a ${donacion.entidadBeneficiaria()}|">
+                        <img th:src="@{/fotos/{id}(id=${donacion.fotos()[0]})}" alt="" loading="lazy"
+                             style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                    </a>
+                    <div th:unless="${tieneFotos}" aria-hidden="true"
+                         style="height: 180px; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: var(--surface-2);">📦</div>
+
+                    <div style="padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span class="badge badge--success">Entregada</span>
+                            <small class="muted" th:text="${#temporals.format(donacion.fechaEntrega(), 'dd/MM/yyyy')}">17/10/2026</small>
+                        </div>
+                        <h3 style="margin: 0 0 5px 0;"
+                            th:text="${donacion.bienes() != null and !donacion.bienes().isEmpty() ? #strings.listJoin(donacion.bienes(), ', ') : 'Donación de bienes'}">
+                            Fideos, arroz
+                        </h3>
+                        <p class="muted" style="margin: 0;" th:text="|Destino: ${donacion.entidadBeneficiaria()}|">Destino: Comedor</p>
+                        <p class="muted" style="margin: 8px 0 0; font-size: var(--fs-sm);" th:if="${tieneFotos and donacion.fotos().size() > 1}"
+                           th:text="|+${donacion.fotos().size() - 1} foto(s) más en el mapa|">+2 fotos más</p>
                     </div>
-                    <h3 style="margin: 0 0 5px 0;">100 Paquetes de Fideos</h3>
-                    <p class="muted" style="margin: 0 0 15px 0;">Destino: Comedor Escobar Sonrisas</p>
-                    <a th:href="@{/donante/entidades}" style="color: #58a6ff; text-decoration: none; font-size: 0.9em;">Ver entidades asociadas →</a>
-                </div>
+                </article>
             </div>
 
             <!-- Información Legal y Accesos Directos -->
             <div style="text-align: center; margin-top: 50px; border-top: 1px solid #333; padding-top: 25px;">
+                <a th:href="@{/mapa-donaciones}" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Fotos de donaciones entregadas</a>
                 <a th:href="@{/legales}" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Información Legal</a>
                 <a th:href="@{/privacidad}" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Aviso de Privacidad</a>
             </div>

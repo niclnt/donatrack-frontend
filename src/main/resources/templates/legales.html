@@ -11,13 +11,138 @@
     <header th:replace="~{fragments/base :: topbar('legales')}"></header>
 
     <main id="main" class="page-body">
-        <div class="container">
+        <div class="container" style="max-width: 860px;">
 
-            <h1>Información Legal</h1>
-            <p class="muted">
-                Información legal de la plataforma DonaTrack.
+            <div class="page-head">
+                <div>
+                    <h1>Información Legal</h1>
+                    <p class="page-head__sub">Términos y condiciones de uso de DonaTrack. Última actualización: octubre de 2026.</p>
+                </div>
+            </div>
+
+            <nav class="card mb-5" aria-labelledby="indice-legales">
+                <h2 id="indice-legales" style="font-size: var(--fs-md);">Contenido</h2>
+                <ol style="margin: var(--sp-2) 0 0; padding-left: 1.25rem; line-height: 1.9;">
+                    <li><a href="#quienes-somos">Quiénes somos</a></li>
+                    <li><a href="#aceptacion">Aceptación de los términos</a></li>
+                    <li><a href="#cuentas">Cuentas de usuario</a></li>
+                    <li><a href="#donaciones">Donaciones</a></li>
+                    <li><a href="#entidades">Entidades beneficiarias</a></li>
+                    <li><a href="#trazabilidad">Trazabilidad, fotos y mapa público</a></li>
+                    <li><a href="#incentivos">Incentivos y rankings</a></li>
+                    <li><a href="#responsabilidad">Limitación de responsabilidad</a></li>
+                    <li><a href="#cambios">Modificaciones</a></li>
+                    <li><a href="#ley">Ley aplicable</a></li>
+                </ol>
+            </nav>
+
+            <article class="card" style="line-height: 1.7;">
+                <section id="quienes-somos">
+                    <h2>1. Quiénes somos</h2>
+                    <p>
+                        DonaTrack es la plataforma de gestión y trazabilidad de donaciones de UTN Solidaria, iniciativa de la
+                        Subsecretaría de Asuntos Estudiantiles de la Universidad Tecnológica Nacional, Facultad Regional Buenos Aires.
+                        Su objetivo es conectar a personas y organizaciones donantes con entidades sin fines de lucro, y hacer
+                        visible el recorrido de cada donación desde el depósito hasta su destino.
+                    </p>
+                    <p class="muted">El uso de la plataforma es gratuito. DonaTrack no comercializa bienes ni cobra comisiones.</p>
+                </section>
+
+                <section id="aceptacion" class="mt-5">
+                    <h2>2. Aceptación de los términos</h2>
+                    <p>
+                        Al registrarte o usar DonaTrack aceptás estos términos y el
+                        <a th:href="@{/privacidad}">Aviso de Privacidad</a>. Si no estás de acuerdo, no utilices la plataforma.
+                    </p>
+                </section>
+
+                <section id="cuentas" class="mt-5">
+                    <h2>3. Cuentas de usuario</h2>
+                    <ul>
+                        <li>Los datos que cargues al registrarte tienen que ser verdaderos y mantenerse actualizados.</li>
+                        <li>Tu cuenta es personal: sos responsable de cuidar tu contraseña y de lo que se haga con ella.
+                            Si recibiste una contraseña temporal por correo, cambiala en tu primer ingreso.</li>
+                        <li>Las personas jurídicas operan a través de representantes habilitados, que actúan en su nombre.
+                            La organización es responsable de mantener actualizada esa lista.</li>
+                        <li>Podemos suspender cuentas que hagan un uso indebido de la plataforma o carguen información falsa.</li>
+                    </ul>
+                </section>
+
+                <section id="donaciones" class="mt-5">
+                    <h2>4. Donaciones</h2>
+                    <ul>
+                        <li>Las donaciones son de bienes materiales y se reciben en el depósito de UTN Solidaria, donde se registran
+                            a nombre de la persona donante.</li>
+                        <li>Los bienes tienen que estar en condiciones de uso. Los perecederos deben tener una fecha de vencimiento
+                            que permita entregarlos a tiempo.</li>
+                        <li>Una vez registrada, la donación es irrevocable: no se devuelve ni se reintegra su valor.</li>
+                        <li>La entidad de destino se define según las necesidades registradas y los criterios de asignación de la
+                            plataforma. La persona donante no elige la entidad final.</li>
+                        <li>Los bienes que venzan en el depósito o no puedan entregarse se dan de baja y no se asignan.</li>
+                    </ul>
+                </section>
+
+                <section id="entidades" class="mt-5">
+                    <h2>5. Entidades beneficiarias</h2>
+                    <ul>
+                        <li>Solo pueden registrarse organizaciones sin fines de lucro (escuelas, comedores, espacios de tutoría, entre otras).</li>
+                        <li>Las necesidades que publiquen tienen que ser reales y estar actualizadas.</li>
+                        <li>Las donaciones recibidas no pueden venderse ni destinarse a fines distintos de los de la organización.</li>
+                        <li>Al recibir una donación, la entidad confirma la recepción y puede cargar fotos como evidencia.</li>
+                    </ul>
+                </section>
+
+                <section id="trazabilidad" class="mt-5">
+                    <h2>6. Trazabilidad, fotos y mapa público</h2>
+                    <p>
+                        Para dar transparencia, el <a th:href="@{/mapa-donaciones}">mapa de donaciones</a> y la página de inicio muestran,
+                        sin necesidad de iniciar sesión, las donaciones entregadas: la entidad que las recibió, su ubicación aproximada,
+                        la fecha, los bienes y las fotos de la recepción. No se publica el nombre de quien donó.
+                    </p>
+                    <p>
+                        Las entidades se comprometen a cargar fotos de los bienes y no de personas. Si una foto muestra a alguien,
+                        en especial a menores, puede pedirse su baja a UTN Solidaria.
+                    </p>
+                </section>
+
+                <section id="incentivos" class="mt-5">
+                    <h2>7. Incentivos y rankings</h2>
+                    <p>
+                        Las misiones, insignias, categorías y rankings son un reconocimiento simbólico a la participación de las
+                        personas donantes. No tienen valor económico ni son canjeables. Las reglas pueden ajustarse para mantener
+                        la equidad del sistema.
+                    </p>
+                </section>
+
+                <section id="responsabilidad" class="mt-5">
+                    <h2>8. Limitación de responsabilidad</h2>
+                    <p>
+                        UTN Solidaria actúa como intermediaria entre donantes y entidades. Hace lo posible para que cada donación
+                        llegue a destino en tiempo y forma, pero no garantiza plazos de entrega, que pueden verse afectados por la
+                        logística, el clima u otras causas ajenas. Tampoco responde por el uso que la entidad haga de los bienes recibidos.
+                    </p>
+                </section>
+
+                <section id="cambios" class="mt-5">
+                    <h2>9. Modificaciones</h2>
+                    <p>
+                        Estos términos pueden actualizarse. Los cambios relevantes se informan en la plataforma y rigen desde su
+                        publicación.
+                    </p>
+                </section>
+
+                <section id="ley" class="mt-5">
+                    <h2>10. Ley aplicable</h2>
+                    <p>
+                        Estos términos se rigen por las leyes de la República Argentina. Ante cualquier controversia, son competentes
+                        los tribunales de la Ciudad Autónoma de Buenos Aires.
+                    </p>
+                </section>
+            </article>
+
+            <p class="muted mt-5" style="font-size: var(--fs-sm);">
+                DonaTrack es un desarrollo académico del Trabajo Práctico Anual de Diseño de Sistemas de Información (UTN FRBA).
             </p>
-
         </div>
     </main>
 

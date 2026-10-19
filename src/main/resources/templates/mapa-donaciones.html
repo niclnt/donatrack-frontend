@@ -45,6 +45,34 @@
             <div id="mapa" style="height: 450px; margin-top: 24px;">
             </div>
 
+            <!-- Fotos que cargaron las entidades al recibir las donaciones (públicas, sin login) -->
+            <section id="fotos" class="mt-5" aria-labelledby="fotos-title"
+                     th:with="conFotos=${donacionesEntregadas.?[fotos() != null and !fotos().isEmpty()]}">
+                <h2 id="fotos-title">Fotos de las entregas</h2>
+                <p class="muted" th:if="${#lists.isEmpty(conFotos)}">Todavía no hay fotos de entregas cargadas.</p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 16px;">
+                    <figure class="card" style="padding: 0; margin: 0; overflow: hidden;"
+                            th:each="donacion : ${conFotos}">
+                        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                            <a th:each="fotoId, it : ${donacion.fotos()}" th:href="@{/fotos/{id}(id=${fotoId})}"
+                               target="_blank" rel="noopener" th:style="${it.first} ? 'flex: 1 1 100%;' : 'flex: 1 1 30%;'"
+                               th:attr="aria-label=|Ver foto ${it.count} de la entrega a ${donacion.entidadBeneficiaria()}|">
+                                <img th:src="@{/fotos/{id}(id=${fotoId})}" alt="" loading="lazy"
+                                     th:style="${it.first} ? 'width: 100%; height: 160px; object-fit: cover; display: block;' : 'width: 100%; height: 60px; object-fit: cover; display: block;'">
+                            </a>
+                        </div>
+                        <figcaption style="padding: 12px 16px;">
+                            <strong th:text="${donacion.entidadBeneficiaria()}">Comedor</strong>
+                            <p class="muted" style="margin: 4px 0 0; font-size: var(--fs-sm);"
+                               th:text="|${#temporals.format(donacion.fechaEntrega(), 'dd/MM/yyyy')} · ${donacion.bienes() != null ? #strings.listJoin(donacion.bienes(), ', ') : ''}|">
+                                17/10/2026 · Fideos
+                            </p>
+                        </figcaption>
+                    </figure>
+                </div>
+            </section>
+
         </div>
     </main>
 

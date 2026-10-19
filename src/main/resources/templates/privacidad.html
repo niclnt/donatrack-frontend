@@ -11,13 +11,124 @@
     <header th:replace="~{fragments/base :: topbar('privacidad')}"></header>
 
     <main id="main" class="page-body">
-        <div class="container">
+        <div class="container" style="max-width: 860px;">
 
-            <h1>Aviso de Privacidad</h1>
-            <p class="muted">
-                Privacidad de la plataforma DonaTrack.
+            <div class="page-head">
+                <div>
+                    <h1>Aviso de Privacidad</h1>
+                    <p class="page-head__sub">Cómo DonaTrack trata tus datos personales. Última actualización: octubre de 2026.</p>
+                </div>
+            </div>
+
+            <article class="card" style="line-height: 1.7;">
+                <section>
+                    <h2>Responsable de los datos</h2>
+                    <p>
+                        El responsable de la base de datos es UTN Solidaria (Subsecretaría de Asuntos Estudiantiles, UTN Facultad
+                        Regional Buenos Aires). Tratamos tus datos según la Ley 25.326 de Protección de los Datos Personales.
+                    </p>
+                </section>
+
+                <section class="mt-5">
+                    <h2>Qué datos pedimos</h2>
+                    <div class="table-wrap">
+                        <table class="table">
+                            <caption class="sr-only">Datos que se piden según el tipo de usuario</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col">Quién</th>
+                                <th scope="col">Datos</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><strong>Persona humana donante</strong></td>
+                                <td>Nombre y apellido, edad, tipo y número de documento, género, dirección, correo electrónico y,
+                                    opcionalmente, teléfono o WhatsApp.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Persona jurídica donante</strong></td>
+                                <td>Razón social, tipo de organización, rubro, medios de contacto y los datos de sus representantes.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Entidad beneficiaria</strong></td>
+                                <td>Razón social, dirección completa, teléfono, correos de sus representantes, las necesidades que
+                                    publica y las fotos de las donaciones que recibe.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Todos</strong></td>
+                                <td>Correo y contraseña de acceso (guardada cifrada) y el historial de donaciones y notificaciones.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="mt-5">
+                    <h2>Para qué los usamos</h2>
+                    <ul>
+                        <li>Registrar las donaciones y asignarlas a las entidades que las necesitan.</li>
+                        <li>Planificar las rutas de entrega y mostrar el seguimiento de los camiones a donantes y entidades.</li>
+                        <li>Enviarte notificaciones por tu medio de contacto preferido: asignaciones, entregas, misiones cumplidas y cambios de categoría.</li>
+                        <li>Calcular incentivos y el ranking mensual de donantes.</li>
+                        <li>Elaborar estadísticas generales, sin identificar a las personas.</li>
+                    </ul>
+                </section>
+
+                <section class="mt-5">
+                    <h2>Qué se muestra públicamente</h2>
+                    <p>
+                        En la página de inicio y en el <a th:href="@{/mapa-donaciones}">mapa de donaciones</a> se ven, sin iniciar
+                        sesión, la entidad que recibió cada donación, su ubicación, la fecha, los bienes y las fotos de la recepción.
+                        <strong>Nunca se publican datos de las personas donantes.</strong> En el ranking de donantes se muestra solo el
+                        nombre de usuario.
+                    </p>
+                </section>
+
+                <section class="mt-5">
+                    <h2>Con quién los compartimos</h2>
+                    <p>No vendemos ni cedemos tus datos. Solo los usamos con los servicios que hacen funcionar la plataforma:</p>
+                    <ul>
+                        <li>Proveedores de envío de correos, SMS y WhatsApp, para las notificaciones.</li>
+                        <li>El servicio de planificación de rutas, que recibe direcciones y volúmenes de las entregas.</li>
+                        <li>Servicios de mapas y geolocalización, que reciben las direcciones de las entidades.</li>
+                    </ul>
+                </section>
+
+                <section class="mt-5">
+                    <h2>Cuánto tiempo los guardamos</h2>
+                    <p>
+                        Mientras tu cuenta esté activa y luego el tiempo necesario para mantener la trazabilidad de las donaciones
+                        realizadas. Pasado ese plazo, los datos se eliminan o se anonimizan.
+                    </p>
+                </section>
+
+                <section class="mt-5">
+                    <h2>Tus derechos</h2>
+                    <p>
+                        Podés pedir acceso, rectificación, actualización o supresión de tus datos en cualquier momento, sin costo,
+                        contactando a UTN Solidaria. El acceso es gratuito a intervalos no menores a seis meses, salvo interés
+                        legítimo (art. 14, inc. 3, Ley 25.326).
+                    </p>
+                    <p class="muted" style="font-size: var(--fs-sm);">
+                        La Agencia de Acceso a la Información Pública, como órgano de control de la Ley 25.326, atiende las denuncias
+                        y reclamos de quienes resulten afectados en sus derechos por incumplimiento de las normas vigentes en materia
+                        de protección de datos personales.
+                    </p>
+                </section>
+
+                <section class="mt-5">
+                    <h2>Seguridad y cookies</h2>
+                    <p>
+                        Las contraseñas se guardan cifradas y el acceso a cada sección depende de tu rol. Usamos una única cookie de
+                        sesión, necesaria para mantenerte conectado. No usamos cookies de publicidad ni de seguimiento.
+                    </p>
+                </section>
+            </article>
+
+            <p class="muted mt-5" style="font-size: var(--fs-sm);">
+                Ver también la <a th:href="@{/legales}">Información Legal</a> (términos y condiciones de uso).
             </p>
-
         </div>
     </main>
 
