@@ -20,8 +20,8 @@
     <!-- NAVBAR PARA VISITANTES (NO AUTENTICADOS) -->
     <nav class="topbar__nav" id="mainnav" aria-label="Principal" sec:authorize="!isAuthenticated()">
         <a th:href="@{/}" th:attr="aria-current=${paginaActual == 'inicio' ? 'page' : null}">Inicio</a>
-        <a th:href="@{/mapa-donaciones}">Mapa de donaciones</a>
-        <a th:href="@{/legales}">Legales</a>
+        <a th:href="@{/mapa-donaciones}" th:attr="aria-current=${paginaActual == 'mapa-donaciones' ? 'page' : null}">Mapa de donaciones</a>
+        <a th:href="@{/legales}" th:attr="aria-current=${paginaActual == 'legales' ? 'page' : null}">Legales</a>
     </nav>
 
     <!-- NAVBAR PARA DONANTES (AUTENTICADOS) -->
