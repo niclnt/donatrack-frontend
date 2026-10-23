@@ -123,7 +123,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 /* ---- Barra de navegación superior ---- */
 .topbar {
-  position: sticky; top: 0; z-index: 1100;
+  position: sticky; top: 0; z-index: 40;
   height: var(--nav-h);
   display: flex; align-items: center; gap: var(--sp-5);
   padding-inline: var(--sp-5);
@@ -135,6 +135,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   color: var(--primary); letter-spacing: -.01em;
   display: inline-flex; align-items: center; gap: var(--sp-2);
 }
+#mapa { position: relative; z-index: 0; }
 .topbar__nav { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; }
 .topbar__nav a {
   display: inline-flex; align-items: center;
@@ -533,7 +534,7 @@ select:disabled {
 
 /* ---- Modal ---- */
 .modal[hidden] { display: none; }
-.modal { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: var(--sp-4); background: rgba(0,0,0,.6); overflow-y: auto; }
+.modal { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: var(--sp-4); background: rgba(0,0,0,.6); overflow-y: auto; }
 .modal__box { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: var(--sp-5); box-shadow: var(--shadow-2); }
 .modal__box--wide { max-width: 640px; }
 .modal__header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); margin-bottom: var(--sp-5); }

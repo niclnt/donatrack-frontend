@@ -34,8 +34,8 @@
         <div class="filter-select-wrap">
           <select id="filterNecesidades" aria-label="Filtrar por necesidades">
             <option value="">Todas las entidades</option>
-            <option value="con-pendientes">Con necesidades pendientes</option>
-            <option value="sin-pendientes">Sin necesidades pendientes</option>
+            <option value="con-pendientes">Con necesidades activas</option>
+            <option value="sin-pendientes">Sin necesidades activas</option>
           </select>
         </div>
         <div class="filter-select-wrap">
@@ -274,8 +274,8 @@
     const countBadge = document.getElementById('entitiesCountBadge');
     const noResults = document.getElementById('noFilterResults');
 
-    // Paletas de color elegantes para los avatares
-    const avatarPalettes = [
+    // Paletas de colores dinamicas
+   const avatarPalettes = [
       { bg: 'rgba(99, 102, 241, 0.18)', text: '#a5b4fc', border: 'rgba(99, 102, 241, 0.35)' },
       { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
       { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
@@ -285,17 +285,16 @@
       { bg: 'rgba(249, 115, 22, 0.18)', text: '#fdba74', border: 'rgba(249, 115, 22, 0.35)' }
     ];
 
-    // Paletas semánticas para categorías
-    const categoryPalettes = {
-      'alimentos': { bg: 'rgba(220, 38, 38, 0.22)', text: '#fca5a5', border: 'rgba(239, 68, 68, 0.35)' },
-      'vestimenta': { bg: 'rgba(2, 132, 199, 0.22)', text: '#7dd3fc', border: 'rgba(2, 132, 199, 0.35)' },
-      'higiene': { bg: 'rgba(16, 185, 129, 0.22)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
-      'cocina': { bg: 'rgba(139, 92, 246, 0.22)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },
-      'electrodomésticos': { bg: 'rgba(245, 158, 11, 0.22)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
-      'electrodomesticos': { bg: 'rgba(245, 158, 11, 0.22)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
-      'limpieza': { bg: 'rgba(20, 184, 166, 0.22)', text: '#5eead4', border: 'rgba(20, 184, 166, 0.35)' },
-      'salud': { bg: 'rgba(236, 72, 153, 0.22)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' }
-    };
+    const categoryPalettes = [
+      { bg: 'rgba(239, 68, 68, 0.18)', text: '#fca5a5', border: 'rgba(239, 68, 68, 0.35)' },
+      { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
+      { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
+      { bg: 'rgba(59, 130, 246, 0.18)', text: '#93c5fd', border: 'rgba(59, 130, 246, 0.35)' },
+      { bg: 'rgba(139, 92, 246, 0.18)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },
+      { bg: 'rgba(236, 72, 153, 0.18)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' },
+      { bg: 'rgba(20, 184, 166, 0.18)', text: '#5eead4', border: 'rgba(20, 184, 166, 0.35)' },
+      { bg: 'rgba(249, 115, 22, 0.18)', text: '#fdba74', border: 'rgba(249, 115, 22, 0.35)' }
+    ];
 
     function hashString(str) {
       let hash = 0;
@@ -326,14 +325,15 @@
         avatar.style.color = palette.text;
         avatar.style.border = '1px solid ' + palette.border;
       }
+    });
 
-      card.querySelectorAll('.entity-category-pill').forEach(pill => {
-        const cat = (pill.getAttribute('data-cat') || pill.textContent).trim().toLowerCase();
-        const p = categoryPalettes[cat] || avatarPalettes[hashString(cat) % avatarPalettes.length];
-        pill.style.backgroundColor = p.bg;
-        pill.style.color = p.text;
-        pill.style.border = '1px solid ' + p.border;
-      });
+    document.querySelectorAll('.entity-category-pill').forEach(pill => {
+      const category = (pill.getAttribute('data-cat') || pill.textContent).trim();
+      if (!category) return;
+      const palette = categoryPalettes[hashString(category) % categoryPalettes.length];
+      pill.style.backgroundColor = palette.bg;
+      pill.style.color = palette.text;
+      pill.style.border = '1px solid ' + palette.border;
     });
 
     // Poblar opciones únicas de Zona y Categoría

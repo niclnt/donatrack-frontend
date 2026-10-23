@@ -3,11 +3,14 @@ package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.catalogo.CategoriaCatalogoResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.EntidadBeneficiariaResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.representantes.RepresentanteResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.MapaDonacionesApiService;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -90,6 +93,10 @@ public class HomeController {
             return "redirect:/login";
         }
 
+        boolean esDonanteJuridico = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + SesionUsuario.ROL_DONANTE_JURIDICO));
+        model.addAttribute("esDonanteJuridico", esDonanteJuridico);
+
         Long donanteId;
         try {
             donanteId = extraerDonanteId();
@@ -108,12 +115,42 @@ public class HomeController {
         if (busqueda != null && !busqueda.isEmpty()) backendUrl.append("busqueda=").append(busqueda).append("&");
         if (orden != null && !orden.isEmpty()) backendUrl.append("orden=").append(orden).append("&");
 
+        List<Map<String, Object>> donaciones = new ArrayList<>();
         try {
-            model.addAttribute("donaciones", webApiCallerService.getList(backendUrl.toString(), Map[].class));
+            List<Map> respuesta = webApiCallerService.getList(backendUrl.toString(), Map[].class);
+            for (Map donacion : respuesta) {
+                Map<String, Object> donacionVista = new LinkedHashMap<>();
+                donacion.forEach((clave, valor) -> {
+                    if (clave instanceof String nombreClave) {
+                        donacionVista.put(nombreClave, valor);
+                    }
+                });
+                donaciones.add(donacionVista);
+            }
         } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
-            model.addAttribute("donaciones", java.util.List.of());
             model.addAttribute("error", "No se pudieron cargar tus donaciones en este momento.");
         }
+
+        if (esDonanteJuridico && !donaciones.isEmpty()) {
+            try {
+                List<RepresentanteResponse> representantes = webApiCallerService.getList(
+                        donacionesServiceUrl + "/donantes/personaJuridica/mia/representantes",
+                        RepresentanteResponse[].class
+                );
+                Map<String, String> nombresPorId = representantes.stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                representante -> representante.id().toString(),
+                                RepresentanteResponse::nombre,
+                                (primero, ignorado) -> primero
+                        ));
+                donaciones.forEach(donacion ->
+                        donacion.put("representanteNombreVista", resolverNombreRepresentante(donacion, nombresPorId)));
+            } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
+                donaciones.forEach(donacion -> donacion.put("representanteNombreVista", "No disponible"));
+                model.addAttribute("errorRepresentantes", "No se pudieron cargar los datos de representantes.");
+            }
+        }
+        model.addAttribute("donaciones", donaciones);
 
         model.addAttribute("estadoFiltro", estado);
         model.addAttribute("categoriaFiltro", categoria);
@@ -134,6 +171,32 @@ public class HomeController {
         model.addAttribute("categorias", categorias);
 
         return "donante/mis-donaciones";
+    }
+
+    private String resolverNombreRepresentante(Map<String, Object> donacion, Map<String, String> nombresPorId) {
+        Object nombreDirecto = donacion.get("representanteNombre");
+        if (nombreDirecto == null) nombreDirecto = donacion.get("nombreRepresentante");
+        if (nombreDirecto != null && !nombreDirecto.toString().isBlank()) {
+            return nombreDirecto.toString();
+        }
+
+        Object representante = donacion.get("representante");
+        if (representante instanceof Map<?, ?> datosRepresentante) {
+            Object nombre = datosRepresentante.get("nombre");
+            if (nombre != null && !nombre.toString().isBlank()) {
+                return nombre.toString();
+            }
+            representante = datosRepresentante.get("id");
+        } else if (representante != null && !(representante instanceof Number)) {
+            return representante.toString();
+        }
+
+        Object representanteId = donacion.get("representanteId");
+        if (representanteId == null) representanteId = donacion.get("idRepresentante");
+        if (representanteId == null) representanteId = representante;
+        return representanteId == null
+                ? "—"
+                : nombresPorId.getOrDefault(representanteId.toString(), "—");
     }
 
     @GetMapping("/legales")

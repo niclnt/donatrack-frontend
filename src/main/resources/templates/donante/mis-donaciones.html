@@ -17,9 +17,12 @@
             </div>
 
             <div class="card">
-                <!-- 1. Manejo de Errores -->
+                <!-- Manejo de Errores -->
                 <div th:if="${error != null}" class="alert alert-danger">
                     <p th:text="${error}">Mensaje de error</p>
+                </div>
+                <div th:if="${errorRepresentantes != null}" class="alert alert-danger">
+                    <p th:text="${errorRepresentantes}">No se pudieron cargar los representantes.</p>
                 </div>
 
                 <!-- Barra de Filtros Completa (Auto-submitable) -->
@@ -41,7 +44,7 @@
                             <select name="estado" class="form-control filtro-auto" style="width: 100%; padding: 8px;">
                                 <option value="" th:selected="${estadoFiltro == null or estadoFiltro == ''}">Todos los estados</option>
                                 <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En Depósito</option>
-                                <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignada</option>
+                                <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignación realizada</option>
                                 <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En Traslado</option>
                                 <option value="ENTREGADA" th:selected="${estadoFiltro == 'ENTREGADA'}">Entregada</option>
                             </select>
@@ -82,7 +85,7 @@
                 <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
                     <tbody th:each="donacion : ${donaciones}" class="donation-group">
                     <tr class="donation-description">
-                        <td colspan="6">
+                        <td th:attr="colspan=${esDonanteJuridico ? 7 : 6}">
                             <span class="donation-description__icon" aria-hidden="true">📦</span>
                             <strong th:text="${donacion.descripcion}">Donación para la colecta de alimentos</strong>
                         </td>
@@ -100,6 +103,7 @@
                         <th scope="col">CANTIDAD</th>
                         <th scope="col">ESTADO</th>
                         <th scope="col">ENTIDAD ASIGNADA</th>
+                        <th scope="col" th:if="${esDonanteJuridico}">REPRESENTANTE</th>
                     </tr>
                     <tr th:each="segmento, segmentoStat : ${donacion.donacionesSegmentadas}">
                         <td th:if="${segmentoStat.first}"
@@ -125,6 +129,9 @@
                             </span>
                         </td>
                         <td th:text="${segmento.entidadAsignada != null ? segmento.entidadAsignada : '—'}">Escuela Rural N°10</td>
+                        <td th:if="${esDonanteJuridico and segmentoStat.first}"
+                            th:rowspan="${#lists.size(donacion.donacionesSegmentadas)}"
+                            th:text="${donacion.representanteNombreVista}">—</td>
                     </tr>
                     </tbody>
                 </table>
