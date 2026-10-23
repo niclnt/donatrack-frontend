@@ -46,20 +46,21 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <!-- Bucle de Thymeleaf leyendo exactamente las variables de ReporteMensualDTO -->
-                            <tr th:each="puesto, iterStat : ${rankingMensual}">
-                                <td><strong th:text="'#' + ${iterStat.count}">#1</strong></td>
+                            <!-- Bucle de Thymeleaf iterando sobre objetos PuestoDTO -->
+                            <tr th:each="puesto : ${rankingMensual}">
 
-                                <td th:text="${puesto.get('username')}">Nombre Donante</td>
+                                <!-- Usamos directamente el 'puesto' que viene del backend -->
+                                <td><strong th:text="'#' + ${puesto.puesto()}">#1</strong></td>
 
-                                <td class="num" th:text="${puesto.get('misionesCompletadasMes')}">8</td>
+                                <td th:text="${puesto.username()}">Nombre Donante</td>
 
-                                <!-- Como el DTO no trae categoría, dejamos un placeholder visual -->
+                                <!-- Usamos el nuevo nombre del atributo -->
+                                <td class="num" th:text="${puesto.cantidadMisionesCompletadas()}">8</td>
+
                                 <td>
                                     <span class="badge badge--info">Sostenedor</span>
                                 </td>
 
-                                <!-- Como el DTO no trae donaciones totales, mostramos un guión -->
                                 <td class="muted">—</td>
                             </tr>
 
@@ -72,7 +73,6 @@
                     </div>
                 </section>
 
-                <!-- Sección de historial estática (maqueta) -->
                 <section class="grid grid--3 mt-5" aria-label="Historial de rankings anteriores">
                     <article class="card">
                         <h2 style="font-size: var(--fs-lg);">Septiembre 2026</h2>

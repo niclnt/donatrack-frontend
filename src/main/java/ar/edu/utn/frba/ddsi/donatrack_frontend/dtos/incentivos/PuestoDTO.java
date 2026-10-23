@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PuestoDTO(
-        int puesto,
         String username,
-        int cantidadMisionesCompletadas
+        Integer puesto,
+        Integer cantidadMisionesCompletadas,
+        String periodoLog
 ) {}

@@ -7,96 +7,92 @@
 <div class="page">
     <header th:replace="~{fragments/base :: topbarAdmin}"></header>
 
-    <div class="shell">
-        <aside th:replace="~{fragments/base :: sidebarAdmin('inicio')}"></aside>
-
-        <main id="main" class="shell__main">
-            <div class="container" style="max-width: 1180px;">
-                <div class="page-head">
-                    <div>
-                        <h1>Panel de administración</h1>
-                        <p class="page-head__sub">Lo que requiere atención hoy y accesos a cada tarea.</p>
-                    </div>
+    <main id="main" style="padding-top: 2rem; padding-bottom: 4rem;">
+        <div class="container" style="max-width: 1180px; margin: 0 auto;">
+            <div class="page-head">
+                <div>
+                    <h1>Panel de administración</h1>
+                    <p class="page-head__sub">Lo que requiere atención hoy y accesos a cada tarea.</p>
                 </div>
-
-                <!-- Indicadores: "—" si el servicio no respondio -->
-                <section class="grid grid--stats" aria-label="Resumen">
-                    <article class="stat">
-                        <p class="stat__label">Donaciones en depósito</p>
-                        <p class="stat__value" th:text="${enDeposito != null ? enDeposito : '—'}">0</p>
-                    </article>
-                    <article class="stat">
-                        <p class="stat__label">Esperando confirmar asignación</p>
-                        <p class="stat__value" th:text="${pendientesAsignacion != null ? pendientesAsignacion : '—'}">0</p>
-                    </article>
-                    <article class="stat">
-                        <p class="stat__label">Camiones disponibles</p>
-                        <p class="stat__value" th:text="${camionesTotal != null ? camionesDisponibles + ' / ' + camionesTotal : '—'}">0 / 0</p>
-                    </article>
-                </section>
-
-                <!-- Acciones agrupadas igual que el menu lateral -->
-                <section class="mt-5" aria-labelledby="acciones-donaciones">
-                    <h2 id="acciones-donaciones" class="sidebar__label" style="padding-inline: 0;">Donaciones</h2>
-                    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-                        <article class="card">
-                            <h3>Registrar donación</h3>
-                            <p class="muted mt-4">Cargá una donación recibida en el depósito y asociala a su donante.</p>
-                            <a class="btn btn--primary btn--sm mt-4" th:href="@{/admin/registrar-donacion}">Registrar</a>
-                        </article>
-                        <article class="card">
-                            <div class="flex justify-between items-center gap-3">
-                                <h3>Depósito y vencidas</h3>
-                                <span class="badge badge--info" th:if="${enDeposito != null and enDeposito > 0}" th:text="${enDeposito}">3</span>
-                            </div>
-                            <p class="muted mt-4">Revisá lo disponible y marcá como vencido lo que ya no puede asignarse.</p>
-                            <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/deposito-vencidas}">Ver depósito</a>
-                        </article>
-                        <article class="card">
-                            <div class="flex justify-between items-center gap-3">
-                                <h3>Asignación por algoritmo</h3>
-                                <span class="badge badge--warning" th:if="${pendientesAsignacion != null and pendientesAsignacion > 0}" th:text="${pendientesAsignacion}">2</span>
-                            </div>
-                            <p class="muted mt-4">Confirmá las entidades sugeridas por el motor para cada donación.</p>
-                            <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/asignar-algoritmo}">Ver sugerencias</a>
-                        </article>
-                    </div>
-                </section>
-
-                <section class="mt-5" aria-labelledby="acciones-donantes">
-                    <h2 id="acciones-donantes" class="sidebar__label" style="padding-inline: 0;">Donantes</h2>
-                    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-                        <article class="card">
-                            <h3>Gestión de donantes</h3>
-                            <p class="muted mt-4">Buscá donantes existentes o dalos de alta manualmente.</p>
-                            <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/donantes}">Gestionar</a>
-                        </article>
-                        <article class="card">
-                            <h3>Importar CSV</h3>
-                            <p class="muted mt-4">Cargá donantes en lote desde un archivo CSV.</p>
-                            <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/importar-csv}">Importar</a>
-                        </article>
-                    </div>
-                </section>
-
-                <section class="mt-5" aria-labelledby="acciones-otros">
-                    <h2 id="acciones-otros" class="sidebar__label" style="padding-inline: 0;">Logística e incentivos</h2>
-                    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
-                        <article class="card">
-                            <h3>Camiones</h3>
-                            <p class="muted mt-4">Administrá la flota y su disponibilidad para las rutas.</p>
-                            <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/camiones}">Ver flota</a>
-                        </article>
-                        <article class="card">
-                            <h3>Rankings</h3>
-                            <p class="muted mt-4">Consultá el ranking mensual de donantes.</p>
-                            <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/rankings}">Ver rankings</a>
-                        </article>
-                    </div>
-                </section>
             </div>
-        </main>
-    </div>
+
+            <!-- Indicadores: "—" si el servicio no respondio -->
+            <section class="grid grid--stats" aria-label="Resumen">
+                <article class="stat">
+                    <p class="stat__label">Donaciones en depósito</p>
+                    <p class="stat__value" th:text="${enDeposito != null ? enDeposito : '—'}">0</p>
+                </article>
+                <article class="stat">
+                    <p class="stat__label">Esperando confirmar asignación</p>
+                    <p class="stat__value" th:text="${pendientesAsignacion != null ? pendientesAsignacion : '—'}">0</p>
+                </article>
+                <article class="stat">
+                    <p class="stat__label">Camiones disponibles</p>
+                    <p class="stat__value" th:text="${camionesTotal != null ? camionesDisponibles + ' / ' + camionesTotal : '—'}">0 / 0</p>
+                </article>
+            </section>
+
+            <!-- Acciones agrupadas -->
+            <section class="mt-5" aria-labelledby="acciones-donaciones">
+                <h2 id="acciones-donaciones" class="sidebar__label" style="padding-inline: 0;">Donaciones</h2>
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                    <article class="card">
+                        <h3>Registrar donación</h3>
+                        <p class="muted mt-4">Cargá una donación recibida en el depósito y asociala a su donante.</p>
+                        <a class="btn btn--primary btn--sm mt-4" th:href="@{/admin/registrar-donacion}">Registrar</a>
+                    </article>
+                    <article class="card">
+                        <div class="flex justify-between items-center gap-3">
+                            <h3>Depósito y vencidas</h3>
+                            <span class="badge badge--info" th:if="${enDeposito != null and enDeposito > 0}" th:text="${enDeposito}">3</span>
+                        </div>
+                        <p class="muted mt-4">Revisá lo disponible y marcá como vencido lo que ya no puede asignarse.</p>
+                        <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/deposito-vencidas}">Ver depósito</a>
+                    </article>
+                    <article class="card">
+                        <div class="flex justify-between items-center gap-3">
+                            <h3>Asignación por algoritmo</h3>
+                            <span class="badge badge--warning" th:if="${pendientesAsignacion != null and pendientesAsignacion > 0}" th:text="${pendientesAsignacion}">2</span>
+                        </div>
+                        <p class="muted mt-4">Confirmá las entidades sugeridas por el motor para cada donación.</p>
+                        <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/asignar-algoritmo}">Ver sugerencias</a>
+                    </article>
+                </div>
+            </section>
+
+            <section class="mt-5" aria-labelledby="acciones-donantes">
+                <h2 id="acciones-donantes" class="sidebar__label" style="padding-inline: 0;">Donantes</h2>
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                    <article class="card">
+                        <h3>Gestión de donantes</h3>
+                        <p class="muted mt-4">Buscá donantes existentes o dalos de alta manualmente.</p>
+                        <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/donantes}">Gestionar</a>
+                    </article>
+                    <article class="card">
+                        <h3>Importar CSV</h3>
+                        <p class="muted mt-4">Cargá donantes en lote desde un archivo CSV.</p>
+                        <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/importar-csv}">Importar</a>
+                    </article>
+                </div>
+            </section>
+
+            <section class="mt-5" aria-labelledby="acciones-otros">
+                <h2 id="acciones-otros" class="sidebar__label" style="padding-inline: 0;">Logística e incentivos</h2>
+                <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+                    <article class="card">
+                        <h3>Camiones</h3>
+                        <p class="muted mt-4">Administrá la flota y su disponibilidad para las rutas.</p>
+                        <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/camiones}">Ver flota</a>
+                    </article>
+                    <article class="card">
+                        <h3>Rankings</h3>
+                        <p class="muted mt-4">Consultá el ranking mensual de donantes.</p>
+                        <a class="btn btn--ghost btn--sm mt-4" th:href="@{/admin/rankings}">Ver rankings</a>
+                    </article>
+                </div>
+            </section>
+        </div>
+    </main>
 </div>
 
 <script th:src="@{/assets/js/app.js}"></script>

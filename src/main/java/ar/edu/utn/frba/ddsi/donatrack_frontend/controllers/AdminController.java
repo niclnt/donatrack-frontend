@@ -5,6 +5,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.asignacion.PropuestaAsignacionResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.importacion.ResultadoImportacionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.PuestoDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.representantes.RepresentanteRequest;
@@ -528,8 +529,8 @@ public class AdminController {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
         try {
-            String url = "http://localhost:8082/incentivos/reportes/mensual";
-            model.addAttribute("rankingMensual", webApiCallerService.getList(url, Map[].class));
+            String url = "http://localhost:8082/incentivos/donantes/ranking-mensual";
+            model.addAttribute("rankingMensual", webApiCallerService.getList(url, PuestoDTO[].class));
         } catch (Exception e) {
             model.addAttribute("rankingMensual", List.of());
             System.out.println("Error cargando rankings: " + e.getMessage());
