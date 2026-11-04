@@ -47,6 +47,7 @@ public final class SesionUsuario {
         if (roles.contains(ROL_ADMIN)) return "/admin/inicio";
         if (roles.contains(ROL_DONANTE_HUMANO) || roles.contains(ROL_DONANTE_JURIDICO)) return "/donante/mis-donaciones";
         if (roles.contains(ROL_BENEFICIARIO)) return "/ong/asignadas";
+        if (roles.contains(ROL_CHOFER)) return "/chofer";
         return "/403";
     }
 

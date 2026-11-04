@@ -96,7 +96,7 @@
               <div><span class="detail-label">Subcategoría</span><strong th:text="${subcategoria}">Fideos secos</strong></div>
               <div><span class="detail-label">Cantidad</span><strong th:text="${bien.cantidad + ' un.'}">10 un.</strong></div>
               <div><span class="detail-label">Estado</span>
-                <span class="badge badge--info donation-status" th:text="${donacion.estadoActual}">Asignada</span>
+                <span class="badge badge--info donation-status" th:text="${@estados.texto(donacion.estadoActual)}">Asignada</span>
               </div>
             </div>
           </article>

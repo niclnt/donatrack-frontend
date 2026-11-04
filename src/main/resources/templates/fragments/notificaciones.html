@@ -33,7 +33,7 @@
                 </span>
             </div>
 
-            <span style="font-size: var(--fs-xs); padding: 4px 8px; border-radius: 12px; font-weight: bold;" th:classappend="${notif.estado == 'ENVIADA' ? 'alert-success' : 'alert-warning'}" th:text="${notif.estado}">ENVIADA</span>
+            <span style="font-size: var(--fs-xs); padding: 4px 8px; border-radius: 12px; font-weight: bold;" th:classappend="${notif.estado == 'ENVIADA' ? 'alert-success' : 'alert-warning'}" th:text="${@estados.texto(notif.estado)}">ENVIADA</span>
         </article>
     </div>
 </th:block>

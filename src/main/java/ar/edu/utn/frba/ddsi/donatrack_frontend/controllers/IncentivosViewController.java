@@ -36,7 +36,7 @@ public class IncentivosViewController {
 
     @GetMapping
     public String verIncentivos(Model model) {
-        Long donanteId = 1L; // Fallback para entorno de pruebas local
+        Long donanteId = null;
 
         // 1. Obtención y loggeo de datos de la sesión
         try {
@@ -53,10 +53,16 @@ public class IncentivosViewController {
                 donanteId = idSesion;
                 log.info("[INCENTIVOS-VIEW] -> Usando DONANTE_ID REAL: {}", donanteId);
             } else {
-                log.warn("[INCENTIVOS-VIEW] -> DONANTE_ID es NULL en la sesión. Usando FALLBACK: {}", donanteId);
+                log.warn("[INCENTIVOS-VIEW] -> DONANTE_ID es NULL en la sesión.");
             }
         } catch (Exception e) {
             log.error("[INCENTIVOS-VIEW] Error al acceder a la sesión: {}", e.getMessage());
+        }
+
+        // Sin donante en la sesion no se muestran misiones (antes se caia en las del donante 1)
+        if (donanteId == null) {
+            model.addAttribute("error", "No pudimos identificar tu perfil de donante. Cerrá sesión y volvé a ingresar.");
+            return "donante/incentivos";
         }
 
         // 2. Consulta a los microservicios de Incentivos

@@ -107,9 +107,17 @@
                                 <label class="field__label" for="chofer">Chofer asignado</label>
                                 <input class="input" id="chofer" name="chofer" placeholder="Opcional">
                             </div>
+                            <div class="field">
+                                <label class="field__label" for="choferMail">Correo del chofer</label>
+                                <input class="input" id="choferMail" name="choferMail" type="email" autocomplete="off">
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="choferPassword">Contraseña inicial del chofer</label>
+                                <input class="input" id="choferPassword" name="choferPassword" type="password" minlength="8" autocomplete="new-password">
+                                <span class="field__hint">Con este correo y contraseña el chofer ingresa a ver e iniciar sus rutas.</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center wrap gap-3 mt-4">
-                            <p class="field__hint">Todos los camiones pueden transportar cualquier tipo de bien.</p>
+                        <div class="flex justify-end items-center wrap gap-3 mt-4">
                             <button class="btn btn--primary" type="submit">Guardar camión</button>
                         </div>
                     </form>

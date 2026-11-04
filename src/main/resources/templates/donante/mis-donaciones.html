@@ -43,9 +43,9 @@
                             <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Estado:</label>
                             <select name="estado" class="form-control filtro-auto" style="width: 100%; padding: 8px;">
                                 <option value="" th:selected="${estadoFiltro == null or estadoFiltro == ''}">Todos los estados</option>
-                                <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En Depósito</option>
+                                <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En depósito</option>
                                 <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignación realizada</option>
-                                <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En Traslado</option>
+                                <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En traslado</option>
                                 <option value="ENTREGADA" th:selected="${estadoFiltro == 'ENTREGADA'}">Entregada</option>
                             </select>
                         </div>
@@ -119,13 +119,7 @@
                                   th:classappend="${segmento.estadoActual == 'EN_DEPOSITO' ? 'status-deposito' :
                                                    (segmento.estadoActual == 'ASIGNACION_REALIZADA' ? 'status-asignado' :
                                                    (segmento.estadoActual == 'EN_TRASLADO' ? 'status-traslado' : 'status-entregado'))}">
-                                <span th:switch="${segmento.estadoActual}">
-                                    <span th:case="'EN_DEPOSITO'">• En depósito</span>
-                                    <span th:case="'ASIGNACION_REALIZADA'">• Asignación realizada</span>
-                                    <span th:case="'EN_TRASLADO'">• En traslado</span>
-                                    <span th:case="'ENTREGADA'">• Entregada</span>
-                                    <span th:case="*">• [[${segmento.estadoActual}]]</span>
-                                </span>
+                                <span th:text="|• ${@estados.texto(segmento.estadoActual)}|">• En depósito</span>
                             </span>
                         </td>
                         <td th:text="${segmento.entidadAsignada != null ? segmento.entidadAsignada : '—'}">Escuela Rural N°10</td>

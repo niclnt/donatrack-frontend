@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
+import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.catalogo.CategoriaCatalogoResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
@@ -35,14 +36,17 @@ public class AdminController {
     private final WebApiCallerService webApiCallerService;
     private final String donacionesServiceUrl;
     private final String logisticaServiceUrl;
+    private final String authServiceUrl;
 
     public AdminController(
             WebApiCallerService webApiCallerService,
             @Value("${donaciones.service.url}") String donacionesServiceUrl,
-            @Value("${logistica.service.url}") String logisticaServiceUrl) {
+            @Value("${logistica.service.url}") String logisticaServiceUrl,
+            @Value("${auth.service.url}") String authServiceUrl) {
         this.webApiCallerService = webApiCallerService;
         this.donacionesServiceUrl = donacionesServiceUrl;
         this.logisticaServiceUrl = logisticaServiceUrl;
+        this.authServiceUrl = authServiceUrl;
     }
 
     // --- PANEL DE INICIO ---
@@ -335,36 +339,61 @@ public class AdminController {
         }
     }
 
-    // --- REQ 16: DEPÓSITO Y VENCIDAS ---
+    // --- REQ 16: STOCK DEL DEPÓSITO ---
+
+    private static final List<String> ESTADOS_DEPOSITO = List.of("EN_DEPOSITO", "VENCIDA", "DESCARTADA");
 
     @GetMapping("/admin/deposito-vencidas")
-    public String mostrarDeposito(Authentication authentication, Model model) {
+    public String mostrarDeposito(@RequestParam(defaultValue = "EN_DEPOSITO") String estado,
+                                  Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
-        try {
-            String url = donacionesServiceUrl + "/donaciones-service/donaciones?estado=EN_DEPOSITO";
-            model.addAttribute("donaciones", webApiCallerService.getList(url, Map[].class));
-        } catch (Exception e) {
-            model.addAttribute("donaciones", List.of());
+        if (!ESTADOS_DEPOSITO.contains(estado)) estado = "EN_DEPOSITO";
+
+        // Cantidad de segmentos por estado, para los filtros
+        Map<String, Integer> cantidades = new LinkedHashMap<>();
+        List<Map> donaciones = List.of();
+        for (String e : ESTADOS_DEPOSITO) {
+            List<Map> porEstado;
+            try {
+                String url = donacionesServiceUrl + "/donaciones-service/donaciones?estado=" + e;
+                porEstado = webApiCallerService.getList(url, Map[].class);
+            } catch (Exception ex) {
+                porEstado = List.of();
+            }
+            cantidades.put(e, porEstado.stream()
+                    .mapToInt(d -> d.get("donacionesSegmentadas") instanceof List<?> l ? l.size() : 0)
+                    .sum());
+            if (e.equals(estado)) donaciones = porEstado;
         }
 
+        model.addAttribute("estado", estado);
+        model.addAttribute("cantidades", cantidades);
+        model.addAttribute("donaciones", donaciones);
         return "admin/deposito-vencidas";
     }
 
-    @PostMapping("/admin/marcar-vencidas")
-    public String procesarVencidas(
+    @PostMapping("/admin/deposito/cambiar-estado")
+    public String cambiarEstadoDeposito(
             @RequestParam(required = false) List<String> segmentosIds,
+            @RequestParam String nuevoEstado,
             @RequestParam String motivo,
+            @RequestParam(defaultValue = "EN_DEPOSITO") String estado,
             Authentication authentication,
             Model model) {
 
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
+        if (!List.of("VENCIDA", "DESCARTADA").contains(nuevoEstado)) {
+            model.addAttribute("error", "Acción no válida.");
+            return mostrarDeposito(estado, authentication, model);
+        }
         if (segmentosIds == null || segmentosIds.isEmpty()) {
-            model.addAttribute("error", "Debes seleccionar al menos un bien para marcarlo como vencido.");
-            return mostrarDeposito(authentication, model);
+            model.addAttribute("error", "Seleccioná al menos una donación.");
+            return mostrarDeposito(estado, authentication, model);
         }
 
+        int fallidos = 0;
         for (String parIds : segmentosIds) {
             String[] ids = parIds.split("-");
             String donacionId = ids[0];
@@ -373,7 +402,7 @@ public class AdminController {
             String url = donacionesServiceUrl + "/donaciones-service/donaciones/" + donacionId + "/segmentadas/" + segmentadaId + "/estado";
 
             Map<String, String> requestBody = Map.of(
-                    "nuevoEstado", "VENCIDA",
+                    "nuevoEstado", nuevoEstado,
                     "motivo", motivo,
                     "responsable", authentication.getName()
             );
@@ -381,11 +410,16 @@ public class AdminController {
             try {
                 webApiCallerService.put(url, requestBody, String.class);
             } catch (Exception e) {
-                System.out.println("Error al marcar vencida: " + e.getMessage());
+                fallidos++;
+                System.out.println("Error al cambiar estado a " + nuevoEstado + ": " + e.getMessage());
             }
         }
 
-        return "redirect:/admin/deposito-vencidas?exito=true";
+        if (fallidos > 0) {
+            model.addAttribute("error", "No se pudieron actualizar " + fallidos + " de " + segmentosIds.size() + " donaciones.");
+            return mostrarDeposito(estado, authentication, model);
+        }
+        return "redirect:/admin/deposito-vencidas?estado=" + estado + "&exito=true";
     }
 
     // --- REQ 17: ASIGNACIÓN POR ALGORITMO ---
@@ -472,6 +506,8 @@ public class AdminController {
             @RequestParam Double altura,
             @RequestParam Double carga,
             @RequestParam(required = false) String chofer,
+            @RequestParam(required = false) String choferMail,
+            @RequestParam(required = false) String choferPassword,
             Authentication authentication,
             RedirectAttributes redirect) {
 
@@ -479,9 +515,29 @@ public class AdminController {
 
         String patenteNormalizada = patente.trim().toUpperCase();
         String nombreChofer = chofer == null || chofer.isBlank() ? null : chofer.trim();
-        CamionCreateRequest request = new CamionCreateRequest(patenteNormalizada, volumen, altura, carga, nombreChofer);
+        String mailChofer = choferMail == null || choferMail.isBlank() ? null : choferMail.trim();
+        boolean conPassword = choferPassword != null && !choferPassword.isBlank();
+
+        // El chofer necesita cuenta para ver e iniciar sus rutas: nombre, mail y contraseña van juntos
+        if (nombreChofer != null && (mailChofer == null || !conPassword)) {
+            redirect.addFlashAttribute("error", "Para asignar un chofer cargá también su correo y una contraseña inicial.");
+            return "redirect:/admin/camiones";
+        }
+        if (conPassword && choferPassword.length() < 8) {
+            redirect.addFlashAttribute("error", "La contraseña del chofer debe tener al menos 8 caracteres.");
+            return "redirect:/admin/camiones";
+        }
 
         try {
+            Long usuarioIdChofer = null;
+            if (nombreChofer != null) {
+                // Solo un admin puede crear usuarios CHOFER: se usa el token de la sesion
+                Map<String, String> usuario = Map.of("mail", mailChofer, "password", choferPassword, "rol", SesionUsuario.ROL_CHOFER);
+                Map<?, ?> creado = webApiCallerService.post(authServiceUrl + "/usuarios", usuario, Map.class);
+                usuarioIdChofer = creado != null && creado.get("id") instanceof Number id ? id.longValue() : null;
+            }
+
+            CamionCreateRequest request = new CamionCreateRequest(patenteNormalizada, volumen, altura, carga, nombreChofer, usuarioIdChofer);
             webApiCallerService.post(logisticaServiceUrl + "/logistica/camiones", request, CamionResponse.class);
             if (!disponible) {
                 cambiarDisponibilidadEnLogistica(patenteNormalizada, false);

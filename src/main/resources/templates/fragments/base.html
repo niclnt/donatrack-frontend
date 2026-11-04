@@ -28,7 +28,7 @@
     <nav class="topbar__nav" id="donornav" aria-label="Panel de donante" sec:authorize="hasAnyRole('DONANTE_HUMANO', 'DONANTE_JURIDICO')">
         <a th:href="@{/donante/mis-donaciones}" th:attr="aria-current=${paginaActual == 'mis-donaciones' ? 'page' : null}">Mis donaciones</a>
         <a th:href="@{/donante/entidades}" th:attr="aria-current=${paginaActual == 'entidades' ? 'page' : null}">Entidades</a>
-        <a sec:authorize="hasRole('DONANTE_HUMANO')" th:href="@{/donante/incentivos}" th:attr="aria-current=${paginaActual == 'incentivos' ? 'page' : null}">Incentivos</a>
+        <a sec:authorize="hasRole('DONANTE_HUMANO')" th:href="@{/donante/incentivos}" th:attr="aria-current=${paginaActual == 'incentivos' ? 'page' : null}">Misiones</a>
         <a sec:authorize="hasRole('DONANTE_JURIDICO')" th:href="@{/donante/representantes}" th:attr="aria-current=${paginaActual == 'representantes' ? 'page' : null}">Representantes</a>
         <a th:href="@{/donante/mapa}" th:attr="aria-current=${paginaActual == 'mapa' ? 'page' : null}">Mapa</a>
         <a th:href="@{/donante/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
@@ -41,6 +41,11 @@
         <a th:href="@{/ong/confirmar-recepcion}" th:attr="aria-current=${paginaActual == 'recepcion' ? 'page' : null}">Recepciones</a>
         <a th:href="@{/ong/mapa}" th:attr="aria-current=${paginaActual == 'mapa' ? 'page' : null}">Mapa</a>
         <a th:href="@{/ong/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
+    </nav>
+
+    <!-- NAVBAR PARA CHOFERES -->
+    <nav class="topbar__nav" id="choferNav" aria-label="Panel de chofer" sec:authorize="hasRole('CHOFER')">
+        <a th:href="@{/chofer}" th:attr="aria-current=${paginaActual == 'mis-rutas' ? 'page' : null}">Mis rutas</a>
     </nav>
 
     <div class="topbar__actions">
@@ -102,7 +107,7 @@
     <!-- Agrupado segun el ciclo de vida de una donacion -->
     <p class="sidebar__label">Donaciones</p>
     <a th:href="@{/admin/registrar-donacion}" th:attr="aria-current=${paginaActual == 'registrar-donacion' ? 'page' : null}">Registrar donación</a>
-    <a th:href="@{/admin/deposito-vencidas}" th:attr="aria-current=${paginaActual == 'deposito-vencidas' ? 'page' : null}">Depósito y vencidas</a>
+    <a th:href="@{/admin/deposito-vencidas}" th:attr="aria-current=${paginaActual == 'deposito-vencidas' ? 'page' : null}">Stock del depósito</a>
     <a th:href="@{/admin/asignar-algoritmo}" th:attr="aria-current=${paginaActual == 'asignar-algoritmo' ? 'page' : null}">Asignación por algoritmo</a>
 
     <p class="sidebar__label">Donantes</p>

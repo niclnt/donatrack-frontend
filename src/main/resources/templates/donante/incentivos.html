@@ -19,7 +19,7 @@
 
       <div class="page-head">
         <div>
-          <h1>Incentivos y logros</h1>
+          <h1>Misiones y logros</h1>
           <p class="page-head__sub">Tu actividad de donación te hace ganar insignias y subir de categoría.</p>
         </div>
       </div>
@@ -63,12 +63,12 @@
 
         <div class="card text-center p-4 flex flex-col items-center justify-center" th:each="insignia : ${insignias}">
           <div style="margin-bottom: var(--sp-2);" aria-hidden="true">
-            <img th:if="${insignia.logoUrl != null and !#strings.isEmpty(insignia.logoUrl)}"
-                 th:src="${insignia.logoUrl}"
+            <img th:if="${!#strings.isEmpty(insignia.urlImagen)}"
+                 th:src="${insignia.urlImagen}"
                  th:alt="${insignia.nombre}"
                  style="width: 80px; height: 80px; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
 
-            <span th:if="${insignia.logoUrl == null or #strings.isEmpty(insignia.logoUrl)}"
+            <span th:if="${#strings.isEmpty(insignia.urlImagen)}"
                   style="font-size: 2.5rem;">🎖️</span>
           </div>
 

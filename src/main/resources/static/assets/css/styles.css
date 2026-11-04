@@ -327,7 +327,8 @@ ul { margin: 0; padding: 0; list-style: none; }
   border-radius: var(--radius-pill); color: var(--text-muted);
   font: inherit; font-size: var(--fs-sm); font-weight: var(--fw-medium); cursor: pointer;
 }
-.filter-pill[aria-pressed="true"] { background: var(--primary-weak); border-color: var(--primary); color: var(--primary); }
+.filter-pill[aria-pressed="true"], .filter-pill[aria-current="page"] { background: var(--primary-weak); border-color: var(--primary); color: var(--primary); }
+a.filter-pill { display: inline-flex; align-items: center; text-decoration: none; }
 
 /* ---- Donaciones asignadas ---- */
 .assigned-filters { margin-bottom: var(--sp-5); }
@@ -717,6 +718,7 @@ select:disabled {
 .flex { display: flex; }
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
 .gap-2 { gap: var(--sp-2); } .gap-3 { gap: var(--sp-3); } .gap-4 { gap: var(--sp-4); }
 .mt-4 { margin-top: var(--sp-4); } .mt-5 { margin-top: var(--sp-5); }
 .wrap { flex-wrap: wrap; }

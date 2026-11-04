@@ -6,6 +6,8 @@ public record CamionCreateRequest(
         Double capacidadVolumen,
         Double altura,
         Double capacidadCarga,
-        String nombreChofer
+        String nombreChofer,
+        // Usuario CHOFER creado antes en el auth-service
+        Long usuarioIdChofer
 ) {
 }

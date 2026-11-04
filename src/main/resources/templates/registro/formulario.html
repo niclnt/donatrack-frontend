@@ -79,7 +79,6 @@
 
       <fieldset class="fieldset" th:if="${tipo.name() == 'PERSONA'}">
         <legend class="fieldset__legend">¿Cómo querés que te avisemos?</legend>
-        <p class="field__hint" style="margin-bottom: var(--sp-3);">Te avisamos cuando tu donación sale del depósito y cuando llega a destino.</p>
         <div class="radio-row">
           <label class="radio"><input type="radio" th:field="*{medioPreferido}" value="EMAIL"> Correo electrónico</label>
           <label class="radio"><input type="radio" th:field="*{medioPreferido}" value="WHATSAPP"> WhatsApp</label>
@@ -122,10 +121,6 @@
 
       <fieldset class="fieldset" th:if="${tipo.name() == 'ORGANIZACION'}">
         <legend class="fieldset__legend">¿Cómo querés que te avisemos?</legend>
-        <p class="field__hint" style="margin-bottom: var(--sp-3);">
-          Te avisamos cuando una donación realizada por la organización es asignada
-          y cuando llega a destino.
-        </p>
 
         <div class="radio-row">
           <label class="radio">
@@ -191,7 +186,6 @@
 
       <fieldset class="fieldset" th:if="${tipo.name() == 'ENTIDAD'}">
         <legend class="fieldset__legend">¿Dónde entregamos las donaciones?</legend>
-        <p class="field__hint" style="margin-bottom: var(--sp-3);">Usamos esta dirección para planificar las rutas de los camiones.</p>
         <div class="field">
           <label class="field__label" for="direccion">Dirección</label>
           <input class="input" th:errorclass="input--error" type="text" th:field="*{direccion}" autocomplete="street-address" placeholder="Calle y número">
@@ -222,7 +216,6 @@
         <div class="field">
           <label class="field__label" for="mail">Correo electrónico</label>
           <input class="input" th:errorclass="input--error" type="email" th:field="*{mail}" autocomplete="email" placeholder="tu@correo.com">
-          <span class="field__hint">Lo vas a usar para ingresar.</span>
           <p class="field__error" th:if="${#fields.hasErrors('mail')}" th:errors="*{mail}"></p>
         </div>
         <div class="form-grid">

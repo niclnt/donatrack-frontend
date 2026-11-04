@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/base :: head('Mis rutas')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+  <header th:replace="~{fragments/base :: topbar('mis-rutas')}"></header>
+
+  <main id="main" class="page-body">
+    <div class="container" style="max-width: 960px;">
+      <div class="page-head">
+        <div>
+          <h1>Mis rutas</h1>
+          <p class="page-head__sub">Rutas asignadas a tu camión. Iniciá la ruta cuando salgas del depósito.</p>
+        </div>
+      </div>
+
+      <div th:if="${error}" class="alert alert--error" th:text="${error}" style="margin-bottom: 16px;"></div>
+      <div th:if="${exito}" class="alert alert--success" th:text="${exito}" style="margin-bottom: 16px;"></div>
+
+      <section class="card" th:if="${#lists.isEmpty(rutas)}">
+        <p class="muted">No tenés rutas asignadas.</p>
+      </section>
+
+      <section class="card mt-5" th:each="ruta : ${rutas}" th:attr="aria-labelledby='ruta-' + ${ruta.id()}">
+        <div class="card__header flex justify-between items-center wrap gap-3">
+          <div>
+            <h2 th:id="'ruta-' + ${ruta.id()}"
+                th:text="|Ruta del ${ruta.fecha() != null ? #temporals.format(ruta.fecha(), 'dd/MM/yyyy') : 'día'}|">Ruta del 10/11/2026</h2>
+            <p class="muted" style="font-size: var(--fs-sm);"
+               th:text="|Camión ${ruta.camion() != null ? ruta.camion().patente() : '—'} · ${#lists.size(ruta.entregas())} ${#lists.size(ruta.entregas()) == 1 ? 'entrega' : 'entregas'}|">Camión AB123CD · 3 entregas</p>
+          </div>
+          <span th:if="${ruta.enCurso()}" class="badge badge--warning">En curso</span>
+          <span th:if="${ruta.planificada()}" class="badge badge--info">Planificada</span>
+        </div>
+
+        <ol class="mt-4" style="padding-left: 20px;">
+          <li th:each="entrega : ${ruta.entregas()}" style="margin-bottom: 8px;">
+            <strong th:text="${entrega.direccion() != null ? entrega.direccion() : 'Dirección sin cargar'}">Av. Rivadavia 4200</strong>
+            <span class="badge" th:text="${@estados.texto(entrega.estadoActual())}">Pendiente</span>
+          </li>
+        </ol>
+
+        <form th:if="${ruta.planificada()}" class="flex justify-end mt-4"
+              th:action="@{/chofer/rutas/{id}/iniciar(id=${ruta.id()})}" method="post"
+              onsubmit="return confirm('¿Iniciar la ruta? Las entregas pasan a En traslado y se avisa a donantes y entidades.');">
+          <button class="btn btn--primary" type="submit">Iniciar ruta</button>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

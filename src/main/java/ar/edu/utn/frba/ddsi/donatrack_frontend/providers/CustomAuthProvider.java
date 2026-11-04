@@ -13,7 +13,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -67,11 +66,6 @@ public class CustomAuthProvider implements AuthenticationProvider {
 
         List<String> roles = respuesta.roles() == null ? List.of() : respuesta.roles();
         List<String> permisos = respuesta.permisos() == null ? List.of() : respuesta.permisos();
-
-        // El chofer usa la app movil (reporte de posiciones); la web no tiene pantallas para el
-        if (roles.contains(SesionUsuario.ROL_CHOFER) && roles.size() == 1) {
-            throw new DisabledException("Los choferes ingresan desde la aplicación móvil");
-        }
 
         log.info("[AUTH-PROVIDER] Login exitoso en Auth-Service.");
         log.info("[AUTH-PROVIDER] USUARIO_ID recibido: {}", respuesta.usuarioId());

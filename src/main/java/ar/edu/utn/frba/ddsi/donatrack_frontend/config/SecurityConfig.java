@@ -4,7 +4,6 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.providers.CustomAuthProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
@@ -36,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/donante/representantes", "/donante/representantes/**").hasRole(SesionUsuario.ROL_DONANTE_JURIDICO)
                         .requestMatchers("/donante/**").hasAnyRole(SesionUsuario.ROL_DONANTE_HUMANO, SesionUsuario.ROL_DONANTE_JURIDICO)
                         .requestMatchers("/ong/**").hasRole(SesionUsuario.ROL_BENEFICIARIO)
+                        .requestMatchers("/chofer", "/chofer/**").hasRole(SesionUsuario.ROL_CHOFER)
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -59,12 +59,10 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Distingue auth caido y chofer de credenciales incorrectas
+    // Distingue auth caido de credenciales incorrectas
     private AuthenticationFailureHandler motivoDelFallo() {
         return (request, response, e) -> {
-            String motivo = e instanceof AuthenticationServiceException ? "servicio"
-                    : e instanceof DisabledException ? "chofer"
-                    : "error";
+            String motivo = e instanceof AuthenticationServiceException ? "servicio" : "error";
             response.sendRedirect("/login?" + motivo);
         };
     }
