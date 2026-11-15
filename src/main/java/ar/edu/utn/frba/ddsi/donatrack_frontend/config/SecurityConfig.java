@@ -24,6 +24,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Recursos estaticos y paginas publicas
                         .requestMatchers("/", "/login", "/registro", "/registro/**","/legales", "/privacidad", "/mapa-donaciones", "/403", "/404", "/error", "/css/**", "/js/**", "/img/**", "/assets/**").permitAll()
+                        // Health check del contenedor
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         // Fotos de las entregas recibidas: se ven sin login (landing, mapa publico)
                         .requestMatchers("/fotos/**").permitAll()
                         .requestMatchers("/admin/**").hasRole(SesionUsuario.ROL_ADMIN)

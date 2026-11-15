@@ -37,16 +37,19 @@ public class AdminController {
     private final String donacionesServiceUrl;
     private final String logisticaServiceUrl;
     private final String authServiceUrl;
+    private final String incentivosServiceUrl;
 
     public AdminController(
             WebApiCallerService webApiCallerService,
             @Value("${donaciones.service.url}") String donacionesServiceUrl,
             @Value("${logistica.service.url}") String logisticaServiceUrl,
-            @Value("${auth.service.url}") String authServiceUrl) {
+            @Value("${auth.service.url}") String authServiceUrl,
+            @Value("${incentivos.service.url}") String incentivosServiceUrl) {
         this.webApiCallerService = webApiCallerService;
         this.donacionesServiceUrl = donacionesServiceUrl;
         this.logisticaServiceUrl = logisticaServiceUrl;
         this.authServiceUrl = authServiceUrl;
+        this.incentivosServiceUrl = incentivosServiceUrl;
     }
 
     // --- PANEL DE INICIO ---
@@ -585,7 +588,7 @@ public class AdminController {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
         try {
-            String url = "http://localhost:8082/incentivos/donantes/ranking-mensual";
+            String url = incentivosServiceUrl + "/incentivos/donantes/ranking-mensual";
             model.addAttribute("rankingMensual", webApiCallerService.getList(url, PuestoDTO[].class));
         } catch (Exception e) {
             model.addAttribute("rankingMensual", List.of());
