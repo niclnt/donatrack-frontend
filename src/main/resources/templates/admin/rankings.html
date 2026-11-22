@@ -22,8 +22,15 @@
                             <option>Mes Actual</option>
                         </select>
                         <button class="btn btn--ghost btn--sm" data-toast="Ranking exportado correctamente">Exportar</button>
+                        <!-- Ranking a demanda: el mismo calculo que el cierre de mes programado -->
+                        <form th:action="@{/admin/rankings/generar}" method="post" style="display: inline;">
+                            <button class="btn btn--primary btn--sm" type="submit">Generar ranking ahora</button>
+                        </form>
                     </div>
                 </div>
+
+                <div th:if="${exitoRanking}" class="alert alert--success mt-4" th:text="${exitoRanking}"></div>
+                <div th:if="${errorRanking}" class="alert alert--error mt-4" th:text="${errorRanking}"></div>
 
                 <section class="card mt-5" aria-labelledby="ranking-title">
                     <div class="card__header">
