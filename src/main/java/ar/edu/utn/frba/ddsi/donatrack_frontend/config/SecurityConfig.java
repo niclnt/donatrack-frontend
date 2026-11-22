@@ -1,6 +1,11 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.config;
 
+import ar.edu.utn.frba.ddsi.donatrack_frontend.config.ratelimit.LimitadorDeSolicitudes;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.config.ratelimit.RateLimitFilter;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.providers.CustomAuthProvider;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.servlet.Filter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -10,16 +15,23 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.core.env.Environment;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthProvider customAuthProvider) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthProvider customAuthProvider,
+                                                   Environment env, ObjectProvider<MeterRegistry> metricas) throws Exception {
         http
+                // Rate limiting: antes del login para frenar fuerza bruta. La sesion ya esta cargada en este punto,
+                // asi que el limite general puede ser por usuario.
+                .addFilterBefore(crearRateLimitFilter(env, metricas.getIfAvailable()), UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(customAuthProvider)
                 .authorizeHttpRequests(auth -> auth
                         // Recursos estaticos y paginas publicas
@@ -59,6 +71,24 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    // Limites configurables en application.properties (o variables de entorno RATELIMIT_...)
+    private static Filter crearRateLimitFilter(Environment env, MeterRegistry metricas) {
+        if (!env.getProperty("ratelimit.habilitado", Boolean.class, true)) {
+            return (request, response, chain) -> chain.doFilter(request, response);
+        }
+        LimitadorDeSolicitudes general = new LimitadorDeSolicitudes(
+                env.getProperty("ratelimit.capacidad", Long.class, 60L),
+                env.getProperty("ratelimit.solicitudes-por-minuto", Long.class, 120L));
+        LimitadorDeSolicitudes login = new LimitadorDeSolicitudes(
+                env.getProperty("ratelimit.login.capacidad", Long.class, 5L),
+                env.getProperty("ratelimit.login.solicitudes-por-minuto", Long.class, 5L));
+        // Metrica ratelimit_rechazos_total en Prometheus/Grafana
+        Consumer<String> alRechazar = metricas == null
+                ? tipo -> { }
+                : tipo -> metricas.counter("ratelimit.rechazos", "cliente", tipo).increment();
+        return new RateLimitFilter(general, login, alRechazar);
     }
 
     // Distingue auth caido de credenciales incorrectas
