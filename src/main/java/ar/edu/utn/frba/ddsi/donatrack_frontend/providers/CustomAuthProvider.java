@@ -32,12 +32,15 @@ public class CustomAuthProvider implements AuthenticationProvider {
     private static final Logger log = LoggerFactory.getLogger(CustomAuthProvider.class);
 
     private final AuthApiService authApiService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final String donacionesServiceUrl;
 
     public CustomAuthProvider(AuthApiService authApiService,
-                              @Value("${donaciones.service.url}") String donacionesServiceUrl) {
+                              @Value("${donaciones.service.url}") String donacionesServiceUrl,
+                              RestTemplate restTemplate) {
         this.authApiService = authApiService;
+        // El bean de RestClientConfig: propaga el traceId
+        this.restTemplate = restTemplate;
         this.donacionesServiceUrl = donacionesServiceUrl;
     }
 
