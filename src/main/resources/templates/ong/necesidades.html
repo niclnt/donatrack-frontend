@@ -155,6 +155,8 @@
                th:text="${'Situación: ' + necesidad.situacion}">Situación</p>
             <p class="need-card__frequency" th:if="${necesidad.cantidadDias != null}"
                th:text="${'Se repite cada ' + necesidad.cantidadDias + ' días'}">Frecuencia</p>
+            <p class="need-card__frequency" th:if="${necesidad.finPeriodo != null}"
+               th:text="${'Período vigente: del ' + #temporals.format(necesidad.inicioPeriodo, 'dd/MM/yyyy') + ' al ' + #temporals.format(necesidad.finPeriodo.minusDays(1), 'dd/MM/yyyy') + ' · el ' + #temporals.format(necesidad.finPeriodo, 'dd/MM') + ' se renueva la demanda'}">Período vigente</p>
             <div class="need-card__details">
               <div>
                 <span class="need-card__label">CATEGORÍA</span>

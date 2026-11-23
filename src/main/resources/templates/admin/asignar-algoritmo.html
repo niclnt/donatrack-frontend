@@ -18,10 +18,20 @@
                         <p class="page-head__sub">Revisá las sugerencias del motor de matchmaking y confirmá el destino final de la donación.</p>
                     </div>
 
-                    <!-- Botón para forzar ejecución manual -->
-                    <form th:action="@{/admin/forzar-algoritmo}" method="post">
-                        <button type="submit" class="btn btn--ghost btn--sm">Actualizar sugerencias</button>
-                    </form>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <!-- Renueva las recurrentes con el período vencido; la fecha permite simular el paso del tiempo -->
+                        <form th:action="@{/admin/necesidades/renovar}" method="post"
+                              style="display: flex; gap: 6px; align-items: center;">
+                            <input class="input" type="date" name="fecha" aria-label="Fecha de referencia (opcional)"
+                                   title="Opcional: simular otra fecha" style="max-width: 160px;">
+                            <button type="submit" class="btn btn--ghost btn--sm">Renovar recurrentes</button>
+                        </form>
+
+                        <!-- Botón para forzar ejecución manual -->
+                        <form th:action="@{/admin/forzar-algoritmo}" method="post">
+                            <button type="submit" class="btn btn--ghost btn--sm">Actualizar sugerencias</button>
+                        </form>
+                    </div>
                 </div>
 
                 <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;">Asignación confirmada.</div>
