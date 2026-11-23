@@ -28,6 +28,13 @@
         La necesidad fue registrada correctamente.
       </div>
 
+      <div th:if="${mensajeError}" class="alert alert--error" role="alert">
+        <span th:text="${mensajeError}">No se registró la necesidad.</span>
+        <ul th:if="${erroresCampo != null and !#lists.isEmpty(erroresCampo)}" style="margin: 8px 0 0 18px;">
+          <li th:each="mensaje : ${erroresCampo}" th:text="${mensaje}">La cantidad requerida tiene que ser mayor a 0.</li>
+        </ul>
+      </div>
+
       <section class="grid grid--stats" aria-label="Resumen de necesidades">
         <article class="stat">
           <p class="stat__label">Necesidades activas</p>

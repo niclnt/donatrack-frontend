@@ -91,7 +91,12 @@
 
                         <!-- Alertas dinámicas -->
                         <div th:if="${exito}" class="alert alert--success" th:text="${exito}"></div>
-                        <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
+                        <div th:if="${error}" class="alert alert--error" role="alert">
+                            <span th:text="${error}"></span>
+                            <ul th:if="${erroresCampo != null and !#lists.isEmpty(erroresCampo)}" style="margin: 8px 0 0 18px;">
+                                <li th:each="mensaje : ${erroresCampo}" th:text="${mensaje}">Bien #1: la fecha de vencimiento no puede ser anterior a hoy.</li>
+                            </ul>
+                        </div>
                         <div th:if="${errorCatalogo}" class="alert alert--error" th:text="${errorCatalogo}"></div>
 
                         <div class="field">
@@ -179,7 +184,8 @@
 
                                     <div class="field campo-vencimiento" style="display: none;">
                                         <label class="field__label">Fecha de vencimiento</label>
-                                        <input class="input" name="vencimiento" type="date">
+                                        <input class="input" name="vencimiento" type="date" th:min="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}">
+                                        <span class="field__hint">No se reciben productos vencidos.</span>
                                     </div>
                                 </div>
                             </div>
@@ -214,6 +220,8 @@
         const pideEstado = !!categoria && (sinDatos || categoria.requiereEstadoUso);
 
         campoVencimiento.style.display = pideVencimiento ? '' : 'none';
+        // En los perecederos el vencimiento es obligatorio: el navegador marca el campo si falta o es anterior a hoy
+        campoVencimiento.querySelector('input').required = pideVencimiento && !sinDatos;
         if (!pideVencimiento) campoVencimiento.querySelector('input').value = '';
 
         campoEstado.style.display = pideEstado ? '' : 'none';

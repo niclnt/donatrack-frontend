@@ -181,9 +181,9 @@ public class WebApiCallerService {
             if (e.getStatusCode().isSameCodeAs(HttpStatus.NOT_FOUND)) {
                 throw new NotFoundException(mensajeDeError(e));
             }
-            throw new ApiException(e.getStatusCode().value(), mensajeDeError(e));
+            throw new ApiException(e.getStatusCode().value(), mensajeDeError(e), erroresPorCampo(e));
         } catch (RestClientResponseException e) {
-            throw new ApiException(e.getStatusCode().value(), mensajeDeError(e));
+            throw new ApiException(e.getStatusCode().value(), mensajeDeError(e), erroresPorCampo(e));
         } catch (ResourceAccessException e) {
             throw new ServicioNoDisponibleException("El servicio no está disponible en este momento", e);
         }
@@ -201,6 +201,21 @@ public class WebApiCallerService {
             // cuerpo vacio o no JSON
         }
         return "Error " + e.getStatusCode().value() + " al comunicarse con el servicio";
+    }
+
+    // Los 400 de validacion traen {"errores": {campo: mensaje}}
+    private Map<String, String> erroresPorCampo(RestClientResponseException e) {
+        try {
+            Map<?, ?> cuerpo = e.getResponseBodyAs(Map.class);
+            if (cuerpo != null && cuerpo.get("errores") instanceof Map<?, ?> errores) {
+                Map<String, String> resultado = new java.util.LinkedHashMap<>();
+                errores.forEach((campo, mensaje) -> resultado.put(String.valueOf(campo), String.valueOf(mensaje)));
+                return resultado;
+            }
+        } catch (RuntimeException ignorada) {
+            // cuerpo vacio o no JSON
+        }
+        return Map.of();
     }
 
     private static <T> List<T> comoLista(T[] array) {

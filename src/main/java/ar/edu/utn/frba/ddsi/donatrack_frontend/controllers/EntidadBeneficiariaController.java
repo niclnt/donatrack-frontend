@@ -107,15 +107,17 @@ public class EntidadBeneficiariaController {
     return "ong/necesidades";
   }
 
+  // Los campos son opcionales aca a proposito: si llegan vacios (o con valores invalidos) los valida
+  // donaciones y devuelve los errores por campo, en vez de cortar con un 400 generico de Spring
   @PostMapping("ong/necesidades")
   public String crearNecesidad(
-      @RequestParam String categoriaNombre,
-      @RequestParam String subcategoriaNombre,
-      @RequestParam int cantidadSolicitada,
-      @RequestParam String tipoNecesidad,
+      @RequestParam(required = false) String categoriaNombre,
+      @RequestParam(required = false) String subcategoriaNombre,
+      @RequestParam(required = false) Integer cantidadSolicitada,
+      @RequestParam(required = false) String tipoNecesidad,
       @RequestParam(required = false) Integer cantidadDias,
       @RequestParam(required = false) String situacion,
-      @RequestParam String descripcion,
+      @RequestParam(required = false) String descripcion,
       RedirectAttributes redirectAttributes
   ){
     Long usuarioId = SesionUsuario.usuarioId();
@@ -133,17 +135,24 @@ public class EntidadBeneficiariaController {
             subcategoriaNombre,
             entidad.id(),
             descripcion,
-            cantidadSolicitada,
+            cantidadSolicitada != null ? cantidadSolicitada : 0,
             tipoNecesidad,
             cantidadDias,
             situacion
         );
 
-    webApiCallerService.post(
-        donacionesServiceUrl + "/donaciones/necesidades",
-        request,
-        NecesidadResponse.class
-        );
+    try {
+      webApiCallerService.post(
+          donacionesServiceUrl + "/donaciones/necesidades",
+          request,
+          NecesidadResponse.class
+          );
+    } catch (ApiException e) {
+      // No se creo nada: se muestran los campos con error
+      redirectAttributes.addFlashAttribute("mensajeError", "No se registró la necesidad. " + e.getMessage());
+      redirectAttributes.addFlashAttribute("erroresCampo", e.mensajesParaMostrar());
+      return "redirect:/ong/necesidades";
+    }
 
     redirectAttributes.addFlashAttribute(
         "mensajeExito",

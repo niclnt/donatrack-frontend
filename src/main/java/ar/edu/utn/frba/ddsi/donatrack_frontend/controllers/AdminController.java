@@ -276,6 +276,10 @@ public class AdminController {
         try {
             webApiCallerService.post(backendUrl, request, String.class);
             model.addAttribute("exito", "Donación registrada correctamente en depósito (" + bienes.size() + " bien(es)).");
+        } catch (ApiException e) {
+            // Validacion del back: no se registro nada; se listan los campos con error
+            model.addAttribute("error", "No se registró la donación. " + e.getMessage());
+            model.addAttribute("erroresCampo", e.mensajesParaMostrar());
         } catch (Exception e) {
             model.addAttribute("error", "Error al registrar la donación: " + e.getMessage());
         }
