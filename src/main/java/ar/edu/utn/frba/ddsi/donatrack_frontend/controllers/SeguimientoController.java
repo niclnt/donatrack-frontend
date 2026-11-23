@@ -10,6 +10,8 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerSer
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,6 +51,24 @@ public class SeguimientoController {
     @ResponseBody
     public ResponseEntity<List<SeguimientoEntregaResponse>> datosDonante() {
         return datos(this::seguimientoDelDonante);
+    }
+
+    // Enlace que llega en la notificacion de inicio de ruta: lleva a cada uno a su mapa en vivo
+    // (si no inicio sesion, Spring Security lo manda primero al login)
+    @GetMapping("/seguimiento")
+    public String seguimiento(Authentication authentication) {
+        List<String> roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(a -> a.startsWith("ROLE_"))
+                .map(a -> a.substring("ROLE_".length()))
+                .toList();
+        if (roles.contains(SesionUsuario.ROL_DONANTE_HUMANO) || roles.contains(SesionUsuario.ROL_DONANTE_JURIDICO)) {
+            return "redirect:/donante/mapa";
+        }
+        if (roles.contains(SesionUsuario.ROL_BENEFICIARIO)) {
+            return "redirect:/ong/mapa";
+        }
+        return "redirect:" + SesionUsuario.panelPara(roles);
     }
 
     @GetMapping("/ong/mapa")

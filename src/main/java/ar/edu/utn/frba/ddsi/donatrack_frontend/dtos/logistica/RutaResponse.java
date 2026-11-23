@@ -13,7 +13,10 @@ public record RutaResponse(
         String estadoActual,
         CamionResponse camion,
         String nombreChofer,
-        List<EntregaResponse> entregas
+        List<EntregaResponse> entregas,
+        Double origenLatitud,          // deposito desde donde parte el camion
+        Double origenLongitud,
+        PosicionResponse ultimaPosicion // null si el camion todavia no reporto posicion
 ) {
     public boolean planificada() {
         return "PLANIFICADA".equals(estadoActual);
