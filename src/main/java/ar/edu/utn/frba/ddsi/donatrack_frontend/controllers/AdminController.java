@@ -16,6 +16,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleEx
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -465,6 +466,24 @@ public class AdminController {
         return "redirect:/admin/asignar-algoritmo";
     }
 
+    // Mismo proceso que corre el scheduler de donaciones; la fecha (opcional) simula el paso del tiempo en la demo
+    @PostMapping("/admin/necesidades/renovar")
+    public String renovarRecurrentes(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            RedirectAttributes redirect) {
+        String url = donacionesServiceUrl + "/donaciones/necesidades/recurrentes/renovar"
+                + (fecha != null ? "?fecha=" + fecha : "");
+        try {
+            Map<?, ?> resultado = webApiCallerService.post(url, null, Map.class);
+            Object renovadas = resultado != null ? resultado.get("renovadas") : 0;
+            redirect.addFlashAttribute("exito", "Renovación de necesidades recurrentes al "
+                    + (fecha != null ? fecha : LocalDate.now()) + ": " + renovadas + " con período nuevo.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudieron renovar las necesidades recurrentes: " + e.getMessage());
+        }
+        return "redirect:/admin/asignar-algoritmo";
+    }
+
     @PostMapping("/admin/confirmar-asignacion")
     public String confirmarAsignacion(
             @RequestParam Long idDonacionSegmentada,
@@ -504,6 +523,22 @@ public class AdminController {
         model.addAttribute("disponibles", camiones.stream().filter(c -> Boolean.TRUE.equals(c.disponible())).count());
 
         return "admin/camiones";
+    }
+
+    // Dispara a demanda la planificacion de rutas (mismo flujo que el scheduler nocturno de logistica)
+    @PostMapping("/admin/planificacion/ejecutar")
+    public String ejecutarPlanificacion(RedirectAttributes redirect) {
+        try {
+            Map<?, ?> resumen = webApiCallerService.post(
+                    logisticaServiceUrl + "/logistica/rutas/planificacion/ejecutar", null, Map.class);
+            Object enviadas = resumen != null ? resumen.get("donacionesEnviadas") : 0;
+            Object lotes = resumen != null ? resumen.get("lotesEnviados") : 0;
+            redirect.addFlashAttribute("exito", "Planificación enviada al motor de ruteo: " + enviadas
+                    + " donaciones en " + lotes + " lote(s). Las rutas aparecen cuando el motor responde.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudo ejecutar la planificación: " + e.getMessage());
+        }
+        return "redirect:/admin/camiones";
     }
 
     @PostMapping("/admin/camiones")

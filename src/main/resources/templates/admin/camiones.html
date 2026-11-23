@@ -17,6 +17,12 @@
                         <h1>Camiones disponibles</h1>
                         <p class="page-head__sub">Administrá la flota utilizada para la planificación y ejecución de rutas.</p>
                     </div>
+
+                    <!-- Corre a demanda la planificacion que de otro modo se ejecuta de madrugada -->
+                    <form th:action="@{/admin/planificacion/ejecutar}" method="post"
+                          onsubmit="return confirm('¿Planificar ahora las rutas de todas las donaciones asignadas?');">
+                        <button type="submit" class="btn btn--primary btn--sm">Planificar rutas ahora</button>
+                    </form>
                 </div>
 
                 <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;">Camión registrado.</div>

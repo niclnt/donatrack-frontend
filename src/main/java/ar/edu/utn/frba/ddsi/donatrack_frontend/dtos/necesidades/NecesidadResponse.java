@@ -15,6 +15,9 @@ public record NecesidadResponse (
     String tipoNecesidad,
     Integer cantidadDias,
     String situacion,
-    LocalDate fechaCreacion
+    LocalDate fechaCreacion,
+    // Solo recurrentes: periodo vigente (null si el backend no lo manda)
+    LocalDate inicioPeriodo,
+    LocalDate finPeriodo
 ) {
 }
