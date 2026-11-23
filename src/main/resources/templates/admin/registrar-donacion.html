@@ -168,7 +168,8 @@
                                         <span class="field__hint">Una caja de 30×20×10 cm ≈ 6 litros</span>
                                     </div>
 
-                                    <div class="field">
+                                    <!-- Estado y vencimiento se muestran segun la categoria elegida (ver actualizarCamposSegunCategoria) -->
+                                    <div class="field campo-estado" style="display: none;">
                                         <label class="field__label">Estado del bien</label>
                                         <select class="select" name="estado">
                                             <option value="Nuevo">Nuevo</option>
@@ -176,7 +177,7 @@
                                         </select>
                                     </div>
 
-                                    <div class="field">
+                                    <div class="field campo-vencimiento" style="display: none;">
                                         <label class="field__label">Fecha de vencimiento</label>
                                         <input class="input" name="vencimiento" type="date">
                                     </div>
@@ -199,6 +200,25 @@
     const catalogoCategorias = /*[[${categorias}]]*/ [];
 
     let contadorBloques = 0;
+
+    // La fecha de vencimiento solo se pide en categorias perecederas (ej: Alimentos) y el estado del bien
+    // (nuevo / usado) solo en las que lo requieren (ej: Vestimenta). Los campos ocultos se mandan igual,
+    // con valor neutro: el controller lee estado y vencimiento por posicion, uno por bien.
+    function actualizarCamposSegunCategoria(bloque, categoria) {
+        const campoVencimiento = bloque.querySelector('.campo-vencimiento');
+        const campoEstado = bloque.querySelector('.campo-estado');
+
+        // Si el catalogo no trae los datos (backend viejo), se muestran los dos campos como antes
+        const sinDatos = categoria && categoria.esPerecedero == null;
+        const pideVencimiento = !!categoria && (sinDatos || categoria.esPerecedero);
+        const pideEstado = !!categoria && (sinDatos || categoria.requiereEstadoUso);
+
+        campoVencimiento.style.display = pideVencimiento ? '' : 'none';
+        if (!pideVencimiento) campoVencimiento.querySelector('input').value = '';
+
+        campoEstado.style.display = pideEstado ? '' : 'none';
+        if (!pideEstado) campoEstado.querySelector('select').value = 'Nuevo';
+    }
 
     // Vincula el select de Categoría con las sugerencias de Subcategoría de un bloque de bien
     function inicializarEventosCategoria(bloque) {
@@ -224,6 +244,8 @@
             subInput.value = '';
             subInput.disabled = !this.value;
             subInput.placeholder = subcategorias.length ? 'Elegí o escribí una subcategoría' : 'Escribí una subcategoría';
+
+            actualizarCamposSegunCategoria(bloque, catEncontrada);
         });
     }
 
@@ -244,6 +266,7 @@
         subInput.placeholder = 'Primero seleccioná una categoría';
         subInput.disabled = true;
         nuevoBloque.querySelector('.lista-subcategorias').innerHTML = '';
+        actualizarCamposSegunCategoria(nuevoBloque, null);
 
         const btnQuitar = document.createElement('button');
         btnQuitar.type = 'button';

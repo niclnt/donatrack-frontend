@@ -28,10 +28,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 @Controller
 public class AdminController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
     private final WebApiCallerService webApiCallerService;
     private final String donacionesServiceUrl;
@@ -582,6 +587,22 @@ public class AdminController {
     }
 
     // --- REQ 19: RANKINGS MENSUALES ---
+
+    // Ranking mensual a demanda (paso 5 del flujo 8): incentivos lo calcula con el mismo criterio que el cierre de mes
+    @PostMapping("/admin/rankings/generar")
+    public String generarRankingMensual(RedirectAttributes redirect) {
+        try {
+            PuestoDTO[] ranking = webApiCallerService.post(
+                    incentivosServiceUrl + "/incentivos/ranking-mensual/generar", Map.of(), PuestoDTO[].class);
+            int puestos = ranking != null ? ranking.length : 0;
+            redirect.addFlashAttribute("exitoRanking", "Ranking del mes generado: " + puestos
+                    + (puestos == 1 ? " donante." : " donantes."));
+        } catch (Exception e) {
+            log.error("[RANKING] No se pudo generar el ranking mensual: {}", e.getMessage());
+            redirect.addFlashAttribute("errorRanking", "No se pudo generar el ranking. Intentá de nuevo en unos minutos.");
+        }
+        return "redirect:/admin/rankings";
+    }
 
     @GetMapping("/admin/rankings")
     public String mostrarRankings(Authentication authentication, Model model) {

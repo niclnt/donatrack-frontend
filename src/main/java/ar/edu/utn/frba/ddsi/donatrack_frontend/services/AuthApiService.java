@@ -18,10 +18,12 @@ public class AuthApiService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthApiService.class);
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
     private final String authServiceUrl;
 
-    public AuthApiService(@Value("${auth.service.url}") String authServiceUrl) {
+    public AuthApiService(@Value("${auth.service.url}") String authServiceUrl, RestClient.Builder restClientBuilder) {
+        // Builder de Spring: propaga el traceId a auth-service
+        this.restClient = restClientBuilder.build();
         this.authServiceUrl = authServiceUrl;
     }
 

@@ -34,6 +34,11 @@
           <div th:if="${param.servicio}" class="alert alert--error" style="margin-bottom: 15px;">
             No pudimos verificar tus datos en este momento. Probá de nuevo en unos minutos.
           </div>
+          <!-- Rate limiting: demasiados intentos de login desde la misma IP -->
+          <div th:if="${param.bloqueado}" class="alert alert--error" role="alert" style="margin-bottom: 15px;"
+               th:text="|Hiciste demasiados intentos de inicio de sesión. Esperá ${param.bloqueado} segundos y volvé a intentar.|">
+            Hiciste demasiados intentos de inicio de sesión. Esperá 60 segundos y volvé a intentar.
+          </div>
 
           <div class="field">
             <label class="field__label" for="username">Correo electrónico</label>

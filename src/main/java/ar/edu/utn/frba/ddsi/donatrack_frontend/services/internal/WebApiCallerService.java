@@ -35,8 +35,9 @@ public class WebApiCallerService {
     private final String authServiceUrl;
 
     @Autowired
-    public WebApiCallerService(@Value("${auth.service.url}") String authServiceUrl) {
-        this(RestClient.create(), authServiceUrl);
+    public WebApiCallerService(@Value("${auth.service.url}") String authServiceUrl, RestClient.Builder restClientBuilder) {
+        // Builder de Spring: propaga el traceId a los servicios
+        this(restClientBuilder.build(), authServiceUrl);
     }
 
     WebApiCallerService(RestClient restClient, String authServiceUrl) {
