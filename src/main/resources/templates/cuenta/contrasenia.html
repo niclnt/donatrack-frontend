@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Cambiar contraseña')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+  <header class="topbar">
+    <a class="brand" th:href="@{/}">◆ DonaTrack</a>
+    <div class="topbar__actions" style="margin-left:auto;">
+      <form th:action="@{/logout}" method="post">
+        <button class="btn btn--link btn--sm" type="submit">Cerrar sesión</button>
+      </form>
+    </div>
+  </header>
+
+  <main id="main" class="page-body">
+    <div class="container" style="max-width: 440px;">
+      <div class="card">
+        <h1 style="font-size: var(--fs-xl); margin-bottom: var(--sp-2);">Cambiar contraseña</h1>
+
+        <div th:if="${exito}" class="alert alert--success" role="status" style="margin-bottom: 15px;">
+          <span th:text="${exito}">Tu contraseña se cambió correctamente.</span>
+        </div>
+        <a th:if="${exito}" class="btn btn--primary btn--block" th:href="@{${urlPanel}}">Ir a mi panel</a>
+
+        <th:block th:unless="${exito}">
+          <p class="muted" style="margin-bottom: var(--sp-5);" th:if="${obligatorio}">
+            Ingresaste con una contraseña temporal. Antes de continuar, elegí una propia.
+          </p>
+          <p class="muted" style="margin-bottom: var(--sp-5);" th:unless="${obligatorio}">
+            Ingresá tu contraseña actual y la nueva.
+          </p>
+
+          <div th:if="${error}" class="alert alert--error" role="alert" style="margin-bottom: 15px;" th:text="${error}">
+            La contraseña actual no es correcta.
+          </div>
+
+          <form th:action="@{/cuenta/contrasenia}" method="post">
+            <div class="field">
+              <label class="field__label" for="actual">Contraseña actual</label>
+              <input class="input" id="actual" name="actual" type="password" autocomplete="current-password" required>
+              <span class="field__hint" th:if="${obligatorio}">Es la que te llegó por correo.</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="nueva">Contraseña nueva</label>
+              <input class="input" id="nueva" name="nueva" type="password" minlength="8" autocomplete="new-password" required>
+              <span class="field__hint">Mínimo 8 caracteres.</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="confirmacion">Repetí la contraseña nueva</label>
+              <input class="input" id="confirmacion" name="confirmacion" type="password" minlength="8" autocomplete="new-password" required>
+            </div>
+
+            <button class="btn btn--primary btn--block" type="submit">Guardar contraseña</button>
+          </form>
+
+          <p class="text-center" style="margin-top: var(--sp-5);" th:unless="${obligatorio}">
+            <a class="btn--link" th:href="@{${urlPanel}}">Volver a mi panel</a>
+          </p>
+        </th:block>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

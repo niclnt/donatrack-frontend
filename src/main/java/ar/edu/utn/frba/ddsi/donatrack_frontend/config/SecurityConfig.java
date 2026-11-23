@@ -99,9 +99,13 @@ public class SecurityConfig {
         };
     }
 
-    // Despues del login, cada rol va a su panel
+    // Despues del login, cada rol va a su panel (o primero a cambiar la contraseña temporal)
     private AuthenticationSuccessHandler redireccionPorRol() {
         return (request, response, authentication) -> {
+            if (Boolean.TRUE.equals(request.getSession().getAttribute(SesionUsuario.DEBE_CAMBIAR_CONTRASENIA))) {
+                response.sendRedirect(SesionUsuario.URL_CAMBIO_CONTRASENIA);
+                return;
+            }
             List<String> roles = authentication.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .filter(a -> a.startsWith("ROLE_"))

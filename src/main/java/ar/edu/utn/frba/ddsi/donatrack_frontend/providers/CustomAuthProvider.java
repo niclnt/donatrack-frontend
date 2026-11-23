@@ -79,6 +79,7 @@ public class CustomAuthProvider implements AuthenticationProvider {
         session.setAttribute(SesionUsuario.REFRESH_TOKEN, respuesta.refreshToken());
         session.setAttribute(SesionUsuario.USUARIO_ID, respuesta.usuarioId());
         session.setAttribute(SesionUsuario.ROLES, roles);
+        session.setAttribute(SesionUsuario.DEBE_CAMBIAR_CONTRASENIA, Boolean.TRUE.equals(respuesta.debeCambiarContrasenia()));
 
         // --- OBTENER DONANTE_ID DESDE DONACIONES-SERVICE ---
         // Verificamos ROL_DONANTE_HUMANO / DONANTE_JURIDICO para coincidir con el log real

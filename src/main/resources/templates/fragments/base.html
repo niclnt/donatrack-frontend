@@ -66,6 +66,7 @@
             <p class="muted mt-4" sec:authentication="name">usuario@mail.com</p>
             <div class="modal__actions">
                 <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+                <a class="btn btn--ghost" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
                 <form th:action="@{/logout}" method="post">
                     <button class="btn btn--danger" type="submit">Cerrar sesión</button>
                 </form>
@@ -92,6 +93,7 @@
             <p class="muted mt-4" sec:authentication="name">admin@mail.com</p>
             <div class="modal__actions">
                 <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+                <a class="btn btn--ghost" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
                 <form th:action="@{/logout}" method="post">
                     <button class="btn btn--danger" type="submit">Cerrar sesión</button>
                 </form>
