@@ -1,7 +1,38 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/base :: head('Mis rutas')}"></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis rutas — DonaTrack</title>
+  <!-- El reporte de posiciones es un POST por JavaScript: necesita el token CSRF de la sesion -->
+  <meta name="_csrf" th:content="${_csrf.token}">
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <link rel="stylesheet" th:href="@{/assets/css/styles.css}">
+  <link rel="icon" th:href="@{/assets/favicon/favicon-32x32.png}" type="image/png" sizes="32x32">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    .mapa-chofer { height: 380px; border-radius: 12px; overflow: hidden; margin-top: 16px; }
+    .controles-recorrido { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-top: 12px; }
+    .controles-recorrido .field { margin: 0; min-width: 200px; }
+    .estado-recorrido { margin-top: 10px; font-size: var(--fs-sm); min-height: 1.4em; }
+    .paradas { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; }
+    .parada { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start;
+              padding: 12px; border: 1px solid var(--color-border, #2a2a35); border-radius: 10px; }
+    .parada__nro { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+                   font-weight: 700; background: #6d5dfc; color: #fff; }
+    .parada--cerrada .parada__nro { background: #555; }
+    .parada--actual { outline: 2px solid #f5a524; }
+    .parada details { margin-top: 8px; }
+    .parada summary { cursor: pointer; min-height: 48px; display: inline-flex; align-items: center; }
+    .icono-camion { font-size: 28px; line-height: 28px; text-align: center; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+    .icono-parada { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+                    background: #6d5dfc; color: #fff; font-weight: 700; border: 2px solid #fff;
+                    box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+    .icono-parada--cerrada { background: #555; }
+    .icono-deposito { font-size: 24px; line-height: 24px; text-align: center; }
+  </style>
+</head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
 
@@ -13,18 +44,20 @@
       <div class="page-head">
         <div>
           <h1>Mis rutas</h1>
-          <p class="page-head__sub">Rutas asignadas a tu camión. Iniciá la ruta cuando salgas del depósito.</p>
+          <p class="page-head__sub">Rutas asignadas a tu camión. Iniciá la ruta cuando salgas del depósito y compartí
+            tu ubicación para que donantes y entidades sigan el camión en vivo.</p>
         </div>
       </div>
 
-      <div th:if="${error}" class="alert alert--error" th:text="${error}" style="margin-bottom: 16px;"></div>
-      <div th:if="${exito}" class="alert alert--success" th:text="${exito}" style="margin-bottom: 16px;"></div>
+      <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}" style="margin-bottom: 16px;"></div>
+      <div th:if="${exito}" class="alert alert--success" role="status" th:text="${exito}" style="margin-bottom: 16px;"></div>
 
       <section class="card" th:if="${#lists.isEmpty(rutas)}">
         <p class="muted">No tenés rutas asignadas.</p>
       </section>
 
-      <section class="card mt-5" th:each="ruta : ${rutas}" th:attr="aria-labelledby='ruta-' + ${ruta.id()}">
+      <section class="card mt-5" th:each="ruta : ${rutas}" data-ruta
+               th:attr="aria-labelledby='ruta-' + ${ruta.id()}">
         <div class="card__header flex justify-between items-center wrap gap-3">
           <div>
             <h2 th:id="'ruta-' + ${ruta.id()}"
@@ -36,10 +69,61 @@
           <span th:if="${ruta.planificada()}" class="badge badge--info">Planificada</span>
         </div>
 
-        <ol class="mt-4" style="padding-left: 20px;">
-          <li th:each="entrega : ${ruta.entregas()}" style="margin-bottom: 8px;">
-            <strong th:text="${entrega.direccion() != null ? entrega.direccion() : 'Dirección sin cargar'}">Av. Rivadavia 4200</strong>
-            <span class="badge" th:text="${@estados.texto(entrega.estadoActual())}">Pendiente</span>
+        <!-- Recorrido en vivo: solo para la ruta en curso -->
+        <div th:if="${ruta.enCurso()}">
+          <div class="mapa-chofer" data-mapa-ruta
+               role="region" aria-label="Mapa del recorrido con el depósito, las paradas y la posición del camión"
+               th:attr="data-ruta-id=${ruta.id()},
+                        data-origen-lat=${ruta.origenLatitud()}, data-origen-lng=${ruta.origenLongitud()},
+                        data-ultima-lat=${ruta.ultimaPosicion() != null ? ruta.ultimaPosicion().latitud() : ''},
+                        data-ultima-lng=${ruta.ultimaPosicion() != null ? ruta.ultimaPosicion().longitud() : ''}"></div>
+
+          <div class="controles-recorrido">
+            <div class="field">
+              <label class="field__label" th:for="'velocidad-' + ${ruta.id()}">Velocidad de la simulación</label>
+              <select class="select" th:id="'velocidad-' + ${ruta.id()}" data-velocidad>
+                <option value="10" selected>Rápida para la demo (x10)</option>
+                <option value="3">Moderada (x3)</option>
+                <option value="1">Tiempo real (40 km/h)</option>
+              </select>
+            </div>
+            <button type="button" class="btn btn--primary" data-accion="simular">▶ Simular recorrido</button>
+            <button type="button" class="btn btn--ghost" data-accion="gps">📍 Usar GPS del celular</button>
+          </div>
+          <p class="estado-recorrido muted" data-estado-recorrido aria-live="polite">
+            El camión todavía no está transmitiendo su posición.
+          </p>
+        </div>
+
+        <ol class="paradas" aria-label="Paradas de la ruta en orden de visita">
+          <li th:each="entrega, it : ${ruta.entregas()}" data-parada
+              th:classappend="${entrega.enTraslado()} ? '' : 'parada--cerrada'"
+              th:attr="data-entrega-id=${entrega.id()}, data-estado=${entrega.estadoActual()},
+                       data-direccion=${entrega.direccion()},
+                       data-lat=${entrega.latitud()}, data-lng=${entrega.longitud()}"
+              class="parada">
+            <span class="parada__nro" aria-hidden="true" th:text="${it.count}">1</span>
+            <div>
+              <strong th:text="${entrega.direccion() != null ? entrega.direccion() : 'Dirección sin cargar'}">Av. Rivadavia 4200</strong>
+              <span class="badge" th:text="${@estados.texto(entrega.estadoActual())}">Pendiente</span>
+
+              <!-- Flujo de error 3: el chofer llega y no puede entregar -->
+              <details th:if="${ruta.enCurso() and entrega.enTraslado()}"
+                       th:open="${entregaConError != null and entregaConError == entrega.id()}">
+                <summary class="btn btn--link btn--sm">No se pudo entregar</summary>
+                <form th:action="@{/chofer/rutas/{r}/entregas/{e}/no-entregada(r=${ruta.id()}, e=${entrega.id()})}"
+                      method="post" class="mt-4"
+                      onsubmit="return confirm('¿Confirmás que la entrega no se pudo realizar? Se avisa a la entidad, al donante y a administración, y la donación vuelve al depósito.');">
+                  <div class="field">
+                    <label class="field__label" th:for="'motivo-' + ${entrega.id()}">Motivo</label>
+                    <textarea class="textarea" name="motivo" th:id="'motivo-' + ${entrega.id()}" required maxlength="500"
+                              placeholder="Ej: Se tocó timbre reiteradas veces y no hubo respuesta."></textarea>
+                    <span class="field__hint">Lo ven la entidad, la persona donante y administración.</span>
+                  </div>
+                  <button type="submit" class="btn btn--danger btn--sm">Registrar entrega fallida</button>
+                </form>
+              </details>
+            </div>
           </li>
         </ol>
 
@@ -54,5 +138,7 @@
 </div>
 
 <script th:src="@{/assets/js/app.js}"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:src="@{/assets/js/chofer-recorrido.js}"></script>
 </body>
 </html>

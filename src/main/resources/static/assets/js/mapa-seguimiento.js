@@ -6,7 +6,8 @@
         return;
     }
 
-    var INTERVALO_MS = 15000;
+    // El chofer reporta cada pocos segundos: refrescamos seguido para que el movimiento se vea fluido
+    var INTERVALO_MS = 5000;
     var urlDatos = contenedor.dataset.url;
     var estadoActualizacion = document.getElementById("estado-actualizacion");
     var tarjetas = document.querySelectorAll("[data-entrega]");
