@@ -65,6 +65,27 @@
     });
   });
 
+  /* --- Menú de cuenta (desplegable bajo el avatar) --- */
+  document.querySelectorAll("[data-user-menu]").forEach(function (menu) {
+    var btn = menu.querySelector("[data-user-menu-toggle]");
+    var panel = menu.querySelector(".user-menu__panel");
+    if (!btn || !panel) return;
+    function setOpen(open) {
+      panel.hidden = !open;
+      btn.setAttribute("aria-expanded", String(open));
+    }
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setOpen(panel.hidden);
+    });
+    document.addEventListener("click", function (e) {
+      if (!menu.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !panel.hidden) { setOpen(false); btn.focus(); }
+    });
+  });
+
   /* --- Demo de carga asincrónica (skeleton -> contenido) --- */
   document.querySelectorAll("[data-skeleton]").forEach(function (region) {
     var real = region.querySelector("[data-content]");

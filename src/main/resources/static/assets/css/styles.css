@@ -158,6 +158,30 @@ ul { margin: 0; padding: 0; list-style: none; }
   cursor: pointer;
 }
 
+/* Menú de cuenta desplegable debajo del avatar */
+.user-menu { position: relative; }
+.user-menu__panel {
+  position: absolute; top: calc(100% + var(--sp-2)); right: 0; z-index: 1100;
+  min-width: 240px; padding: var(--sp-2);
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-2);
+}
+.user-menu__panel[hidden] { display: none; }
+.user-menu__head {
+  display: flex; flex-direction: column; gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3); margin-bottom: var(--sp-1);
+  border-bottom: 1px solid var(--border); overflow-wrap: anywhere;
+}
+.user-menu__head .muted { font-size: var(--fs-sm); }
+.user-menu__item {
+  display: flex; align-items: center; width: 100%; min-height: 40px;
+  padding: 0 var(--sp-3); border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.user-menu__item:hover, .user-menu__item:focus-visible { background: var(--surface-2); }
+.user-menu__item--danger { color: var(--danger); }
+.user-menu__item--danger:hover { background: var(--danger-bg); }
+
 /* Botón hamburguesa (responsive) - OCULTO EN ESCRITORIO */
 .nav-toggle {
   display: none; width: 44px; height: 44px;

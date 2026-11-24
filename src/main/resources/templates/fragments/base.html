@@ -54,21 +54,20 @@
             <a class="btn btn--primary btn--sm" th:href="@{/registro}">Registrarme</a>
         </th:block>
 
-        <button sec:authorize="isAuthenticated()" class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta"
-                th:text="${session.DONANTE_NOMBRE != null ? #strings.toUpperCase(#strings.substring(session.DONANTE_NOMBRE, 0, 2)) : #strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">
-        </button>
-    </div>
-
-    <!-- Modal de Cuenta + cerrar sesión -->
-    <div sec:authorize="isAuthenticated()" class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-        <div class="modal__box">
-            <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Mi cuenta</h2>
-            <p class="muted mt-4" sec:authentication="name">usuario@mail.com</p>
-            <div class="modal__actions">
-                <button class="btn btn--ghost" data-modal-close>Cerrar</button>
-                <a class="btn btn--ghost" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
+        <!-- Menú de cuenta: se despliega debajo del avatar -->
+        <div sec:authorize="isAuthenticated()" class="user-menu" data-user-menu>
+            <button class="avatar" type="button" data-user-menu-toggle aria-haspopup="true" aria-expanded="false"
+                    aria-controls="menu-cuenta" aria-label="Mi cuenta"
+                    th:text="${session.DONANTE_NOMBRE != null ? #strings.toUpperCase(#strings.substring(session.DONANTE_NOMBRE, 0, 2)) : #strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">
+            </button>
+            <div class="user-menu__panel" id="menu-cuenta" hidden>
+                <div class="user-menu__head">
+                    <strong>Mi cuenta</strong>
+                    <span class="muted" sec:authentication="name">usuario@mail.com</span>
+                </div>
+                <a class="user-menu__item" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
                 <form th:action="@{/logout}" method="post">
-                    <button class="btn btn--danger" type="submit">Cerrar sesión</button>
+                    <button class="user-menu__item user-menu__item--danger" type="submit">Cerrar sesión</button>
                 </form>
             </div>
         </div>
@@ -83,19 +82,18 @@
         <a th:href="@{/}">Sitio Público</a>
     </nav>
     <div class="topbar__actions">
-        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button>
-    </div>
-
-    <!-- Modal de Cuenta + cerrar sesión -->
-    <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-        <div class="modal__box">
-            <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2>
-            <p class="muted mt-4" sec:authentication="name">admin@mail.com</p>
-            <div class="modal__actions">
-                <button class="btn btn--ghost" data-modal-close>Cerrar</button>
-                <a class="btn btn--ghost" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
+        <!-- Menú de cuenta: se despliega debajo del avatar -->
+        <div class="user-menu" data-user-menu>
+            <button class="avatar" type="button" data-user-menu-toggle aria-haspopup="true" aria-expanded="false"
+                    aria-controls="menu-cuenta" aria-label="Mi cuenta">AD</button>
+            <div class="user-menu__panel" id="menu-cuenta" hidden>
+                <div class="user-menu__head">
+                    <strong>Panel administrador</strong>
+                    <span class="muted" sec:authentication="name">admin@mail.com</span>
+                </div>
+                <a class="user-menu__item" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
                 <form th:action="@{/logout}" method="post">
-                    <button class="btn btn--danger" type="submit">Cerrar sesión</button>
+                    <button class="user-menu__item user-menu__item--danger" type="submit">Cerrar sesión</button>
                 </form>
             </div>
         </div>
@@ -121,6 +119,9 @@
 
     <p class="sidebar__label">Incentivos</p>
     <a th:href="@{/admin/rankings}" th:attr="aria-current=${paginaActual == 'rankings' ? 'page' : null}">Rankings</a>
+
+    <p class="sidebar__label">Equipo</p>
+    <a th:href="@{/admin/administradores}" th:attr="aria-current=${paginaActual == 'administradores' ? 'page' : null}">Administradores</a>
 </aside>
 
 </body>

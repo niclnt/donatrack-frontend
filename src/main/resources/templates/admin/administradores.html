@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/base :: head('Administradores — DonaTrack')}"></head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<div class="page">
+    <header th:replace="~{fragments/base :: topbarAdmin}"></header>
+
+    <div class="shell">
+        <aside th:replace="~{fragments/base :: sidebarAdmin('administradores')}"></aside>
+
+        <main id="main" class="shell__main">
+            <div class="container" style="max-width: 720px;">
+                <div class="page-head">
+                    <div>
+                        <h1>Nuevo administrador</h1>
+                        <p class="page-head__sub">Dale acceso al panel de administración a otra persona del equipo.</p>
+                    </div>
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;"></div>
+                <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;"></div>
+
+                <section class="card" aria-labelledby="alta-admin-title">
+                    <div class="card__header">
+                        <div>
+                            <h2 id="alta-admin-title">Datos de acceso</h2>
+                            <p class="muted" style="font-size: var(--fs-sm);">Pasale la contraseña inicial por un medio seguro: al ingresar por primera vez la tiene que cambiar.</p>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/admin/administradores}" method="post">
+                        <div class="field">
+                            <label class="field__label" for="mail">Correo electrónico</label>
+                            <input class="input" id="mail" name="mail" type="email" autocomplete="off" required
+                                   th:value="${mail}">
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="password">Contraseña inicial</label>
+                            <input class="input" id="password" name="password" type="password" autocomplete="new-password"
+                                   minlength="8" required>
+                            <p class="field__hint">Al menos 8 caracteres.</p>
+                        </div>
+                        <div class="field">
+                            <label class="field__label" for="confirmacion">Repetir contraseña</label>
+                            <input class="input" id="confirmacion" name="confirmacion" type="password" autocomplete="new-password"
+                                   minlength="8" required>
+                        </div>
+                        <div class="flex justify-end mt-4">
+                            <button class="btn btn--primary" type="submit">Crear administrador</button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

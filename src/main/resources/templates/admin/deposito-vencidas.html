@@ -62,7 +62,14 @@
                                         <td th:if="${estado != 'DESCARTADA'}"><input type="checkbox" name="segmentosIds" th:value="${donacion.get('id')} + '-' + ${segmento.get('id')}" aria-label="Seleccionar ítem"></td>
 
                                         <!-- Extracción defensiva de datos -->
-                                        <td th:text="${segmento.get('bienes') != null && !segmento.get('bienes').isEmpty() ? segmento.get('bienes').get(0).get('descripcion') : donacion.get('descripcion')}"><strong>Fideos</strong></td>
+                                        <td>
+                                            <span th:text="${segmento.get('bienes') != null && !segmento.get('bienes').isEmpty() ? segmento.get('bienes').get(0).get('descripcion') : donacion.get('descripcion')}"><strong>Fideos</strong></span>
+                                            <!-- Foto cargada al recibir la donacion (Azure Blob Storage, via /fotos/bienes) -->
+                                            <th:block th:with="conFoto=${segmento.get('bienes') != null ? segmento.get('bienes').?[#this.get('foto') != null] : null}">
+                                                <a th:if="${conFoto != null and !conFoto.isEmpty()}" th:href="@{/fotos/bienes/{clave}(clave=${conFoto[0].get('foto')})}"
+                                                   target="_blank" rel="noopener" class="btn btn--link btn--sm">📷 Ver foto</a>
+                                            </th:block>
+                                        </td>
                                         <td th:text="${segmento.get('subcategoria') != null ? segmento.get('subcategoria').get('nombre') : '—'}">Alimentos</td>
 
                                         <td class="num" th:text="${segmento.get('bienes') != null && !segmento.get('bienes').isEmpty() ? segmento.get('bienes').get(0).get('cantidad') : '—'}">15 u.</td>

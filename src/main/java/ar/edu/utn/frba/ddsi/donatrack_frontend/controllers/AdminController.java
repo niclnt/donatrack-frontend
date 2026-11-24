@@ -17,6 +17,9 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerSer
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -251,6 +254,8 @@ public class AdminController {
             @RequestParam String descripcion,
             @RequestParam String responsable,
             @RequestParam MultiValueMap<String, String> params,
+            // Un input por bien (vacio si no se adjunto foto): la posicion indica a que bien corresponde
+            @RequestParam(value = "fotoBien", required = false) List<MultipartFile> fotosBienes,
             Authentication authentication,
             Model model) {
 
@@ -274,7 +279,16 @@ public class AdminController {
         String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
 
         try {
-            webApiCallerService.post(backendUrl, request, String.class);
+            MultiValueMap<String, Object> partesFotos = partesDeFotos(fotosBienes);
+            if (partesFotos.isEmpty()) {
+                webApiCallerService.post(backendUrl, request, String.class);
+            } else {
+                // Con fotos: multipart con la donacion en JSON y una parte "foto-{i}" por bien
+                HttpHeaders json = new HttpHeaders();
+                json.setContentType(MediaType.APPLICATION_JSON);
+                partesFotos.add("donacion", new HttpEntity<>(request, json));
+                webApiCallerService.postMultipart(backendUrl, partesFotos, String.class);
+            }
             model.addAttribute("exito", "Donación registrada correctamente en depósito (" + bienes.size() + " bien(es)).");
         } catch (ApiException e) {
             // Validacion del back: no se registro nada; se listan los campos con error
@@ -286,6 +300,27 @@ public class AdminController {
 
         cargarCategorias(model);
         return "admin/registrar-donacion";
+    }
+
+    // Cada foto viaja con su nombre y Content-Type; donaciones la guarda en el almacenamiento de imagenes
+    private static MultiValueMap<String, Object> partesDeFotos(List<MultipartFile> fotos) throws IOException {
+        MultiValueMap<String, Object> partes = new LinkedMultiValueMap<>();
+        if (fotos == null) return partes;
+        for (int i = 0; i < fotos.size(); i++) {
+            MultipartFile foto = fotos.get(i);
+            if (foto == null || foto.isEmpty()) continue;
+            HttpHeaders encabezado = new HttpHeaders();
+            encabezado.setContentType(foto.getContentType() != null
+                    ? MediaType.parseMediaType(foto.getContentType()) : MediaType.APPLICATION_OCTET_STREAM);
+            String nombre = foto.getOriginalFilename();
+            partes.add("foto-" + i, new HttpEntity<>(new ByteArrayResource(foto.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return nombre;
+                }
+            }, encabezado));
+        }
+        return partes;
     }
 
     private List<BienDTO> armarBienes(MultiValueMap<String, String> params) {
@@ -656,6 +691,47 @@ public class AdminController {
         }
 
         return "admin/rankings";
+    }
+
+    // --- ALTA DE ADMINISTRADORES ---
+
+    @GetMapping("/admin/administradores")
+    public String mostrarAltaAdministrador() {
+        return "admin/administradores";
+    }
+
+    // Auth solo deja crear el rol ADMIN si quien llama es admin: se usa el token de la sesion.
+    // La contraseña queda como inicial y el nuevo admin la tiene que cambiar al entrar.
+    @PostMapping("/admin/administradores")
+    public String crearAdministrador(
+            @RequestParam String mail,
+            @RequestParam String password,
+            @RequestParam String confirmacion,
+            RedirectAttributes redirect) {
+
+        String mailNormalizado = mail == null ? "" : mail.trim();
+        String error = null;
+        if (mailNormalizado.isEmpty() || password == null || password.isBlank()) {
+            error = "Completá el correo y la contraseña inicial.";
+        } else if (password.length() < 8) {
+            error = "La contraseña inicial debe tener al menos 8 caracteres.";
+        } else if (!password.equals(confirmacion)) {
+            error = "Las contraseñas no coinciden.";
+        } else {
+            try {
+                Map<String, String> usuario = Map.of("mail", mailNormalizado, "password", password, "rol", SesionUsuario.ROL_ADMIN);
+                webApiCallerService.post(authServiceUrl + "/usuarios", usuario, Map.class);
+                redirect.addFlashAttribute("exito", "Administrador " + mailNormalizado
+                        + " creado. Al ingresar por primera vez va a tener que cambiar la contraseña.");
+                return "redirect:/admin/administradores";
+            } catch (ApiException | ServicioNoDisponibleException e) {
+                error = "No se pudo crear el administrador: " + e.getMessage();
+            }
+        }
+        // Se conserva el correo para no tener que tipearlo de nuevo
+        redirect.addFlashAttribute("mail", mailNormalizado);
+        redirect.addFlashAttribute("error", error);
+        return "redirect:/admin/administradores";
     }
 
     // --- REQ 20: IMPORTAR CSV ---

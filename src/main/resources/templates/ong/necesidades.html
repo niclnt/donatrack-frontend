@@ -191,23 +191,6 @@
   </main>
 </div>
 
-<div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-  <div class="modal__box">
-    <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Mi cuenta</h2>
-
-    <p class="muted mt-4" sec:authentication="name">usuario@mail.com</p>
-
-    <div class="modal__actions">
-      <button class="btn btn--ghost" data-modal-close>Cerrar</button>
-      <a class="btn btn--ghost" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
-
-      <form th:action="@{/logout}" method="post">
-        <button class="btn btn--danger" type="submit">Cerrar sesión</button>
-      </form>
-    </div>
-  </div>
-</div>
-
 <script src="../assets/js/app.js"></script>
 <script th:inline="javascript">
   const categorias = /*[[${categorias}]]*/ [];

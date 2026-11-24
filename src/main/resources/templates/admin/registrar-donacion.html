@@ -19,7 +19,8 @@
                     </div>
                 </div>
 
-                <form th:action="@{/admin/registrar-donacion}" method="post" id="formRegistrarDonacion">
+                <!-- multipart: cada bien puede llevar una foto -->
+                <form th:action="@{/admin/registrar-donacion}" method="post" id="formRegistrarDonacion" enctype="multipart/form-data">
 
                     <!-- ID REAL DEL DONANTE (Se llena mediante JS al hacer click en un resultado) -->
                     <input type="hidden" name="donanteId" id="donanteIdInput">
@@ -186,6 +187,13 @@
                                         <label class="field__label">Fecha de vencimiento</label>
                                         <input class="input" name="vencimiento" type="date" th:min="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}">
                                         <span class="field__hint">No se reciben productos vencidos.</span>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Foto del bien (opcional)</label>
+                                        <!-- Siempre se manda (vacio si no hay foto): la posicion dice a que bien corresponde -->
+                                        <input class="input" name="fotoBien" type="file" accept="image/*">
+                                        <span class="field__hint">JPG o PNG, hasta 10 MB.</span>
                                     </div>
                                 </div>
                             </div>
