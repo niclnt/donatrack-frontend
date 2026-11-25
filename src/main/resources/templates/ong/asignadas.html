@@ -14,7 +14,7 @@
         <div>
           <p class="req-tag">Seguimiento de aportes</p>
           <h1>Donaciones asignadas</h1>
-          <p class="page-head__sub">Consultá el estado de las donaciones vinculadas a tus necesidades materiales.</p>
+          <!-- <p class="page-head__sub">Consultá el estado de las donaciones vinculadas a tus necesidades materiales.</p> -->
         </div>
         <strong class="assigned-count" id="assignedCount"
                 th:text="${#lists.size(donaciones)} + ' donaciones'">0 donaciones</strong>
@@ -25,7 +25,7 @@
         <div class="assigned-filters__heading">
           <div>
             <h2 class="h3">Filtrar donaciones</h2>
-            <p class="muted">Encontrá rápidamente un aporte por estado o categoría.</p>
+            <!-- <p class="muted">Encontrá rápidamente un aporte por estado o categoría.</p> -->
           </div>
           <button class="btn btn--ghost btn--sm" id="clearFilters" type="button">Limpiar filtros</button>
         </div>
@@ -96,7 +96,7 @@
               <div><span class="detail-label">Subcategoría</span><strong th:text="${subcategoria}">Fideos secos</strong></div>
               <div><span class="detail-label">Cantidad</span><strong th:text="${bien.cantidad + ' un.'}">10 un.</strong></div>
               <div><span class="detail-label">Estado</span>
-                <span class="badge badge--info donation-status" th:text="${donacion.estadoActual}">Asignada</span>
+                <span class="badge badge--info donation-status" th:text="${@estados.texto(donacion.estadoActual)}">Asignada</span>
               </div>
             </div>
           </article>

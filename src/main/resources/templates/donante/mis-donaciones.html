@@ -18,40 +18,42 @@
 
             <div class="card">
                 <!-- Manejo de Errores -->
-                <div th:if="${error != null}" class="alert alert-danger">
+                <div th:if="${error != null}" class="alert alert--error" role="alert">
                     <p th:text="${error}">Mensaje de error</p>
                 </div>
-                <div th:if="${errorRepresentantes != null}" class="alert alert-danger">
+                <div th:if="${errorRepresentantes != null}" class="alert alert--error" role="alert">
                     <p th:text="${errorRepresentantes}">No se pudieron cargar los representantes.</p>
                 </div>
 
                 <!-- Barra de Filtros Completa (Auto-submitable) -->
-                <form id="formFiltros" th:action="@{/donante/mis-donaciones}" method="get" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                <form id="formFiltros" th:action="@{/donante/mis-donaciones}" method="get" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
 
                     <!-- Fila Superior: Búsqueda y Ordenamiento -->
-                    <div style="display: flex; gap: 15px;">
-                        <input type="text" id="inputBusqueda" name="busqueda" class="form-control" placeholder="Buscar por descripción..." th:value="${busquedaFiltro}" style="flex: 2; padding: 8px;">
-                        <select name="orden" class="form-control filtro-auto" style="flex: 1; padding: 8px;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <label class="sr-only" for="inputBusqueda">Buscar por descripción</label>
+                        <input type="text" id="inputBusqueda" name="busqueda" class="form-control" placeholder="Buscar por descripción..." th:value="${busquedaFiltro}" style="flex: 2 1 220px; min-width: 0; padding: 8px;">
+                        <label class="sr-only" for="filtroOrden">Ordenar donaciones</label>
+                        <select id="filtroOrden" name="orden" class="form-control filtro-auto" style="flex: 1 1 180px; min-width: 0; padding: 8px;">
                             <option value="recientes" th:selected="${ordenFiltro == 'recientes' or ordenFiltro == null}">Más recientes primero</option>
                             <option value="antiguas" th:selected="${ordenFiltro == 'antiguas'}">Más antiguas primero</option>
                         </select>
                     </div>
 
                     <!-- Fila Inferior: Estado, Categoría, Subcategoría y Limpiar -->
-                    <div style="display: flex; gap: 15px; align-items: flex-end;">
-                        <div style="flex: 1;">
-                            <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Estado:</label>
-                            <select name="estado" class="form-control filtro-auto" style="width: 100%; padding: 8px;">
+                    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                        <div style="flex: 1 1 170px; min-width: 0;">
+                            <label for="filtroEstado" style="font-weight: bold; font-size: 0.9em;">Filtrar por Estado:</label>
+                            <select id="filtroEstado" name="estado" class="form-control filtro-auto" style="width: 100%; padding: 8px;">
                                 <option value="" th:selected="${estadoFiltro == null or estadoFiltro == ''}">Todos los estados</option>
-                                <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En Depósito</option>
+                                <option value="EN_DEPOSITO" th:selected="${estadoFiltro == 'EN_DEPOSITO'}">En depósito</option>
                                 <option value="ASIGNACION_REALIZADA" th:selected="${estadoFiltro == 'ASIGNACION_REALIZADA'}">Asignación realizada</option>
-                                <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En Traslado</option>
+                                <option value="EN_TRASLADO" th:selected="${estadoFiltro == 'EN_TRASLADO'}">En traslado</option>
                                 <option value="ENTREGADA" th:selected="${estadoFiltro == 'ENTREGADA'}">Entregada</option>
                             </select>
                         </div>
 
-                        <div style="flex: 1;">
-                            <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Categoría:</label>
+                        <div style="flex: 1 1 170px; min-width: 0;">
+                            <label for="filtroCategoria" style="font-weight: bold; font-size: 0.9em;">Filtrar por Categoría:</label>
                             <select id="filtroCategoria" name="categoria" class="form-control filtro-auto" style="width: 100%; padding: 8px;">
                                 <option value="" th:selected="${categoriaFiltro == null or categoriaFiltro == ''}">Todas las categorías</option>
                                 <option th:each="categoria : ${categorias}"
@@ -61,15 +63,16 @@
                             </select>
                         </div>
 
-                        <div style="flex: 1;">
-                            <label style="font-weight: bold; font-size: 0.9em;">Filtrar por Subcategoria:</label>
+                        <div style="flex: 1 1 170px; min-width: 0;">
+                            <label for="filtroSubcategoria" style="font-weight: bold; font-size: 0.9em;">Filtrar por Subcategoria:</label>
                             <select id="filtroSubcategoria" name="subcategoria" class="form-control filtro-auto" style="width: 100%; padding: 8px;" disabled>
                                 <option value="">Todas las subcategorías</option>
                             </select>
                         </div>
 
-                        <div>
-                            <a th:href="@{/donante/mis-donaciones}" class="btn btn-outline" style="padding: 9px 20px; text-decoration: none;">Limpiar</a>
+                        <div class="flex gap-2 wrap">
+                            <button type="submit" class="btn btn--primary">Filtrar</button>
+                            <a th:href="@{/donante/mis-donaciones}" class="btn btn--ghost" style="padding: 9px 20px; text-decoration: none;">Limpiar</a>
                         </div>
                     </div>
                 </form>
@@ -82,7 +85,8 @@
                 </div>
 
                 <!-- 3. Tabla plana agrupada visualmente por donación -->
-                <table class="table" th:if="${donaciones != null and !donaciones.isEmpty()}">
+                <div class="table-wrap" th:if="${donaciones != null and !donaciones.isEmpty()}">
+                <table class="table">
                     <tbody th:each="donacion : ${donaciones}" class="donation-group">
                     <tr class="donation-description">
                         <td th:attr="colspan=${esDonanteJuridico ? 7 : 6}">
@@ -106,7 +110,7 @@
                         <th scope="col" th:if="${esDonanteJuridico}">REPRESENTANTE</th>
                     </tr>
                     <tr th:each="segmento, segmentoStat : ${donacion.donacionesSegmentadas}">
-                        <td th:if="${segmentoStat.first}"
+                        <td class="num" th:if="${segmentoStat.first}"
                             th:rowspan="${#lists.size(donacion.donacionesSegmentadas)}"
                             th:text="${segmento.fechaDonacion}">12/04/2025</td>
                         <td>
@@ -119,13 +123,7 @@
                                   th:classappend="${segmento.estadoActual == 'EN_DEPOSITO' ? 'status-deposito' :
                                                    (segmento.estadoActual == 'ASIGNACION_REALIZADA' ? 'status-asignado' :
                                                    (segmento.estadoActual == 'EN_TRASLADO' ? 'status-traslado' : 'status-entregado'))}">
-                                <span th:switch="${segmento.estadoActual}">
-                                    <span th:case="'EN_DEPOSITO'">• En depósito</span>
-                                    <span th:case="'ASIGNACION_REALIZADA'">• Asignación realizada</span>
-                                    <span th:case="'EN_TRASLADO'">• En traslado</span>
-                                    <span th:case="'ENTREGADA'">• Entregada</span>
-                                    <span th:case="*">• [[${segmento.estadoActual}]]</span>
-                                </span>
+                                <span th:text="|• ${@estados.texto(segmento.estadoActual)}|">• En depósito</span>
                             </span>
                         </td>
                         <td th:text="${segmento.entidadAsignada != null ? segmento.entidadAsignada : '—'}">Escuela Rural N°10</td>
@@ -135,6 +133,7 @@
                     </tr>
                     </tbody>
                 </table>
+                </div>
             </div>
 
         </div>
@@ -169,7 +168,7 @@
         });
     }
 
-    // --- FILTROS REACTIVOS (AUTO-SUBMIT) ---
+    // --- FILTROS REACTIVOS ---
 
     // 1. Escuchar cambios en todos los select
     document.querySelectorAll('.filtro-auto').forEach(select => {
@@ -181,65 +180,10 @@
         });
     });
 
-    // 2. Debounce para el campo de texto de búsqueda (400ms)
-    const inputBusqueda = document.getElementById('inputBusqueda');
-    let timerBusqueda = null;
-
-    if (inputBusqueda) {
-        inputBusqueda.addEventListener('input', function () {
-            clearTimeout(timerBusqueda);
-            timerBusqueda = setTimeout(() => {
-                formFiltros.submit();
-            }, 400);
-        });
-
-        // Mantener cursor al final del input si recarga la página por búsqueda
-        if (inputBusqueda.value) {
-            inputBusqueda.focus();
-            inputBusqueda.setSelectionRange(inputBusqueda.value.length, inputBusqueda.value.length);
-        }
-    }
-
     categoriaSelect.addEventListener('change', function () {
         cargarSubcategorias();
     });
     cargarSubcategorias();
-
-    // --- OPCIÓN 3: Colores dinámicos por Hashing ---
-    const paletaColores = [
-        { bg: 'rgba(239, 68, 68, 0.18)', text: '#fca5a5', border: 'rgba(239, 68, 68, 0.35)' },   // Rojo / Rosa
-        { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },  // Ámbar
-        { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },  // Esmeralda
-        { bg: 'rgba(59, 130, 246, 0.18)', text: '#93c5fd', border: 'rgba(59, 130, 246, 0.35)' },  // Azul
-        { bg: 'rgba(139, 92, 246, 0.18)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },  // Violeta
-        { bg: 'rgba(236, 72, 153, 0.18)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' },  // Magenta
-        { bg: 'rgba(20, 184, 166, 0.18)', text: '#5eead4', border: 'rgba(20, 184, 166, 0.35)' },  // Turquesa
-        { bg: 'rgba(249, 115, 22, 0.18)', text: '#fdba74', border: 'rgba(249, 115, 22, 0.35)' }   // Naranja
-    ];
-
-    function aplicarColoresCategorias() {
-        document.querySelectorAll('.badge-categoria').forEach(badge => {
-            const nombre = badge.getAttribute('data-categoria') || badge.textContent.trim();
-            if (!nombre) return;
-
-            let hash = 0;
-            for (let i = 0; i < nombre.length; i++) {
-                hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
-            }
-
-            const color = paletaColores[Math.abs(hash) % paletaColores.length];
-            badge.style.backgroundColor = color.bg;
-            badge.style.color = color.text;
-            badge.style.border = `1px solid ${color.border}`;
-            badge.style.padding = '3px 8px';
-            badge.style.borderRadius = '6px';
-            badge.style.fontSize = '0.82em';
-            badge.style.fontWeight = '500';
-            badge.style.display = 'inline-block';
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', aplicarColoresCategorias);
 </script>
 </body>
 </html>

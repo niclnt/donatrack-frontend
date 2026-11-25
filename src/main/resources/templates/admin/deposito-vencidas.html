@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/base :: head('Depósito y vencidas — DonaTrack')}"></head>
+<head th:replace="~{fragments/base :: head('Stock del depósito — DonaTrack')}"></head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
 
@@ -14,30 +14,38 @@
             <div class="container" style="max-width: 1180px;">
                 <div class="page-head">
                     <div>
-                        <h1>Depósito — Estado de donaciones</h1>
-                        <p class="page-head__sub">Revisá las donaciones disponibles y marcá como vencidas aquellas que ya no puedan asignarse.</p>
+                        <h1>Stock del depósito</h1>
+                        <!-- <p class="page-head__sub">Revisá el inventario y marcá como vencidas o descartadas las donaciones que ya no puedan asignarse.</p> -->
                     </div>
                 </div>
 
                 <!-- Alertas dinámicas -->
-                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 4px;"></div>
-                <div th:if="${param.exito}" class="alert alert-success" style="margin-bottom: 20px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 4px;">Estados actualizados correctamente.</div>
+                <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}"></div>
+                <div th:if="${param.exito}" class="alert alert--success">Estados actualizados correctamente.</div>
+
+                <!-- Filtro por estado: cada pestaña es un link con la cantidad de donaciones -->
+                <nav class="filterbar" aria-label="Filtrar por estado">
+                    <a th:each="c : ${cantidades}" class="filter-pill"
+                       th:href="@{/admin/deposito-vencidas(estado=${c.key})}"
+                       th:attr="aria-current=${c.key == estado ? 'page' : null}"
+                       th:text="|${@estados.texto(c.key)} (${c.value})|">En depósito (0)</a>
+                </nav>
 
                 <!-- Formulario unificado (engloba la tabla y el motivo) -->
-                <form th:action="@{/admin/marcar-vencidas}" method="post">
+                <form th:action="@{/admin/deposito/cambiar-estado}" method="post" data-loading>
+                    <input type="hidden" name="estado" th:value="${estado}">
 
                     <section class="card mt-5" aria-labelledby="tabla-title">
                         <div class="card__header">
                             <div>
-                                <h2 id="tabla-title">Donaciones disponibles en depósito</h2>
-                                <p class="muted" style="font-size: var(--fs-sm);">Seleccioná las donaciones vencidas y registrá el cambio de estado con trazabilidad.</p>
+                                <h2 id="tabla-title" th:text="|Donaciones: ${@estados.texto(estado)}|">Donaciones: En depósito</h2>
                             </div>
                         </div>
                         <div class="table-wrap">
                             <table class="table">
                                 <thead>
                                 <tr>
-                                    <th scope="col"><span class="sr-only">Seleccionar</span></th>
+                                    <th scope="col" th:if="${estado != 'DESCARTADA'}"><span class="sr-only">Seleccionar</span></th>
                                     <th scope="col">Ítem</th>
                                     <th scope="col">Subcategoría</th>
                                     <th scope="col">Cantidad</th>
@@ -51,46 +59,54 @@
                                     <tr th:each="segmento : ${donacion.get('donacionesSegmentadas')}">
                                         <!-- Checkbox con el nombre 'segmentosIds' (Spring lo convierte en una Lista) -->
                                         <!-- Concatenamos el ID de la donación y el ID del segmento -->
-                                        <td><input type="checkbox" name="segmentosIds" th:value="${donacion.get('id')} + '-' + ${segmento.get('id')}" aria-label="Seleccionar ítem"></td>
+                                        <td th:if="${estado != 'DESCARTADA'}"><input type="checkbox" name="segmentosIds" th:value="${donacion.get('id')} + '-' + ${segmento.get('id')}" aria-label="Seleccionar ítem"></td>
 
                                         <!-- Extracción defensiva de datos -->
-                                        <td th:text="${segmento.get('bienes') != null && !segmento.get('bienes').isEmpty() ? segmento.get('bienes').get(0).get('descripcion') : donacion.get('descripcion')}"><strong>Fideos</strong></td>
+                                        <td>
+                                            <span th:text="${segmento.get('bienes') != null && !segmento.get('bienes').isEmpty() ? segmento.get('bienes').get(0).get('descripcion') : donacion.get('descripcion')}"><strong>Fideos</strong></span>
+                                            <!-- Foto cargada al recibir la donacion (Azure Blob Storage, via /fotos/bienes) -->
+                                            <th:block th:with="conFoto=${segmento.get('bienes') != null ? segmento.get('bienes').?[#this.get('foto') != null] : null}">
+                                                <a th:if="${conFoto != null and !conFoto.isEmpty()}" th:href="@{/fotos/bienes/{clave}(clave=${conFoto[0].get('foto')})}"
+                                                   target="_blank" rel="noopener" class="btn btn--link btn--sm">📷 Ver foto</a>
+                                            </th:block>
+                                        </td>
                                         <td th:text="${segmento.get('subcategoria') != null ? segmento.get('subcategoria').get('nombre') : '—'}">Alimentos</td>
 
                                         <td class="num" th:text="${segmento.get('bienes') != null && !segmento.get('bienes').isEmpty() ? segmento.get('bienes').get(0).get('cantidad') : '—'}">15 u.</td>
 
                                         <td th:text="${segmento.get('bienes') != null && !segmento.get('bienes').isEmpty() && segmento.get('bienes').get(0).get('fechaVencimiento') != null ? segmento.get('bienes').get(0).get('fechaVencimiento') : '—'}">10/09/2026</td>
 
-                                        <td><span class="badge badge--info" th:text="${segmento.get('estadoActual')}">EN_DEPOSITO</span></td>
+                                        <td><span class="badge badge--info" th:text="${@estados.texto(segmento.get('estadoActual'))}">En depósito</span></td>
                                     </tr>
                                 </th:block>
 
-                                <!-- Fila vacía en caso de que no haya nada en el depósito -->
+                                <!-- Fila vacía en caso de que no haya donaciones en el estado elegido -->
                                 <tr th:if="${donaciones == null or donaciones.isEmpty()}">
-                                    <td colspan="6" style="text-align: center; padding: 20px;" class="muted">No hay donaciones en depósito actualmente.</td>
+                                    <td colspan="6" style="text-align: center; padding: 20px;" class="muted">No hay donaciones en este estado.</td>
                                 </tr>
                                 </tbody>
                             </table>
                         </div>
                     </section>
 
-                    <section class="card mt-5" aria-labelledby="confirmar-title">
+                    <!-- Las descartadas son de solo lectura -->
+                    <section class="card mt-5" aria-labelledby="confirmar-title" th:if="${estado != 'DESCARTADA'}">
                         <div class="card__header">
                             <div>
-                                <h2 id="confirmar-title">Confirmar marcado como vencidas</h2>
-                                <p class="muted" style="font-size: var(--fs-sm);">Esta acción modifica el estado y agrega una entrada al historial de auditoría.</p>
+                                <h2 id="confirmar-title">Cambiar estado de las seleccionadas</h2>
+                                <!-- <p class="muted" style="font-size: var(--fs-sm);">Esta acción modifica el estado y agrega una entrada al historial de auditoría.</p> -->
                             </div>
                         </div>
                         <div class="field">
                             <label class="field__label" for="motivo">Motivo del cambio de estado</label>
-                            <!-- Agregamos el name="motivo" -->
                             <textarea class="textarea" id="motivo" name="motivo" placeholder="Ej: Fecha de vencimiento superada durante control de depósito." required></textarea>
                         </div>
                         <div class="flex justify-between items-center wrap gap-3">
                             <p class="chip chip--alert">Acción irreversible para las donaciones seleccionadas.</p>
                             <div class="flex gap-2 wrap">
                                 <button class="btn btn--ghost" type="reset">Limpiar selección</button>
-                                <button class="btn btn--danger" type="submit">Confirmar vencimiento</button>
+                                <button class="btn btn--ghost" type="submit" name="nuevoEstado" value="VENCIDA" th:if="${estado == 'EN_DEPOSITO'}">Marcar como vencidas</button>
+                                <button class="btn btn--danger" type="submit" name="nuevoEstado" value="DESCARTADA">Descartar</button>
                             </div>
                         </div>
                     </section>

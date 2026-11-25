@@ -19,7 +19,7 @@
             </div>
 
             <div th:if="${exito}" class="alert alert--success" th:text="${exito}">Recepción confirmada.</div>
-            <div th:if="${error}" class="alert alert--error" th:text="${error}">Error.</div>
+            <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}">Error.</div>
 
             <!-- Entregas en camino: se pueden confirmar -->
             <section aria-labelledby="en-camino-title">
@@ -47,7 +47,7 @@
                         </th:block>
                     </ul>
 
-                    <form th:action="@{/ong/confirmar-recepcion/{id}(id=${entrega.id()})}" method="post" enctype="multipart/form-data" class="mt-4">
+                    <form th:action="@{/ong/confirmar-recepcion/{id}(id=${entrega.id()})}" method="post" enctype="multipart/form-data" class="mt-4" data-loading>
                         <div class="field">
                             <label class="field__label" th:for="${'fotos-' + entrega.id()}">Fotos de la donación recibida</label>
                             <input class="input" th:id="${'fotos-' + entrega.id()}" name="fotos" type="file" accept="image/*" multiple required>
@@ -87,7 +87,7 @@
                     <p class="muted" th:if="${entrega.fotosEvidencia() == null or entrega.fotosEvidencia().isEmpty()}">Todavía no hay fotos de esta entrega.</p>
 
                     <form th:action="@{/ong/confirmar-recepcion/{id}(id=${entrega.id()})}" method="post" enctype="multipart/form-data"
-                          class="mt-4 flex items-center gap-3 wrap">
+                          class="mt-4 flex items-center gap-3 wrap" data-loading>
                         <label class="sr-only" th:for="${'mas-fotos-' + entrega.id()}">Agregar fotos</label>
                         <input class="input" th:id="${'mas-fotos-' + entrega.id()}" name="fotos" type="file" accept="image/*" multiple required style="flex: 1;">
                         <button class="btn btn--ghost btn--sm" type="submit">Agregar fotos</button>

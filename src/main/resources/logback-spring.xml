@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Logs del front de DonaTrack. Misma config que logback-donatrack.xml de common-lib (el front no usa esa libreria).
+
+  - Consola: igual que el default de Spring Boot (con [traceId-spanId] en cada linea).
+  - Loki: se manda desde el nivel loki.nivel (LOKI_NIVEL) a loki.url (LOKI_URL).
+    Por defecto el nivel es OFF: no se manda nada (por ejemplo al correr un servicio sin Loki levantado).
+    Labels (para filtrar en Grafana): servicio y level. El traceId y el spanId van como structured metadata
+    (no como label, porque hay uno distinto por request) y tambien en el texto de la linea.
+
+  Se usa un filtro de nivel y no un <if>: en Logback 1.5.38+ (Spring Boot 4.1) un appender adentro de un <if>
+  no se crea.
+-->
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+  <springProperty scope="context" name="servicio" source="spring.application.name" defaultValue="donatrack"/>
+  <springProperty scope="context" name="lokiUrl" source="loki.url" defaultValue="http://localhost:3100/loki/api/v1/push"/>
+  <springProperty scope="context" name="lokiNivel" source="loki.nivel" defaultValue="OFF"/>
+
+  <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+    <!-- OFF (default) = no pasa ningun log; INFO = INFO, WARN y ERROR -->
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>${lokiNivel}</level>
+    </filter>
+    <http>
+      <url>${lokiUrl}</url>
+    </http>
+    <!-- Manda los logs en tandas cada 2 s como maximo (el default es 60 s: en la demo tardaban en aparecer) -->
+    <batch>
+      <timeoutMs>2000</timeoutMs>
+    </batch>
+    <labels>
+      servicio = ${servicio}
+      level = %level
+    </labels>
+    <structuredMetadata>
+      traceId = %mdc{traceId:-}
+      spanId = %mdc{spanId:-}
+      logger = %logger
+      thread = %thread
+    </structuredMetadata>
+    <message class="ch.qos.logback.classic.PatternLayout">
+      <pattern>%-5level [%thread] %logger{36} traceId=%mdc{traceId:-} : %msg%n%ex</pattern>
+    </message>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="LOKI"/>
+  </root>
+</configuration>

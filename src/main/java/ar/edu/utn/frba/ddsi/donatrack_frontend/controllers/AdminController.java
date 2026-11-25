@@ -1,5 +1,6 @@
 package ar.edu.utn.frba.ddsi.donatrack_frontend.controllers;
 
+import ar.edu.utn.frba.ddsi.donatrack_frontend.config.SesionUsuario;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.catalogo.CategoriaCatalogoResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.BienDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.donaciones.DonacionCreateRequest;
@@ -15,6 +16,10 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleEx
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,22 +32,33 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 @Controller
 public class AdminController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+
     private final WebApiCallerService webApiCallerService;
     private final String donacionesServiceUrl;
     private final String logisticaServiceUrl;
+    private final String authServiceUrl;
+    private final String incentivosServiceUrl;
 
     public AdminController(
             WebApiCallerService webApiCallerService,
             @Value("${donaciones.service.url}") String donacionesServiceUrl,
-            @Value("${logistica.service.url}") String logisticaServiceUrl) {
+            @Value("${logistica.service.url}") String logisticaServiceUrl,
+            @Value("${auth.service.url}") String authServiceUrl,
+            @Value("${incentivos.service.url}") String incentivosServiceUrl) {
         this.webApiCallerService = webApiCallerService;
         this.donacionesServiceUrl = donacionesServiceUrl;
         this.logisticaServiceUrl = logisticaServiceUrl;
+        this.authServiceUrl = authServiceUrl;
+        this.incentivosServiceUrl = incentivosServiceUrl;
     }
 
     // --- PANEL DE INICIO ---
@@ -238,6 +254,8 @@ public class AdminController {
             @RequestParam String descripcion,
             @RequestParam String responsable,
             @RequestParam MultiValueMap<String, String> params,
+            // Un input por bien (vacio si no se adjunto foto): la posicion indica a que bien corresponde
+            @RequestParam(value = "fotoBien", required = false) List<MultipartFile> fotosBienes,
             Authentication authentication,
             Model model) {
 
@@ -261,14 +279,48 @@ public class AdminController {
         String backendUrl = donacionesServiceUrl + "/donaciones-service/donaciones/donantes/" + donanteId;
 
         try {
-            webApiCallerService.post(backendUrl, request, String.class);
+            MultiValueMap<String, Object> partesFotos = partesDeFotos(fotosBienes);
+            if (partesFotos.isEmpty()) {
+                webApiCallerService.post(backendUrl, request, String.class);
+            } else {
+                // Con fotos: multipart con la donacion en JSON y una parte "foto-{i}" por bien
+                HttpHeaders json = new HttpHeaders();
+                json.setContentType(MediaType.APPLICATION_JSON);
+                partesFotos.add("donacion", new HttpEntity<>(request, json));
+                webApiCallerService.postMultipart(backendUrl, partesFotos, String.class);
+            }
             model.addAttribute("exito", "Donación registrada correctamente en depósito (" + bienes.size() + " bien(es)).");
+        } catch (ApiException e) {
+            // Validacion del back: no se registro nada; se listan los campos con error
+            model.addAttribute("error", "No se registró la donación. " + e.getMessage());
+            model.addAttribute("erroresCampo", e.mensajesParaMostrar());
         } catch (Exception e) {
             model.addAttribute("error", "Error al registrar la donación: " + e.getMessage());
         }
 
         cargarCategorias(model);
         return "admin/registrar-donacion";
+    }
+
+    // Cada foto viaja con su nombre y Content-Type; donaciones la guarda en el almacenamiento de imagenes
+    private static MultiValueMap<String, Object> partesDeFotos(List<MultipartFile> fotos) throws IOException {
+        MultiValueMap<String, Object> partes = new LinkedMultiValueMap<>();
+        if (fotos == null) return partes;
+        for (int i = 0; i < fotos.size(); i++) {
+            MultipartFile foto = fotos.get(i);
+            if (foto == null || foto.isEmpty()) continue;
+            HttpHeaders encabezado = new HttpHeaders();
+            encabezado.setContentType(foto.getContentType() != null
+                    ? MediaType.parseMediaType(foto.getContentType()) : MediaType.APPLICATION_OCTET_STREAM);
+            String nombre = foto.getOriginalFilename();
+            partes.add("foto-" + i, new HttpEntity<>(new ByteArrayResource(foto.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return nombre;
+                }
+            }, encabezado));
+        }
+        return partes;
     }
 
     private List<BienDTO> armarBienes(MultiValueMap<String, String> params) {
@@ -335,36 +387,61 @@ public class AdminController {
         }
     }
 
-    // --- REQ 16: DEPÓSITO Y VENCIDAS ---
+    // --- REQ 16: STOCK DEL DEPÓSITO ---
+
+    private static final List<String> ESTADOS_DEPOSITO = List.of("EN_DEPOSITO", "VENCIDA", "DESCARTADA");
 
     @GetMapping("/admin/deposito-vencidas")
-    public String mostrarDeposito(Authentication authentication, Model model) {
+    public String mostrarDeposito(@RequestParam(defaultValue = "EN_DEPOSITO") String estado,
+                                  Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
-        try {
-            String url = donacionesServiceUrl + "/donaciones-service/donaciones?estado=EN_DEPOSITO";
-            model.addAttribute("donaciones", webApiCallerService.getList(url, Map[].class));
-        } catch (Exception e) {
-            model.addAttribute("donaciones", List.of());
+        if (!ESTADOS_DEPOSITO.contains(estado)) estado = "EN_DEPOSITO";
+
+        // Cantidad de segmentos por estado, para los filtros
+        Map<String, Integer> cantidades = new LinkedHashMap<>();
+        List<Map> donaciones = List.of();
+        for (String e : ESTADOS_DEPOSITO) {
+            List<Map> porEstado;
+            try {
+                String url = donacionesServiceUrl + "/donaciones-service/donaciones?estado=" + e;
+                porEstado = webApiCallerService.getList(url, Map[].class);
+            } catch (Exception ex) {
+                porEstado = List.of();
+            }
+            cantidades.put(e, porEstado.stream()
+                    .mapToInt(d -> d.get("donacionesSegmentadas") instanceof List<?> l ? l.size() : 0)
+                    .sum());
+            if (e.equals(estado)) donaciones = porEstado;
         }
 
+        model.addAttribute("estado", estado);
+        model.addAttribute("cantidades", cantidades);
+        model.addAttribute("donaciones", donaciones);
         return "admin/deposito-vencidas";
     }
 
-    @PostMapping("/admin/marcar-vencidas")
-    public String procesarVencidas(
+    @PostMapping("/admin/deposito/cambiar-estado")
+    public String cambiarEstadoDeposito(
             @RequestParam(required = false) List<String> segmentosIds,
+            @RequestParam String nuevoEstado,
             @RequestParam String motivo,
+            @RequestParam(defaultValue = "EN_DEPOSITO") String estado,
             Authentication authentication,
             Model model) {
 
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
+        if (!List.of("VENCIDA", "DESCARTADA").contains(nuevoEstado)) {
+            model.addAttribute("error", "Acción no válida.");
+            return mostrarDeposito(estado, authentication, model);
+        }
         if (segmentosIds == null || segmentosIds.isEmpty()) {
-            model.addAttribute("error", "Debes seleccionar al menos un bien para marcarlo como vencido.");
-            return mostrarDeposito(authentication, model);
+            model.addAttribute("error", "Seleccioná al menos una donación.");
+            return mostrarDeposito(estado, authentication, model);
         }
 
+        int fallidos = 0;
         for (String parIds : segmentosIds) {
             String[] ids = parIds.split("-");
             String donacionId = ids[0];
@@ -373,7 +450,7 @@ public class AdminController {
             String url = donacionesServiceUrl + "/donaciones-service/donaciones/" + donacionId + "/segmentadas/" + segmentadaId + "/estado";
 
             Map<String, String> requestBody = Map.of(
-                    "nuevoEstado", "VENCIDA",
+                    "nuevoEstado", nuevoEstado,
                     "motivo", motivo,
                     "responsable", authentication.getName()
             );
@@ -381,11 +458,16 @@ public class AdminController {
             try {
                 webApiCallerService.put(url, requestBody, String.class);
             } catch (Exception e) {
-                System.out.println("Error al marcar vencida: " + e.getMessage());
+                fallidos++;
+                System.out.println("Error al cambiar estado a " + nuevoEstado + ": " + e.getMessage());
             }
         }
 
-        return "redirect:/admin/deposito-vencidas?exito=true";
+        if (fallidos > 0) {
+            model.addAttribute("error", "No se pudieron actualizar " + fallidos + " de " + segmentosIds.size() + " donaciones.");
+            return mostrarDeposito(estado, authentication, model);
+        }
+        return "redirect:/admin/deposito-vencidas?estado=" + estado + "&exito=true";
     }
 
     // --- REQ 17: ASIGNACIÓN POR ALGORITMO ---
@@ -420,6 +502,24 @@ public class AdminController {
             redirect.addFlashAttribute("error", "No se pudo ejecutar el algoritmo: " + e.getMessage());
         }
 
+        return "redirect:/admin/asignar-algoritmo";
+    }
+
+    // Mismo proceso que corre el scheduler de donaciones; la fecha (opcional) simula el paso del tiempo en la demo
+    @PostMapping("/admin/necesidades/renovar")
+    public String renovarRecurrentes(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            RedirectAttributes redirect) {
+        String url = donacionesServiceUrl + "/donaciones/necesidades/recurrentes/renovar"
+                + (fecha != null ? "?fecha=" + fecha : "");
+        try {
+            Map<?, ?> resultado = webApiCallerService.post(url, null, Map.class);
+            Object renovadas = resultado != null ? resultado.get("renovadas") : 0;
+            redirect.addFlashAttribute("exito", "Renovación de necesidades recurrentes al "
+                    + (fecha != null ? fecha : LocalDate.now()) + ": " + renovadas + " con período nuevo.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudieron renovar las necesidades recurrentes: " + e.getMessage());
+        }
         return "redirect:/admin/asignar-algoritmo";
     }
 
@@ -464,6 +564,22 @@ public class AdminController {
         return "admin/camiones";
     }
 
+    // Dispara a demanda la planificacion de rutas (mismo flujo que el scheduler nocturno de logistica)
+    @PostMapping("/admin/planificacion/ejecutar")
+    public String ejecutarPlanificacion(RedirectAttributes redirect) {
+        try {
+            Map<?, ?> resumen = webApiCallerService.post(
+                    logisticaServiceUrl + "/logistica/rutas/planificacion/ejecutar", null, Map.class);
+            Object enviadas = resumen != null ? resumen.get("donacionesEnviadas") : 0;
+            Object lotes = resumen != null ? resumen.get("lotesEnviados") : 0;
+            redirect.addFlashAttribute("exito", "Planificación enviada al motor de ruteo: " + enviadas
+                    + " donaciones en " + lotes + " lote(s). Las rutas aparecen cuando el motor responde.");
+        } catch (ApiException | ServicioNoDisponibleException e) {
+            redirect.addFlashAttribute("error", "No se pudo ejecutar la planificación: " + e.getMessage());
+        }
+        return "redirect:/admin/camiones";
+    }
+
     @PostMapping("/admin/camiones")
     public String registrarCamion(
             @RequestParam String patente,
@@ -472,6 +588,8 @@ public class AdminController {
             @RequestParam Double altura,
             @RequestParam Double carga,
             @RequestParam(required = false) String chofer,
+            @RequestParam(required = false) String choferMail,
+            @RequestParam(required = false) String choferPassword,
             Authentication authentication,
             RedirectAttributes redirect) {
 
@@ -479,9 +597,29 @@ public class AdminController {
 
         String patenteNormalizada = patente.trim().toUpperCase();
         String nombreChofer = chofer == null || chofer.isBlank() ? null : chofer.trim();
-        CamionCreateRequest request = new CamionCreateRequest(patenteNormalizada, volumen, altura, carga, nombreChofer);
+        String mailChofer = choferMail == null || choferMail.isBlank() ? null : choferMail.trim();
+        boolean conPassword = choferPassword != null && !choferPassword.isBlank();
+
+        // El chofer necesita cuenta para ver e iniciar sus rutas: nombre, mail y contraseña van juntos
+        if (nombreChofer != null && (mailChofer == null || !conPassword)) {
+            redirect.addFlashAttribute("error", "Para asignar un chofer cargá también su correo y una contraseña inicial.");
+            return "redirect:/admin/camiones";
+        }
+        if (conPassword && choferPassword.length() < 8) {
+            redirect.addFlashAttribute("error", "La contraseña del chofer debe tener al menos 8 caracteres.");
+            return "redirect:/admin/camiones";
+        }
 
         try {
+            Long usuarioIdChofer = null;
+            if (nombreChofer != null) {
+                // Solo un admin puede crear usuarios CHOFER: se usa el token de la sesion
+                Map<String, String> usuario = Map.of("mail", mailChofer, "password", choferPassword, "rol", SesionUsuario.ROL_CHOFER);
+                Map<?, ?> creado = webApiCallerService.post(authServiceUrl + "/usuarios", usuario, Map.class);
+                usuarioIdChofer = creado != null && creado.get("id") instanceof Number id ? id.longValue() : null;
+            }
+
+            CamionCreateRequest request = new CamionCreateRequest(patenteNormalizada, volumen, altura, carga, nombreChofer, usuarioIdChofer);
             webApiCallerService.post(logisticaServiceUrl + "/logistica/camiones", request, CamionResponse.class);
             if (!disponible) {
                 cambiarDisponibilidadEnLogistica(patenteNormalizada, false);
@@ -524,12 +662,28 @@ public class AdminController {
 
     // --- REQ 19: RANKINGS MENSUALES ---
 
+    // Ranking mensual a demanda (paso 5 del flujo 8): incentivos lo calcula con el mismo criterio que el cierre de mes
+    @PostMapping("/admin/rankings/generar")
+    public String generarRankingMensual(RedirectAttributes redirect) {
+        try {
+            PuestoDTO[] ranking = webApiCallerService.post(
+                    incentivosServiceUrl + "/incentivos/ranking-mensual/generar", Map.of(), PuestoDTO[].class);
+            int puestos = ranking != null ? ranking.length : 0;
+            redirect.addFlashAttribute("exitoRanking", "Ranking del mes generado: " + puestos
+                    + (puestos == 1 ? " donante." : " donantes."));
+        } catch (Exception e) {
+            log.error("[RANKING] No se pudo generar el ranking mensual: {}", e.getMessage());
+            redirect.addFlashAttribute("errorRanking", "No se pudo generar el ranking. Intentá de nuevo en unos minutos.");
+        }
+        return "redirect:/admin/rankings";
+    }
+
     @GetMapping("/admin/rankings")
     public String mostrarRankings(Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
         try {
-            String url = "http://localhost:8082/incentivos/donantes/ranking-mensual";
+            String url = incentivosServiceUrl + "/incentivos/donantes/ranking-mensual";
             model.addAttribute("rankingMensual", webApiCallerService.getList(url, PuestoDTO[].class));
         } catch (Exception e) {
             model.addAttribute("rankingMensual", List.of());
@@ -537,6 +691,47 @@ public class AdminController {
         }
 
         return "admin/rankings";
+    }
+
+    // --- ALTA DE ADMINISTRADORES ---
+
+    @GetMapping("/admin/administradores")
+    public String mostrarAltaAdministrador() {
+        return "admin/administradores";
+    }
+
+    // Auth solo deja crear el rol ADMIN si quien llama es admin: se usa el token de la sesion.
+    // La contraseña queda como inicial y el nuevo admin la tiene que cambiar al entrar.
+    @PostMapping("/admin/administradores")
+    public String crearAdministrador(
+            @RequestParam String mail,
+            @RequestParam String password,
+            @RequestParam String confirmacion,
+            RedirectAttributes redirect) {
+
+        String mailNormalizado = mail == null ? "" : mail.trim();
+        String error = null;
+        if (mailNormalizado.isEmpty() || password == null || password.isBlank()) {
+            error = "Completá el correo y la contraseña inicial.";
+        } else if (password.length() < 8) {
+            error = "La contraseña inicial debe tener al menos 8 caracteres.";
+        } else if (!password.equals(confirmacion)) {
+            error = "Las contraseñas no coinciden.";
+        } else {
+            try {
+                Map<String, String> usuario = Map.of("mail", mailNormalizado, "password", password, "rol", SesionUsuario.ROL_ADMIN);
+                webApiCallerService.post(authServiceUrl + "/usuarios", usuario, Map.class);
+                redirect.addFlashAttribute("exito", "Administrador " + mailNormalizado
+                        + " creado. Al ingresar por primera vez va a tener que cambiar la contraseña.");
+                return "redirect:/admin/administradores";
+            } catch (ApiException | ServicioNoDisponibleException e) {
+                error = "No se pudo crear el administrador: " + e.getMessage();
+            }
+        }
+        // Se conserva el correo para no tener que tipearlo de nuevo
+        redirect.addFlashAttribute("mail", mailNormalizado);
+        redirect.addFlashAttribute("error", error);
+        return "redirect:/admin/administradores";
     }
 
     // --- REQ 20: IMPORTAR CSV ---

@@ -22,13 +22,14 @@
         <a th:href="@{/}" th:attr="aria-current=${paginaActual == 'inicio' ? 'page' : null}">Inicio</a>
         <a th:href="@{/mapa-donaciones}" th:attr="aria-current=${paginaActual == 'mapa-donaciones' ? 'page' : null}">Mapa de donaciones</a>
         <a th:href="@{/legales}" th:attr="aria-current=${paginaActual == 'legales' ? 'page' : null}">Legales</a>
+        <a class="nav-mobile-only" th:href="@{/registro}">Registrarme</a>
     </nav>
 
     <!-- NAVBAR PARA DONANTES (AUTENTICADOS) -->
     <nav class="topbar__nav" id="donornav" aria-label="Panel de donante" sec:authorize="hasAnyRole('DONANTE_HUMANO', 'DONANTE_JURIDICO')">
         <a th:href="@{/donante/mis-donaciones}" th:attr="aria-current=${paginaActual == 'mis-donaciones' ? 'page' : null}">Mis donaciones</a>
         <a th:href="@{/donante/entidades}" th:attr="aria-current=${paginaActual == 'entidades' ? 'page' : null}">Entidades</a>
-        <a sec:authorize="hasRole('DONANTE_HUMANO')" th:href="@{/donante/incentivos}" th:attr="aria-current=${paginaActual == 'incentivos' ? 'page' : null}">Incentivos</a>
+        <a sec:authorize="hasRole('DONANTE_HUMANO')" th:href="@{/donante/incentivos}" th:attr="aria-current=${paginaActual == 'incentivos' ? 'page' : null}">Misiones</a>
         <a sec:authorize="hasRole('DONANTE_JURIDICO')" th:href="@{/donante/representantes}" th:attr="aria-current=${paginaActual == 'representantes' ? 'page' : null}">Representantes</a>
         <a th:href="@{/donante/mapa}" th:attr="aria-current=${paginaActual == 'mapa' ? 'page' : null}">Mapa</a>
         <a th:href="@{/donante/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
@@ -43,26 +44,31 @@
         <a th:href="@{/ong/notificaciones}" th:attr="aria-current=${paginaActual == 'notificaciones' ? 'page' : null}">Notificaciones</a>
     </nav>
 
+    <!-- NAVBAR PARA CHOFERES -->
+    <nav class="topbar__nav" id="choferNav" aria-label="Panel de chofer" sec:authorize="hasRole('CHOFER')">
+        <a th:href="@{/chofer}" th:attr="aria-current=${paginaActual == 'mis-rutas' ? 'page' : null}">Mis rutas</a>
+    </nav>
+
     <div class="topbar__actions">
         <th:block sec:authorize="!isAuthenticated()">
             <a class="btn btn--ghost btn--sm" th:href="@{/login}">Iniciar sesión</a>
-            <a class="btn btn--primary btn--sm" th:href="@{/registro}">Registrarme</a>
+            <a class="btn btn--primary btn--sm hide-mobile" th:href="@{/registro}">Registrarme</a>
         </th:block>
 
-        <button sec:authorize="isAuthenticated()" class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta"
-                th:text="${session.DONANTE_NOMBRE != null ? #strings.toUpperCase(#strings.substring(session.DONANTE_NOMBRE, 0, 2)) : #strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">
-        </button>
-    </div>
-
-    <!-- Modal de Cuenta + cerrar sesión -->
-    <div sec:authorize="isAuthenticated()" class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-        <div class="modal__box">
-            <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Mi cuenta</h2>
-            <p class="muted mt-4" sec:authentication="name">usuario@mail.com</p>
-            <div class="modal__actions">
-                <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+        <!-- Menú de cuenta: se despliega debajo del avatar -->
+        <div sec:authorize="isAuthenticated()" class="user-menu" data-user-menu>
+            <button class="avatar" type="button" data-user-menu-toggle aria-haspopup="true" aria-expanded="false"
+                    aria-controls="menu-cuenta" aria-label="Mi cuenta"
+                    th:text="${session.DONANTE_NOMBRE != null ? #strings.toUpperCase(#strings.substring(session.DONANTE_NOMBRE, 0, 2)) : #strings.toUpperCase(#strings.substring(#authentication.name, 0, 2))}">
+            </button>
+            <div class="user-menu__panel" id="menu-cuenta" hidden>
+                <div class="user-menu__head">
+                    <strong>Mi cuenta</strong>
+                    <span class="muted" sec:authentication="name">usuario@mail.com</span>
+                </div>
+                <a class="user-menu__item" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
                 <form th:action="@{/logout}" method="post">
-                    <button class="btn btn--danger" type="submit">Cerrar sesión</button>
+                    <button class="user-menu__item user-menu__item--danger" type="submit">Cerrar sesión</button>
                 </form>
             </div>
         </div>
@@ -74,21 +80,29 @@
     <a class="brand" th:href="@{/}">◆ DonaTrack</a>
     <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
     <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
+        <a class="nav-mobile-only" th:href="@{/admin/inicio}">Inicio</a>
+        <a class="nav-mobile-only" th:href="@{/admin/registrar-donacion}">Registrar donación</a>
+        <a class="nav-mobile-only" th:href="@{/admin/deposito-vencidas}">Stock del depósito</a>
+        <a class="nav-mobile-only" th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
+        <a class="nav-mobile-only" th:href="@{/admin/donantes}">Gestión de donantes</a>
+        <a class="nav-mobile-only" th:href="@{/admin/importar-csv}">Importar CSV</a>
+        <a class="nav-mobile-only" th:href="@{/admin/camiones}">Camiones</a>
+        <a class="nav-mobile-only" th:href="@{/admin/rankings}">Rankings</a>
         <a th:href="@{/}">Sitio Público</a>
     </nav>
     <div class="topbar__actions">
-        <button class="avatar" data-modal-open="modal-cuenta" aria-label="Mi cuenta">AD</button>
-    </div>
-
-    <!-- Modal de Cuenta + cerrar sesión -->
-    <div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-        <div class="modal__box">
-            <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Panel administrador</h2>
-            <p class="muted mt-4" sec:authentication="name">admin@mail.com</p>
-            <div class="modal__actions">
-                <button class="btn btn--ghost" data-modal-close>Cerrar</button>
+        <!-- Menú de cuenta: se despliega debajo del avatar -->
+        <div class="user-menu" data-user-menu>
+            <button class="avatar" type="button" data-user-menu-toggle aria-haspopup="true" aria-expanded="false"
+                    aria-controls="menu-cuenta" aria-label="Mi cuenta">AD</button>
+            <div class="user-menu__panel" id="menu-cuenta" hidden>
+                <div class="user-menu__head">
+                    <strong>Panel administrador</strong>
+                    <span class="muted" sec:authentication="name">admin@mail.com</span>
+                </div>
+                <a class="user-menu__item" th:href="@{/cuenta/contrasenia}">Cambiar contraseña</a>
                 <form th:action="@{/logout}" method="post">
-                    <button class="btn btn--danger" type="submit">Cerrar sesión</button>
+                    <button class="user-menu__item user-menu__item--danger" type="submit">Cerrar sesión</button>
                 </form>
             </div>
         </div>
@@ -102,7 +116,7 @@
     <!-- Agrupado segun el ciclo de vida de una donacion -->
     <p class="sidebar__label">Donaciones</p>
     <a th:href="@{/admin/registrar-donacion}" th:attr="aria-current=${paginaActual == 'registrar-donacion' ? 'page' : null}">Registrar donación</a>
-    <a th:href="@{/admin/deposito-vencidas}" th:attr="aria-current=${paginaActual == 'deposito-vencidas' ? 'page' : null}">Depósito y vencidas</a>
+    <a th:href="@{/admin/deposito-vencidas}" th:attr="aria-current=${paginaActual == 'deposito-vencidas' ? 'page' : null}">Stock del depósito</a>
     <a th:href="@{/admin/asignar-algoritmo}" th:attr="aria-current=${paginaActual == 'asignar-algoritmo' ? 'page' : null}">Asignación por algoritmo</a>
 
     <p class="sidebar__label">Donantes</p>
@@ -114,7 +128,22 @@
 
     <p class="sidebar__label">Incentivos</p>
     <a th:href="@{/admin/rankings}" th:attr="aria-current=${paginaActual == 'rankings' ? 'page' : null}">Rankings</a>
+
+    <p class="sidebar__label">Equipo</p>
+    <a th:href="@{/admin/administradores}" th:attr="aria-current=${paginaActual == 'administradores' ? 'page' : null}">Administradores</a>
 </aside>
+
+<!-- Pie de página público -->
+<footer th:fragment="footer" class="footer">
+    <div class="container flex justify-between items-center wrap gap-3">
+        <span>© 2026 DonaTrack · UTN Solidaria</span>
+        <nav class="flex gap-4 wrap" aria-label="Enlaces legales y de transparencia">
+            <a th:href="@{/mapa-donaciones}">Fotos de donaciones entregadas</a>
+            <a th:href="@{/legales}">Información Legal</a>
+            <a th:href="@{/privacidad}">Aviso de Privacidad</a>
+        </nav>
+    </div>
+</footer>
 
 </body>
 </html>

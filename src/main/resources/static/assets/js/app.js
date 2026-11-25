@@ -3,19 +3,45 @@
 (function () {
   "use strict";
 
+  function obtenerFocuseables(contenedor) {
+    var selector = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return Array.prototype.filter.call(contenedor.querySelectorAll(selector), function (el) {
+      return el.offsetParent !== null;
+    });
+  }
+
+  function atraparTab(modal, e) {
+    var focuseables = obtenerFocuseables(modal);
+    if (!focuseables.length) return;
+    var primero = focuseables[0];
+    var ultimo = focuseables[focuseables.length - 1];
+    if (e.shiftKey && document.activeElement === primero) {
+      e.preventDefault();
+      ultimo.focus();
+    } else if (!e.shiftKey && document.activeElement === ultimo) {
+      e.preventDefault();
+      primero.focus();
+    }
+  }
+
   /* --- Nav responsive (hamburguesa) --- */
   document.querySelectorAll("[data-nav-toggle]").forEach(function (btn) {
     var barra = btn.closest(".topbar");
-    var menu = null;
-    if (barra){
-      menu = barra.querySelector(".topbar__nav");
-    }
+    var menu = barra ? barra.querySelector(".topbar__nav") : null;
     if (!menu) return;
     btn.setAttribute("aria-controls", menu.id);
+    function cerrarMenu(restaurarFoco) {
+      btn.setAttribute("aria-expanded", "false");
+      menu.classList.remove("is-open");
+      if (restaurarFoco) btn.focus();
+    }
     btn.addEventListener("click", function () {
       var open = btn.getAttribute("aria-expanded") === "true";
       btn.setAttribute("aria-expanded", String(!open));
       menu.classList.toggle("is-open", !open);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && menu.classList.contains("is-open")) cerrarMenu(true);
     });
   });
 
@@ -53,26 +79,72 @@
   });
 
   /* --- Modales --- */
+  var modalActivo = null;
+  var disparadorModal = null;
+
+  function cerrarModalActivo() {
+    if (!modalActivo) return;
+    modalActivo.hidden = true;
+    var trigger = disparadorModal;
+    modalActivo = null;
+    disparadorModal = null;
+    if (trigger && typeof trigger.focus === "function") trigger.focus();
+  }
+
   document.querySelectorAll("[data-modal-open]").forEach(function (btn) {
     var modal = document.getElementById(btn.getAttribute("data-modal-open"));
     if (!modal) return;
-    btn.addEventListener("click", function () { modal.hidden = false; });
-    modal.addEventListener("click", function (e) {
-      if (e.target === modal || e.target.hasAttribute("data-modal-close")) modal.hidden = true;
+    btn.addEventListener("click", function () {
+      disparadorModal = btn;
+      modalActivo = modal;
+      modal.hidden = false;
+      var focuseables = obtenerFocuseables(modal);
+      if (focuseables.length) {
+        focuseables[0].focus();
+      } else {
+        var box = modal.querySelector(".modal__box");
+        if (box) { box.setAttribute("tabindex", "-1"); box.focus(); }
+      }
+    });
+    if (!modal.dataset.modalBound) {
+      modal.dataset.modalBound = "true";
+      modal.addEventListener("click", function (e) {
+        if (e.target === modal || e.target.closest("[data-modal-close]")) cerrarModalActivo();
+      });
+    }
+  });
+
+  /* --- Menú de cuenta (desplegable bajo el avatar) --- */
+  document.querySelectorAll("[data-user-menu]").forEach(function (menu) {
+    var btn = menu.querySelector("[data-user-menu-toggle]");
+    var panel = menu.querySelector(".user-menu__panel");
+    if (!btn || !panel) return;
+    function setOpen(open) {
+      panel.hidden = !open;
+      btn.setAttribute("aria-expanded", String(open));
+    }
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setOpen(panel.hidden);
+    });
+    document.addEventListener("click", function (e) {
+      if (!menu.contains(e.target)) setOpen(false);
     });
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") modal.hidden = true;
+      if (e.key === "Escape" && !panel.hidden) { setOpen(false); btn.focus(); }
     });
   });
 
-  /* --- Demo de carga asincrónica (skeleton -> contenido) --- */
-  document.querySelectorAll("[data-skeleton]").forEach(function (region) {
-    var real = region.querySelector("[data-content]");
-    var skel = region.querySelector("[data-loader]");
-    if (real && skel) {
-      setTimeout(function () { skel.hidden = true; real.hidden = false; }, 1400);
+  document.addEventListener("keydown", function (e) {
+    if (!modalActivo || modalActivo.hidden) return;
+    if (e.key === "Escape") {
+      cerrarModalActivo();
+    } else if (e.key === "Tab") {
+      atraparTab(modalActivo, e);
     }
   });
+
+  window.donaTrackFocusTrap = atraparTab;
 })();
 
 /* ---- Agregados para el front SSR (Entrega 5) ---- */
@@ -86,17 +158,94 @@
 
   /* Loader en el boton al enviar formularios: evita doble envio y muestra que se esta procesando */
   document.querySelectorAll("form[data-loading]").forEach(function (form) {
-    form.addEventListener("submit", function () {
-      var btn = form.querySelector("button[type=submit]");
-      if (!btn) return;
-      btn.setAttribute("aria-busy", "true");
-      btn.disabled = true;
-      var spin = document.createElement("span");
-      spin.className = "spinner spinner--sm";
-      spin.setAttribute("aria-hidden", "true");
-      btn.prepend(spin);
+    form.addEventListener("submit", function (e) {
+      setTimeout(function () {
+        if (e.defaultPrevented) return;
+        var btn = e.submitter || form.querySelector("button[type=submit]");
+        if (!btn || btn.disabled) return;
+        btn.setAttribute("aria-busy", "true");
+        btn.disabled = true;
+        var spin = document.createElement("span");
+        spin.className = "spinner spinner--sm";
+        spin.setAttribute("aria-hidden", "true");
+        btn.prepend(spin);
+      }, 0);
     });
   });
+
+  /* Confirmación con modal del sistema para formularios con data-confirm */
+  var formsConfirm = document.querySelectorAll("form[data-confirm]");
+  if (formsConfirm.length) {
+    var modalConfirm = document.createElement("div");
+    modalConfirm.className = "modal";
+    modalConfirm.hidden = true;
+    modalConfirm.setAttribute("role", "dialog");
+    modalConfirm.setAttribute("aria-modal", "true");
+    modalConfirm.setAttribute("aria-labelledby", "modal-confirm-title");
+    modalConfirm.innerHTML =
+      '<div class="modal__box">' +
+        '<h2 id="modal-confirm-title" style="font-size: var(--fs-lg);">Confirmar acción</h2>' +
+        '<p class="muted mt-4" data-confirm-msg></p>' +
+        '<div class="modal__actions">' +
+          '<button class="btn btn--ghost" type="button" data-confirm-cancel>Cancelar</button>' +
+          '<button class="btn btn--primary" type="button" data-confirm-ok>Confirmar</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(modalConfirm);
+
+    var msgConfirm = modalConfirm.querySelector("[data-confirm-msg]");
+    var btnCancelConfirm = modalConfirm.querySelector("[data-confirm-cancel]");
+    var btnOkConfirm = modalConfirm.querySelector("[data-confirm-ok]");
+    var pendingForm = null;
+    var confirmTrigger = null;
+
+    function cerrarConfirm(restaurarFoco) {
+      modalConfirm.hidden = true;
+      pendingForm = null;
+      var trigger = confirmTrigger;
+      confirmTrigger = null;
+      if (restaurarFoco && trigger && typeof trigger.focus === "function") trigger.focus();
+    }
+
+    btnCancelConfirm.addEventListener("click", function () { cerrarConfirm(true); });
+    modalConfirm.addEventListener("click", function (e) {
+      if (e.target === modalConfirm) cerrarConfirm(true);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (modalConfirm.hidden) return;
+      if (e.key === "Escape") {
+        cerrarConfirm(true);
+      } else if (e.key === "Tab" && window.donaTrackFocusTrap) {
+        window.donaTrackFocusTrap(modalConfirm, e);
+      }
+    });
+    btnOkConfirm.addEventListener("click", function () {
+      if (!pendingForm) return;
+      var formToSubmit = pendingForm;
+      formToSubmit.dataset.confirmed = "true";
+      cerrarConfirm(false);
+      if (typeof formToSubmit.requestSubmit === "function") {
+        formToSubmit.requestSubmit();
+      } else {
+        formToSubmit.submit();
+      }
+    });
+
+    formsConfirm.forEach(function (form) {
+      form.addEventListener("submit", function (e) {
+        if (form.dataset.confirmed === "true") {
+          delete form.dataset.confirmed;
+          return;
+        }
+        e.preventDefault();
+        pendingForm = form;
+        confirmTrigger = e.submitter || document.activeElement;
+        msgConfirm.textContent = form.getAttribute("data-confirm");
+        modalConfirm.hidden = false;
+        btnOkConfirm.focus();
+      });
+    });
+  }
 
   /* Mostrar/ocultar contraseña: agrega un boton con ojo a cada campo de contraseña. */
   var ICONO_OJO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -132,6 +281,39 @@
       input.form.addEventListener("submit", function () { actualizar(false); });
     }
   });
+
+  /* Colores consistentes por categoría (hash determinista) */
+  var PALETA_CATEGORIAS = [
+    { bg: "rgba(239, 68, 68, 0.18)", text: "#fca5a5", border: "rgba(239, 68, 68, 0.35)" },
+    { bg: "rgba(245, 158, 11, 0.18)", text: "#fcd34d", border: "rgba(245, 158, 11, 0.35)" },
+    { bg: "rgba(16, 185, 129, 0.18)", text: "#6ee7b7", border: "rgba(16, 185, 129, 0.35)" },
+    { bg: "rgba(59, 130, 246, 0.18)", text: "#93c5fd", border: "rgba(59, 130, 246, 0.35)" },
+    { bg: "rgba(139, 92, 246, 0.18)", text: "#c4b5fd", border: "rgba(139, 92, 246, 0.35)" },
+    { bg: "rgba(236, 72, 153, 0.18)", text: "#f472b6", border: "rgba(236, 72, 153, 0.35)" },
+    { bg: "rgba(20, 184, 166, 0.18)", text: "#5eead4", border: "rgba(20, 184, 166, 0.35)" },
+    { bg: "rgba(249, 115, 22, 0.18)", text: "#fdba74", border: "rgba(249, 115, 22, 0.35)" }
+  ];
+
+  function hashTexto(str) {
+    var hash = 0;
+    for (var i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash);
+  }
+
+  function aplicarColoresCategorias(root) {
+    (root || document).querySelectorAll(".badge-categoria, .entity-category-pill").forEach(function (el) {
+      var nombre = (el.getAttribute("data-categoria") || el.getAttribute("data-cat") || el.textContent || "").trim();
+      if (!nombre) return;
+      var color = PALETA_CATEGORIAS[hashTexto(nombre) % PALETA_CATEGORIAS.length];
+      el.style.backgroundColor = color.bg;
+      el.style.color = color.text;
+      el.style.border = "1px solid " + color.border;
+    });
+  }
+  window.aplicarColoresCategorias = aplicarColoresCategorias;
+  aplicarColoresCategorias();
 })();
 
 /* ---- MÓDULO REGISTRAR DONACIÓN & DONANTES ---- */

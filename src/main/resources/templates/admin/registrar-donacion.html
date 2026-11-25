@@ -19,7 +19,8 @@
                     </div>
                 </div>
 
-                <form th:action="@{/admin/registrar-donacion}" method="post" id="formRegistrarDonacion">
+                <!-- multipart: cada bien puede llevar una foto -->
+                <form th:action="@{/admin/registrar-donacion}" method="post" id="formRegistrarDonacion" enctype="multipart/form-data" data-loading>
 
                     <!-- ID REAL DEL DONANTE (Se llena mediante JS al hacer click en un resultado) -->
                     <input type="hidden" name="donanteId" id="donanteIdInput">
@@ -31,17 +32,16 @@
                                 <h2 id="donante-title">Paso 1 · Persona donante</h2>
                                 <p class="muted" style="font-size: var(--fs-sm);">Buscá un donante existente para vincular a la donación.</p>
                             </div>
-                            <a th:href="@{/admin/donantes}" class="btn btn--sm btn-outline">+ Crear nuevo donante</a>
+                            <a th:href="@{/admin/donantes}" class="btn btn--sm btn--ghost">+ Crear nuevo donante</a>
                         </div>
 
                         <div class="form-grid">
                             <div class="field">
                                 <label class="field__label" for="buscar-donante">Buscar por nombre, DNI, CUIT o email</label>
-                                <div style="display: flex; gap: var(--sp-2);">
-                                    <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez, 44098907...">
+                                <div class="flex gap-2 wrap">
+                                    <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez, 44098907..." style="flex: 1 1 180px; min-width: 0;">
                                     <button class="btn btn--primary" type="button" id="btnBuscarDonante">Buscar</button>
                                 </div>
-                                <span class="field__hint">Hacé click en el resultado correcto para vincular la donación.</span>
                             </div>
                             <div class="field">
                                 <label class="field__label" for="tipo-persona">Tipo de persona</label>
@@ -68,7 +68,7 @@
                                 <p class="stat__value" id="donanteNombre" style="font-size: var(--fs-lg);">—</p>
                                 <p class="muted" id="donanteDetalles" style="font-size: var(--fs-sm);">—</p>
                             </div>
-                            <button class="btn btn--sm btn-outline" type="button" onclick="deseleccionarDonante()">Cambiar donante</button>
+                            <button class="btn btn--sm btn--ghost" type="button" onclick="deseleccionarDonante()">Cambiar donante</button>
                         </article>
 
                         <!-- Solo para personas jurídicas: quién acerca la donación (lo completa app.js) -->
@@ -92,8 +92,13 @@
 
                         <!-- Alertas dinámicas -->
                         <div th:if="${exito}" class="alert alert--success" th:text="${exito}"></div>
-                        <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
-                        <div th:if="${errorCatalogo}" class="alert alert--error" th:text="${errorCatalogo}"></div>
+                        <div th:if="${error}" class="alert alert--error" role="alert">
+                            <span th:text="${error}"></span>
+                            <ul th:if="${erroresCampo != null and !#lists.isEmpty(erroresCampo)}" style="margin: 8px 0 0 18px;">
+                                <li th:each="mensaje : ${erroresCampo}" th:text="${mensaje}">Bien #1: la fecha de vencimiento no puede ser anterior a hoy.</li>
+                            </ul>
+                        </div>
+                        <div th:if="${errorCatalogo}" class="alert alert--error" role="alert" th:text="${errorCatalogo}"></div>
 
                         <div class="field">
                             <label class="field__label" for="descripcion">Descripción general</label>
@@ -110,7 +115,7 @@
                         <!-- HEADER DE SECCIÓN DE BIENES Y BOTÓN AGREGAR -->
                         <div class="flex justify-between items-center wrap gap-3 mt-4">
                             <h3>Bienes recibidos</h3>
-                            <button type="button" class="btn btn-outline btn--sm" onclick="agregarNuevoBien()">+ Agregar otro bien</button>
+                            <button type="button" class="btn btn--ghost btn--sm" onclick="agregarNuevoBien()">+ Agregar otro bien</button>
                         </div>
 
                         <!-- CONTENEDOR DINÁMICO DE BIENES -->
@@ -169,7 +174,8 @@
                                         <span class="field__hint">Una caja de 30×20×10 cm ≈ 6 litros</span>
                                     </div>
 
-                                    <div class="field">
+                                    <!-- Estado y vencimiento se muestran segun la categoria elegida (ver actualizarCamposSegunCategoria) -->
+                                    <div class="field campo-estado" style="display: none;">
                                         <label class="field__label">Estado del bien</label>
                                         <select class="select" name="estado">
                                             <option value="Nuevo">Nuevo</option>
@@ -177,16 +183,23 @@
                                         </select>
                                     </div>
 
-                                    <div class="field">
+                                    <div class="field campo-vencimiento" style="display: none;">
                                         <label class="field__label">Fecha de vencimiento</label>
-                                        <input class="input" name="vencimiento" type="date">
+                                        <input class="input" name="vencimiento" type="date" th:min="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}">
+                                        <span class="field__hint">No se reciben productos vencidos.</span>
+                                    </div>
+
+                                    <div class="field">
+                                        <label class="field__label">Foto del bien (opcional)</label>
+                                        <!-- Siempre se manda (vacio si no hay foto): la posicion dice a que bien corresponde -->
+                                        <input class="input" name="fotoBien" type="file" accept="image/*">
+                                        <span class="field__hint">JPG o PNG, hasta 10 MB.</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex justify-between items-center wrap gap-3 mt-4">
-                            <p class="field__hint">Al confirmar, la donación queda en depósito y disponible para el proceso de asignación.</p>
+                        <div class="flex justify-end items-center wrap gap-3 mt-4">
                             <button class="btn btn--primary" type="submit">Registrar donación</button>
                         </div>
                     </section>
@@ -202,15 +215,46 @@
 
     let contadorBloques = 0;
 
-    // Vincula el select de Categoría con las sugerencias de Subcategoría de un bloque de bien
+    // La fecha de vencimiento solo se pide en categorias perecederas (ej: Alimentos) y el estado del bien
+    // (nuevo / usado) solo en las que lo requieren (ej: Vestimenta). Los campos ocultos se mandan igual,
+    // con valor neutro: el controller lee estado y vencimiento por posicion, uno por bien.
+    function actualizarCamposSegunCategoria(bloque, categoria) {
+        const campoVencimiento = bloque.querySelector('.campo-vencimiento');
+        const campoEstado = bloque.querySelector('.campo-estado');
+
+        // Si el catalogo no trae los datos (backend viejo), se muestran los dos campos como antes
+        const sinDatos = categoria && categoria.esPerecedero == null;
+        const pideVencimiento = !!categoria && (sinDatos || categoria.esPerecedero);
+        const pideEstado = !!categoria && (sinDatos || categoria.requiereEstadoUso);
+
+        campoVencimiento.style.display = pideVencimiento ? '' : 'none';
+        // En los perecederos el vencimiento es obligatorio: el navegador marca el campo si falta o es anterior a hoy
+        campoVencimiento.querySelector('input').required = pideVencimiento && !sinDatos;
+        if (!pideVencimiento) campoVencimiento.querySelector('input').value = '';
+
+        campoEstado.style.display = pideEstado ? '' : 'none';
+        if (!pideEstado) campoEstado.querySelector('select').value = 'Nuevo';
+    }
+
+    // Vincula el select de Categoría con las sugerencias de Subcategoría y asocia cada label con su control
     function inicializarEventosCategoria(bloque) {
+        const indice = contadorBloques++;
         const catSelect = bloque.querySelector('.select-categoria');
         const subInput = bloque.querySelector('.input-subcategoria');
         const subLista = bloque.querySelector('.lista-subcategorias');
 
-        // Cada bloque necesita su propio datalist (se referencia por id)
-        subLista.id = 'subcategorias-' + (contadorBloques++);
+        // Cada bloque necesita su propio datalist e IDs únicos para accesibilidad
+        subLista.id = 'subcategorias-' + indice;
         subInput.setAttribute('list', subLista.id);
+
+        bloque.querySelectorAll('.field').forEach(function (campo, i) {
+            const label = campo.querySelector('label.field__label');
+            const control = campo.querySelector('input, select, textarea');
+            if (!label || !control) return;
+            const base = control.name || 'campo-' + i;
+            control.id = 'bien-' + indice + '-' + base;
+            label.setAttribute('for', control.id);
+        });
 
         catSelect.addEventListener('change', function () {
             const catEncontrada = catalogoCategorias.find(c => c.nombre === this.value);
@@ -226,6 +270,8 @@
             subInput.value = '';
             subInput.disabled = !this.value;
             subInput.placeholder = subcategorias.length ? 'Elegí o escribí una subcategoría' : 'Escribí una subcategoría';
+
+            actualizarCamposSegunCategoria(bloque, catEncontrada);
         });
     }
 
@@ -246,6 +292,7 @@
         subInput.placeholder = 'Primero seleccioná una categoría';
         subInput.disabled = true;
         nuevoBloque.querySelector('.lista-subcategorias').innerHTML = '';
+        actualizarCamposSegunCategoria(nuevoBloque, null);
 
         const btnQuitar = document.createElement('button');
         btnQuitar.type = 'button';

@@ -14,6 +14,9 @@ public final class SesionUsuario {
     public static final String USUARIO_ID = "usuarioId";
     public static final String DONANTE_ID = "donanteId"; // <-- AGREGAR ESTA LÍNEA
     public static final String ROLES = "roles";
+    // Mientras este en true, CambioContraseniaObligatorioInterceptor solo deja ver la pantalla de cambio
+    public static final String DEBE_CAMBIAR_CONTRASENIA = "debeCambiarContrasenia";
+    public static final String URL_CAMBIO_CONTRASENIA = "/cuenta/contrasenia";
 
     public static final String ROL_ADMIN = "ADMIN";
     public static final String ROL_DONANTE_HUMANO = "DONANTE_HUMANO";
@@ -47,6 +50,7 @@ public final class SesionUsuario {
         if (roles.contains(ROL_ADMIN)) return "/admin/inicio";
         if (roles.contains(ROL_DONANTE_HUMANO) || roles.contains(ROL_DONANTE_JURIDICO)) return "/donante/mis-donaciones";
         if (roles.contains(ROL_BENEFICIARIO)) return "/ong/asignadas";
+        if (roles.contains(ROL_CHOFER)) return "/chofer";
         return "/403";
     }
 

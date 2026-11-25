@@ -28,14 +28,16 @@
         <form th:action="@{/login}" method="post" novalidate>
 
           <!-- Si Spring Security rebota el login, devuelve a esta página con un ?error en la URL -->
-          <div th:if="${param.error}" class="alert alert-danger" style="margin-bottom: 15px; color: #d73a49; font-weight: bold;">
+          <div th:if="${param.error}" class="alert alert--error" role="alert" style="margin-bottom: 15px;">
             Correo o contraseña incorrectos.
           </div>
-          <div th:if="${param.servicio}" class="alert alert--error" style="margin-bottom: 15px;">
+          <div th:if="${param.servicio}" class="alert alert--error" role="alert" style="margin-bottom: 15px;">
             No pudimos verificar tus datos en este momento. Probá de nuevo en unos minutos.
           </div>
-          <div th:if="${param.chofer}" class="alert alert--info" style="margin-bottom: 15px;">
-            Los choferes ingresan desde la aplicación móvil.
+          <!-- Rate limiting: demasiados intentos de login desde la misma IP -->
+          <div th:if="${param.bloqueado}" class="alert alert--error" role="alert" style="margin-bottom: 15px;"
+               th:text="|Hiciste demasiados intentos de inicio de sesión. Esperá ${param.bloqueado} segundos y volvé a intentar.|">
+            Hiciste demasiados intentos de inicio de sesión. Esperá 60 segundos y volvé a intentar.
           </div>
 
           <div class="field">
@@ -53,7 +55,7 @@
           <button class="btn btn--primary btn--block" type="submit">Ingresar</button>
         </form>
 
-        <p class="muted text-center" style="margin-top: var(--sp-5)";>¿No tenés cuenta? <a style="color:#7c6cf5;" th:href="@{/registro}" class="btn--link">Creá una</a></p>
+        <p class="muted text-center" style="margin-top: var(--sp-5);">¿No tenés cuenta? <a style="color:#7c6cf5;" th:href="@{/registro}" class="btn--link">Creá una</a></p>
       </div>
 
     </div>

@@ -15,12 +15,18 @@
                 <div class="page-head">
                     <div>
                         <h1>Camiones disponibles</h1>
-                        <p class="page-head__sub">Administrá la flota utilizada para la planificación y ejecución de rutas.</p>
+                        <!-- <p class="page-head__sub">Administrá la flota utilizada para la planificación y ejecución de rutas.</p> -->
                     </div>
+
+                    <!-- Corre a demanda la planificacion que de otro modo se ejecuta de madrugada -->
+                    <form th:action="@{/admin/planificacion/ejecutar}" method="post"
+                          onsubmit="return confirm('¿Planificar ahora las rutas de todas las donaciones asignadas?');">
+                        <button type="submit" class="btn btn--primary btn--sm">Planificar rutas ahora</button>
+                    </form>
                 </div>
 
-                <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;">Camión registrado.</div>
-                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;">Error.</div>
+                <div th:if="${exito}" class="alert alert--success" th:text="${exito}" style="margin-bottom: 20px;">Camión registrado.</div>
+                <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}" style="margin-bottom: 20px;">Error.</div>
 
                 <!-- Indicadores dinámicos rápidos -->
                 <section class="grid grid--stats" aria-label="Resumen de flota">
@@ -31,7 +37,7 @@
 
                 <section class="card mt-5" aria-labelledby="camiones-title">
                     <div class="card__header">
-                        <div><h2 id="camiones-title">Listado de camiones</h2><p class="muted" style="font-size: var(--fs-sm);">Patente, dimensiones y disponibilidad operativa.</p></div>
+                        <h2 id="camiones-title">Listado de camiones</h2>
                         <a th:href="@{/admin/camiones}" class="btn btn--ghost btn--sm">Actualizar</a>
                     </div>
                     <div class="table-wrap">
@@ -58,7 +64,7 @@
                                           th:text="${disponible} ? 'Disponible' : 'Fuera de servicio'">Disponible</span>
                                 </td>
                                 <td>
-                                    <form th:action="@{/admin/camiones/{patente}/disponibilidad(patente=${camion.patente()})}" method="post">
+                                    <form th:action="@{/admin/camiones/{patente}/disponibilidad(patente=${camion.patente()})}" method="post" data-loading>
                                         <input type="hidden" name="disponible" th:value="${!disponible}">
                                         <button type="submit" class="btn btn--ghost btn--sm"
                                                 th:text="${disponible} ? 'Sacar de servicio' : 'Marcar disponible'">Sacar de servicio</button>
@@ -76,9 +82,9 @@
 
                 <!-- Formulario de carga (dentro del mismo HTML para no abrir modales complejos) -->
                 <section class="card mt-5" aria-labelledby="form-title">
-                    <div class="card__header"><div><h2 id="form-title">Registrar nuevo camión</h2><p class="muted" style="font-size: var(--fs-sm);">Los datos se utilizan para validar capacidad y restricciones de planificación.</p></div></div>
+                    <div class="card__header"><h2 id="form-title">Registrar nuevo camión</h2></div>
 
-                    <form th:action="@{/admin/camiones}" method="post">
+                    <form th:action="@{/admin/camiones}" method="post" data-loading>
                         <div class="form-grid">
                             <div class="field">
                                 <label class="field__label" for="patente">Patente</label>
@@ -107,9 +113,17 @@
                                 <label class="field__label" for="chofer">Chofer asignado</label>
                                 <input class="input" id="chofer" name="chofer" placeholder="Opcional">
                             </div>
+                            <div class="field">
+                                <label class="field__label" for="choferMail">Correo del chofer</label>
+                                <input class="input" id="choferMail" name="choferMail" type="email" autocomplete="off">
+                            </div>
+                            <div class="field">
+                                <label class="field__label" for="choferPassword">Contraseña inicial del chofer</label>
+                                <input class="input" id="choferPassword" name="choferPassword" type="password" minlength="8" autocomplete="new-password">
+                                <span class="field__hint">Con este correo y contraseña el chofer ingresa a ver e iniciar sus rutas.</span>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center wrap gap-3 mt-4">
-                            <p class="field__hint">Todos los camiones pueden transportar cualquier tipo de bien.</p>
+                        <div class="flex justify-end items-center wrap gap-3 mt-4">
                             <button class="btn btn--primary" type="submit">Guardar camión</button>
                         </div>
                     </form>

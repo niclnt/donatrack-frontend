@@ -3,7 +3,7 @@
 <body>
 <th:block th:fragment="lista(error, notificaciones)">
     <!-- Manejo de errores -->
-    <div th:if="${error != null}" class="alert alert-danger" style="margin-bottom: 20px;">
+    <div th:if="${error != null}" class="alert alert--error" role="alert" style="margin-bottom: 20px;">
         <p th:text="${error}">Mensaje de error</p>
     </div>
 
@@ -16,24 +16,24 @@
 
     <!-- Lista de notificaciones -->
     <div th:if="${notificaciones != null and !notificaciones.isEmpty()}" class="grid" style="gap: var(--sp-3); margin-bottom: var(--sp-6);">
-        <article th:each="notif : ${notificaciones}" class="card flex items-center gap-4">
-            <!-- Icono dinámico según el medio de envío -->
-            <div class="entity__icon" style="background: var(--primary-weak); color: var(--primary);" aria-hidden="true" th:text="${notif.medio == 'EMAIL' ? '✉️' : ((notif.medio == 'TELEFONO' || notif.medio == 'WHATSAPP') ? '📱' : '📦')}">📦</div>
-
-            <div style="flex: 1;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <strong th:text="${notif.titulo}">Título Notificación</strong>
-                    <!-- Badge mostrando el medio/canal de envío -->
-                    <small class="muted"style="font-size: var(--fs-xs); background: #f0f0f0; padding: 2px 6px; border-radius: 4px;" th:if="${notif.medio != null}" th:text="${notif.medio}">EMAIL</small>
+        <article th:each="notif : ${notificaciones}" class="card">
+            <div class="flex items-center justify-between gap-3" style="margin-bottom: var(--sp-3);">
+                <div class="flex items-center gap-3">
+                    <!-- Icono dinámico según el medio de envío -->
+                    <div class="entity__icon" style="background: var(--primary-weak); color: var(--primary);" aria-hidden="true" th:text="${notif.medio == 'EMAIL' ? '✉️' : ((notif.medio == 'TELEFONO' || notif.medio == 'WHATSAPP') ? '📱' : '📦')}">📦</div>
+                    <span class="badge" th:if="${notif.medio != null}" th:text="${notif.medio}">EMAIL</span>
                 </div>
-                <p class="muted" style="font-size: var(--fs-sm); margin: 0 0 4px 0;" th:text="${notif.mensaje}">Mensaje descriptivo...</p>
-                <!-- Fecha de envio -->
-                <span class="dim" style="font-size: var(--fs-xs);" th:text="${notif.fechaEnvio != null ? #temporals.format(notif.fechaEnvio, 'dd/MM/yyyy · HH:mm') : ''}">
-                    xx/xx/xxxx · xx:xx
-                </span>
+                <span class="badge"
+                      th:classappend="${notif.estado == 'ENVIADA' ? 'badge--success' : (notif.estado == 'FALLIDA' ? 'badge--danger' : 'badge--warning')}"
+                      th:text="${@estados.texto(notif.estado)}">ENVIADA</span>
             </div>
 
-            <span style="font-size: var(--fs-xs); padding: 4px 8px; border-radius: 12px; font-weight: bold;" th:classappend="${notif.estado == 'ENVIADA' ? 'alert-success' : 'alert-warning'}" th:text="${notif.estado}">ENVIADA</span>
+            <strong style="display: block; margin-bottom: 4px;" th:text="${notif.titulo}">Título Notificación</strong>
+            <p class="muted" style="font-size: var(--fs-sm); margin: 0 0 8px 0;" th:text="${notif.mensaje}">Mensaje descriptivo...</p>
+            <!-- Fecha de envio -->
+            <span class="dim" style="font-size: var(--fs-xs);" th:text="${notif.fechaEnvio != null ? #temporals.format(notif.fechaEnvio, 'dd/MM/yyyy · HH:mm') : ''}">
+                xx/xx/xxxx · xx:xx
+            </span>
         </article>
     </div>
 </th:block>

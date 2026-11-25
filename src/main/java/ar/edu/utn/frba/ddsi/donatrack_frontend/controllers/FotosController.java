@@ -22,19 +22,32 @@ public class FotosController {
 
     private final WebApiCallerService webApiCallerService;
     private final String logisticaServiceUrl;
+    private final String donacionesServiceUrl;
 
     public FotosController(
             WebApiCallerService webApiCallerService,
-            @Value("${logistica.service.url}") String logisticaServiceUrl) {
+            @Value("${logistica.service.url}") String logisticaServiceUrl,
+            @Value("${donaciones.service.url}") String donacionesServiceUrl) {
         this.webApiCallerService = webApiCallerService;
         this.logisticaServiceUrl = logisticaServiceUrl;
+        this.donacionesServiceUrl = donacionesServiceUrl;
     }
 
-    @GetMapping("/fotos/{fotoId:[0-9a-fA-F]{24}}")
+    // Fotos de evidencia de entregas: claves de Azure Blob (o ids de GridFS las viejas). Solo letras, numeros y guiones
+    @GetMapping("/fotos/{fotoId:[A-Za-z0-9-]{1,120}}")
     public ResponseEntity<byte[]> foto(@PathVariable String fotoId) {
+        return reenviar(logisticaServiceUrl + "/logistica/trazabilidad/fotos/" + fotoId);
+    }
+
+    // Foto de un bien cargada al recibir la donacion en el deposito
+    @GetMapping("/fotos/bienes/{clave:[A-Za-z0-9-]{1,120}}")
+    public ResponseEntity<byte[]> fotoDeBien(@PathVariable String clave) {
+        return reenviar(donacionesServiceUrl + "/donaciones-service/donaciones/fotos/" + clave);
+    }
+
+    private ResponseEntity<byte[]> reenviar(String url) {
         try {
-            ResponseEntity<byte[]> respuesta = webApiCallerService.getArchivoPublico(
-                    logisticaServiceUrl + "/logistica/trazabilidad/fotos/" + fotoId);
+            ResponseEntity<byte[]> respuesta = webApiCallerService.getArchivoPublico(url);
             MediaType tipo = respuesta.getHeaders().getContentType();
             return ResponseEntity.ok()
                     .contentType(tipo != null ? tipo : MediaType.APPLICATION_OCTET_STREAM)

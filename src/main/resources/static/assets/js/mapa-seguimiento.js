@@ -6,7 +6,8 @@
         return;
     }
 
-    var INTERVALO_MS = 15000;
+    // El chofer reporta cada pocos segundos: refrescamos seguido para que el movimiento se vea fluido
+    var INTERVALO_MS = 5000;
     var urlDatos = contenedor.dataset.url;
     var estadoActualizacion = document.getElementById("estado-actualizacion");
     var tarjetas = document.querySelectorAll("[data-entrega]");
@@ -124,16 +125,29 @@
             });
     }
 
-    // Click en una tarjeta: centra el mapa en su camion
+    // Click o teclado (Enter/Espacio) en una tarjeta: centra el mapa en su camion
+    function enfocarEntrega(tarjeta) {
+        var marcador = marcadores[tarjeta.dataset.entrega];
+        if (marcador) {
+            mapa.setView(marcador.getLatLng(), 15);
+            marcador.openPopup();
+        }
+    }
+
     Array.prototype.forEach.call(tarjetas, function (tarjeta) {
         tarjeta.addEventListener("click", function (evento) {
             if (evento.target.closest("a")) {
                 return;
             }
-            var marcador = marcadores[tarjeta.dataset.entrega];
-            if (marcador) {
-                mapa.setView(marcador.getLatLng(), 15);
-                marcador.openPopup();
+            enfocarEntrega(tarjeta);
+        });
+        tarjeta.addEventListener("keydown", function (evento) {
+            if (evento.target.closest("a")) {
+                return;
+            }
+            if (evento.key === "Enter" || evento.key === " ") {
+                evento.preventDefault();
+                enfocarEntrega(tarjeta);
             }
         });
     });

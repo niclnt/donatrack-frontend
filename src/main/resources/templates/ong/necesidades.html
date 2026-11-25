@@ -14,7 +14,7 @@
       <div class="page-head">
         <div>
           <h1>Necesidades materiales</h1>
-          <p class="page-head__sub">Registrá necesidades concretas para que puedan vincularse con donaciones compatibles.</p>
+          <!-- <p class="page-head__sub">Registrá necesidades concretas para que puedan vincularse con donaciones compatibles.</p> -->
         </div>
         <button class="btn btn--primary" type="button" data-modal-open="modal-necesidad" aria-haspopup="dialog">
           <span aria-hidden="true">+</span> Nueva necesidad
@@ -26,6 +26,13 @@
            role="alert"
            th:text="${mensajeExito}">
         La necesidad fue registrada correctamente.
+      </div>
+
+      <div th:if="${mensajeError}" class="alert alert--error" role="alert">
+        <span th:text="${mensajeError}">No se registró la necesidad.</span>
+        <ul th:if="${erroresCampo != null and !#lists.isEmpty(erroresCampo)}" style="margin: 8px 0 0 18px;">
+          <li th:each="mensaje : ${erroresCampo}" th:text="${mensaje}">La cantidad requerida tiene que ser mayor a 0.</li>
+        </ul>
       </div>
 
       <section class="grid grid--stats" aria-label="Resumen de necesidades">
@@ -56,7 +63,7 @@
           <form th:action="@{/ong/necesidades}" method="post">
           <div class="form-grid">
             <div class="field">
-              <label class="field__label" for="tipo-necesidad">Tipo de necesidad</label>
+              <label class="field__label" for="tipoNecesidad">Tipo de necesidad</label>
               <select class="select" id="tipoNecesidad" name="tipoNecesidad" required>
                 <option value="" disabled selected hidden>Seleccionar tipo</option>
                 <option value="RECURRENTE">Recurrente</option>
@@ -80,7 +87,6 @@
               <select class="select" id="subcategoriaNombre" name="subcategoriaNombre" required style="pointer-events:none;opacity:.55;">
                 <option value="" disabled selected hidden>Primero seleccioná una categoría</option>
               </select>
-              <span class="field__hint">Seleccioná una subcategoría del catálogo parametrizado.</span>
             </div>
 
             <div class="field">
@@ -93,7 +99,7 @@
               <div id="campoFrecuencia">
                 <label class="field__label" for="cantidadDias">Frecuencia</label>
                 <input class="input" id="cantidadDias" name="cantidadDias" type="number" min="1" placeholder="Ej: 7">
-                <span class="field__hint">Indicá cada cuántos días se repite la necesidad.</span>
+                <!-- <span class="field__hint">Indicá cada cuántos días se repite la necesidad.</span> -->
               </div>
 
               <div id="campoSituacion" hidden>
@@ -111,8 +117,7 @@
             <textarea class="textarea" id="descripcion" name="descripcion" placeholder="Describí la necesidad..." required></textarea>
           </div>
 
-          <div class="flex justify-between items-center wrap gap-3">
-            <p class="field__hint">Estos datos se usarán para comparar la necesidad con donaciones compatibles.</p>
+          <div class="flex justify-end items-center wrap gap-3">
 
             <button class="btn btn--primary" type="submit">Registrar necesidad</button>
           </div>
@@ -124,7 +129,7 @@
         <div class="card__header">
           <div>
             <h2 id="necesidades-registradas-title">Necesidades registradas</h2>
-            <p class="muted" style="font-size: var(--fs-sm);">Estado actual de las necesidades declaradas por la entidad.</p>
+            <!-- <p class="muted" style="font-size: var(--fs-sm);">Estado actual de las necesidades declaradas por la entidad.</p> -->
           </div>
         </div>
 
@@ -157,6 +162,8 @@
                th:text="${'Situación: ' + necesidad.situacion}">Situación</p>
             <p class="need-card__frequency" th:if="${necesidad.cantidadDias != null}"
                th:text="${'Se repite cada ' + necesidad.cantidadDias + ' días'}">Frecuencia</p>
+            <p class="need-card__frequency" th:if="${necesidad.finPeriodo != null}"
+               th:text="${'Período vigente: del ' + #temporals.format(necesidad.inicioPeriodo, 'dd/MM/yyyy') + ' al ' + #temporals.format(necesidad.finPeriodo.minusDays(1), 'dd/MM/yyyy') + ' · el ' + #temporals.format(necesidad.finPeriodo, 'dd/MM') + ' se renueva la demanda'}">Período vigente</p>
             <div class="need-card__details">
               <div>
                 <span class="need-card__label">CATEGORÍA</span>
@@ -184,23 +191,7 @@
   </main>
 </div>
 
-<div class="modal" id="modal-cuenta" hidden role="dialog" aria-modal="true" aria-labelledby="modal-cuenta-h">
-  <div class="modal__box">
-    <h2 id="modal-cuenta-h" style="font-size: var(--fs-lg);">Mi cuenta</h2>
-
-    <p class="muted mt-4" sec:authentication="name">usuario@mail.com</p>
-
-    <div class="modal__actions">
-      <button class="btn btn--ghost" data-modal-close>Cerrar</button>
-
-      <form th:action="@{/logout}" method="post">
-        <button class="btn btn--danger" type="submit">Cerrar sesión</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<script src="../assets/js/app.js"></script>
+<script th:src="@{/assets/js/app.js}"></script>
 <script th:inline="javascript">
   const categorias = /*[[${categorias}]]*/ [];
 

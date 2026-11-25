@@ -14,7 +14,9 @@ public record EntregaResponse(
         LocalDate fecha,
         String estadoActual,
         List<DonacionEntregada> donacionesSegmentadas,
-        List<String> fotosEvidencia
+        List<String> fotosEvidencia,
+        Double latitud,   // destino (puede faltar si no se geocodifico)
+        Double longitud
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record DonacionEntregada(Long id, String subcategoria, List<BienEntregado> bienes) {

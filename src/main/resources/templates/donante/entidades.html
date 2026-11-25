@@ -275,24 +275,13 @@
     const noResults = document.getElementById('noFilterResults');
 
     // Paletas de colores dinamicas
-   const avatarPalettes = [
+    const avatarPalettes = [
       { bg: 'rgba(99, 102, 241, 0.18)', text: '#a5b4fc', border: 'rgba(99, 102, 241, 0.35)' },
       { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
       { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
       { bg: 'rgba(139, 92, 246, 0.18)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },
       { bg: 'rgba(244, 63, 94, 0.18)', text: '#fda4af', border: 'rgba(244, 63, 94, 0.35)' },
       { bg: 'rgba(6, 182, 212, 0.18)', text: '#67e8f9', border: 'rgba(6, 182, 212, 0.35)' },
-      { bg: 'rgba(249, 115, 22, 0.18)', text: '#fdba74', border: 'rgba(249, 115, 22, 0.35)' }
-    ];
-
-    const categoryPalettes = [
-      { bg: 'rgba(239, 68, 68, 0.18)', text: '#fca5a5', border: 'rgba(239, 68, 68, 0.35)' },
-      { bg: 'rgba(245, 158, 11, 0.18)', text: '#fcd34d', border: 'rgba(245, 158, 11, 0.35)' },
-      { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
-      { bg: 'rgba(59, 130, 246, 0.18)', text: '#93c5fd', border: 'rgba(59, 130, 246, 0.35)' },
-      { bg: 'rgba(139, 92, 246, 0.18)', text: '#c4b5fd', border: 'rgba(139, 92, 246, 0.35)' },
-      { bg: 'rgba(236, 72, 153, 0.18)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' },
-      { bg: 'rgba(20, 184, 166, 0.18)', text: '#5eead4', border: 'rgba(20, 184, 166, 0.35)' },
       { bg: 'rgba(249, 115, 22, 0.18)', text: '#fdba74', border: 'rgba(249, 115, 22, 0.35)' }
     ];
 
@@ -314,7 +303,7 @@
       return name.substring(0, 2).toUpperCase();
     }
 
-    // Estilizar avatares y píldoras de categoría dinámicamente
+    // Estilizar avatares dinámicamente (las píldoras de categoría las estiliza app.js)
     cards.forEach(card => {
       const avatar = card.querySelector('.entity-card__avatar');
       if (avatar) {
@@ -325,15 +314,6 @@
         avatar.style.color = palette.text;
         avatar.style.border = '1px solid ' + palette.border;
       }
-    });
-
-    document.querySelectorAll('.entity-category-pill').forEach(pill => {
-      const category = (pill.getAttribute('data-cat') || pill.textContent).trim();
-      if (!category) return;
-      const palette = categoryPalettes[hashString(category) % categoryPalettes.length];
-      pill.style.backgroundColor = palette.bg;
-      pill.style.color = palette.text;
-      pill.style.border = '1px solid ' + palette.border;
     });
 
     // Poblar opciones únicas de Zona y Categoría

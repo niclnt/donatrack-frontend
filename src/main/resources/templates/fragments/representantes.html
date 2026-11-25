@@ -23,7 +23,7 @@
                 <td th:text="${(r.tipoDoc() != null ? r.tipoDoc() + ' ' : '') + r.documento()}">DNI 30111222</td>
                 <td th:text="${r.mail() != null ? r.mail() : '—'}">carlos@mail.com</td>
                 <td>
-                    <form th:action="@{__${accionBase}__/{id}/quitar(id=${r.id()})}" method="post">
+                    <form th:action="@{__${accionBase}__/{id}/quitar(id=${r.id()})}" method="post" data-loading>
                         <button type="submit" class="btn btn--ghost btn--sm">Quitar</button>
                     </form>
                 </td>
@@ -35,7 +35,7 @@
         </table>
     </div>
 
-    <form th:action="@{__${accionBase}__}" method="post" class="mt-5">
+    <form th:action="@{__${accionBase}__}" method="post" class="mt-5" data-loading>
         <h3>Agregar representante</h3>
         <p class="muted" style="font-size: var(--fs-sm);">Si la persona ya está registrada en DonaTrack alcanza con su documento.</p>
 

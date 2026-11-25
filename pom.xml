@@ -30,6 +30,34 @@
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
+		<!-- Health checks y metricas (/actuator) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<!-- Expone las metricas en formato Prometheus (/actuator/prometheus) -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<!-- Trazas distribuidas: Micrometer Tracing (Brave) + envio de spans a Zipkin -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-zipkin</artifactId>
+		</dependency>
+		<!-- RestTemplateBuilder y RestClient.Builder instrumentados (propagan el traceId) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-restclient</artifactId>
+		</dependency>
+		<!-- Logs centralizados: appender de Logback que manda los logs a Loki (ver logback-spring.xml).
+		     2.0.x porque esta hecha para Logback 1.5, el que trae Spring Boot 4.0. -->
+		<dependency>
+			<groupId>com.github.loki4j</groupId>
+			<artifactId>loki-logback-appender</artifactId>
+			<version>2.0.3</version>
+			<scope>runtime</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>

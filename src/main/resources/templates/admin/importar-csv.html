@@ -15,14 +15,14 @@
                 <div class="page-head">
                     <div>
                         <h1>Importar donantes desde CSV</h1>
-                        <p class="page-head__sub">Cargá archivos masivos para registrar personas donantes y otorgarles usuario.</p>
+                        <!-- <p class="page-head__sub">Cargá archivos masivos para registrar personas donantes y otorgarles usuario.</p> -->
                     </div>
                     <a class="btn btn--ghost btn--sm" th:href="@{/assets/plantillas/donantes.csv}" download>Descargar plantilla</a>
                 </div>
 
                 <!-- Alertas de estado de importación -->
-                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;"></div>
-                <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;"></div>
+                <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}" style="margin-bottom: 20px;"></div>
+                <div th:if="${exito}" class="alert alert--success" th:text="${exito}" style="margin-bottom: 20px;"></div>
 
                 <section class="card" aria-labelledby="upload-title">
                     <div class="card__header">
@@ -33,11 +33,10 @@
                     </div>
 
                     <!-- Formulario Multipart crucial para envío de archivos -->
-                    <form th:action="@{/admin/importar-csv}" method="post" enctype="multipart/form-data">
+                    <form th:action="@{/admin/importar-csv}" method="post" enctype="multipart/form-data" data-loading>
                         <div class="field">
                             <label class="field__label" for="archivo">Archivo CSV</label>
                             <input class="input" id="archivo" name="archivo" type="file" accept=".csv" required>
-                            <span class="field__hint">La importación soporta archivos de más de 10.000 filas. Se validan duplicados por email.</span>
                         </div>
                         <div class="flex justify-between items-center wrap gap-3 mt-4">
                             <p class="field__hint">Los correos ya registrados se omiten; los nuevos donantes reciben un usuario. Un archivo grande puede tardar un par de minutos.</p>

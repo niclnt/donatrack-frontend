@@ -13,7 +13,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,12 +32,15 @@ public class CustomAuthProvider implements AuthenticationProvider {
     private static final Logger log = LoggerFactory.getLogger(CustomAuthProvider.class);
 
     private final AuthApiService authApiService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final String donacionesServiceUrl;
 
     public CustomAuthProvider(AuthApiService authApiService,
-                              @Value("${donaciones.service.url}") String donacionesServiceUrl) {
+                              @Value("${donaciones.service.url}") String donacionesServiceUrl,
+                              RestTemplate restTemplate) {
         this.authApiService = authApiService;
+        // El bean de RestClientConfig: propaga el traceId
+        this.restTemplate = restTemplate;
         this.donacionesServiceUrl = donacionesServiceUrl;
     }
 
@@ -68,11 +70,6 @@ public class CustomAuthProvider implements AuthenticationProvider {
         List<String> roles = respuesta.roles() == null ? List.of() : respuesta.roles();
         List<String> permisos = respuesta.permisos() == null ? List.of() : respuesta.permisos();
 
-        // El chofer usa la app movil (reporte de posiciones); la web no tiene pantallas para el
-        if (roles.contains(SesionUsuario.ROL_CHOFER) && roles.size() == 1) {
-            throw new DisabledException("Los choferes ingresan desde la aplicación móvil");
-        }
-
         log.info("[AUTH-PROVIDER] Login exitoso en Auth-Service.");
         log.info("[AUTH-PROVIDER] USUARIO_ID recibido: {}", respuesta.usuarioId());
         log.info("[AUTH-PROVIDER] ROLES recibidos: {}", roles);
@@ -82,6 +79,7 @@ public class CustomAuthProvider implements AuthenticationProvider {
         session.setAttribute(SesionUsuario.REFRESH_TOKEN, respuesta.refreshToken());
         session.setAttribute(SesionUsuario.USUARIO_ID, respuesta.usuarioId());
         session.setAttribute(SesionUsuario.ROLES, roles);
+        session.setAttribute(SesionUsuario.DEBE_CAMBIAR_CONTRASENIA, Boolean.TRUE.equals(respuesta.debeCambiarContrasenia()));
 
         // --- OBTENER DONANTE_ID DESDE DONACIONES-SERVICE ---
         // Verificamos ROL_DONANTE_HUMANO / DONANTE_JURIDICO para coincidir con el log real

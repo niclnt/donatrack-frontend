@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
-<head th:replace="~{fragments/base :: head('Mis donaciones')}"></head>
+<head th:replace="~{fragments/base :: head('Misiones y logros — DonaTrack')}"></head>
 
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -13,13 +13,13 @@
     <div class="container">
 
       <!-- Alerta de error si falla la comunicación REST con incentivos-service -->
-      <div th:if="${error != null}" class="alert alert-danger" style="margin-bottom: var(--sp-4);" th:text="${error}">
+      <div th:if="${error != null}" class="alert alert--error" role="alert" style="margin-bottom: var(--sp-4);" th:text="${error}">
         Error al conectar con el servicio.
       </div>
 
       <div class="page-head">
         <div>
-          <h1>Incentivos y logros</h1>
+          <h1>Misiones y logros</h1>
           <p class="page-head__sub">Tu actividad de donación te hace ganar insignias y subir de categoría.</p>
         </div>
       </div>
@@ -31,8 +31,8 @@
           <h2 style="text-transform: capitalize;" th:text="'Categoría ' + ${#strings.toLowerCase(categoriaActual)}">Categoría Colaborador</h2>
           <p style="color:#5b5680;">Completa misiones secuenciales para desbloquear el siguiente nivel</p>
 
-          <div class="flex items-center gap-3 mt-4">
-            <div class="progress" style="flex:1; max-width:280px; background:#cfc9f2;">
+          <div class="flex items-center gap-3 mt-4 wrap">
+            <div class="progress" style="flex: 1 1 180px; max-width: 280px; background: #cfc9f2;">
               <div class="progress__fill"
                    th:style="'width:' + ${(totalMisionesCat > 0 ? (misionesCompletadasCat * 100.0 / totalMisionesCat) : 0)} + '%;'"></div>
             </div>
@@ -63,12 +63,12 @@
 
         <div class="card text-center p-4 flex flex-col items-center justify-center" th:each="insignia : ${insignias}">
           <div style="margin-bottom: var(--sp-2);" aria-hidden="true">
-            <img th:if="${insignia.logoUrl != null and !#strings.isEmpty(insignia.logoUrl)}"
-                 th:src="${insignia.logoUrl}"
+            <img th:if="${!#strings.isEmpty(insignia.urlImagen)}"
+                 th:src="${insignia.urlImagen}"
                  th:alt="${insignia.nombre}"
                  style="width: 80px; height: 80px; object-fit: contain; border-radius: 50%; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));" />
 
-            <span th:if="${insignia.logoUrl == null or #strings.isEmpty(insignia.logoUrl)}"
+            <span th:if="${#strings.isEmpty(insignia.urlImagen)}"
                   style="font-size: 2.5rem;">🎖️</span>
           </div>
 
@@ -86,7 +86,7 @@
       <h3 style="margin-bottom: var(--sp-4);">Misión Actual</h3>
       <div class="grid" style="gap: var(--sp-3); margin-bottom: var(--sp-6);">
 
-        <div class="card flex items-center gap-4 p-4"
+        <div class="card flex items-center gap-4 p-4 wrap"
              th:each="mision : ${misiones}"
              th:style="${mision.estado == 'COMPLETADA'} ? 'border-color: rgba(74,222,128,.4);' : ''">
 
@@ -95,7 +95,7 @@
                th:text="${mision.estado == 'COMPLETADA'} ? '🏆' : (${mision.estado == 'BLOQUEADA'} ? '🔒' : '🎯')">🎯</div>
 
           <!-- Nombre, descripción y barra de progreso -->
-          <div style="flex: 1; min-width: 0;">
+          <div style="flex: 1 1 220px; min-width: 0;">
             <strong style="font-size: var(--fs-md); color: #ffffff;" th:text="${mision.nombre}">Primer Impulso</strong>
             <p class="muted mt-1 mb-0" style="font-size: var(--fs-sm);" th:text="${mision.descripcion}">
               Realizá tu primera donación aportando al menos 3 bienes en un solo envío.
@@ -142,6 +142,7 @@
         Ranking Mensual de Donantes
       </h3>
       <div class="card" style="margin-bottom: var(--sp-6);">
+        <div class="table-wrap">
         <table class="table" style="width: 100%; text-align: left;">
           <thead>
           <tr>
@@ -161,6 +162,7 @@
           </tr>
           </tbody>
         </table>
+        </div>
       </div>
 
     </div>
