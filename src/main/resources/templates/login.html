@@ -39,6 +39,17 @@
                th:text="|Hiciste demasiados intentos de inicio de sesión. Esperá ${param.bloqueado} segundos y volvé a intentar.|">
             Hiciste demasiados intentos de inicio de sesión. Esperá 60 segundos y volvé a intentar.
           </div>
+          <!-- Se entro a una pagina protegida sin iniciar sesion (SecurityConfig -> /login?unauthorized) -->
+          <div th:if="${param.unauthorized}" class="alert alert--info" role="alert" style="margin-bottom: 15px;">
+            Tenés que iniciar sesión para acceder a esa página.
+          </div>
+          <!-- El token del backend vencio (ErroresControllerAdvice -> /login?expired) -->
+          <div th:if="${param.expired}" class="alert alert--info" role="alert" style="margin-bottom: 15px;">
+            Tu sesión expiró. Volvé a iniciar sesión para continuar.
+          </div>
+          <div th:if="${param.logout}" class="alert alert--success" role="alert" style="margin-bottom: 15px;">
+            Cerraste sesión correctamente.
+          </div>
 
           <div class="field">
             <label class="field__label" for="username">Correo electrónico</label>
