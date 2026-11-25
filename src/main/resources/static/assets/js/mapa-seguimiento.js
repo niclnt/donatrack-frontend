@@ -125,16 +125,29 @@
             });
     }
 
-    // Click en una tarjeta: centra el mapa en su camion
+    // Click o teclado (Enter/Espacio) en una tarjeta: centra el mapa en su camion
+    function enfocarEntrega(tarjeta) {
+        var marcador = marcadores[tarjeta.dataset.entrega];
+        if (marcador) {
+            mapa.setView(marcador.getLatLng(), 15);
+            marcador.openPopup();
+        }
+    }
+
     Array.prototype.forEach.call(tarjetas, function (tarjeta) {
         tarjeta.addEventListener("click", function (evento) {
             if (evento.target.closest("a")) {
                 return;
             }
-            var marcador = marcadores[tarjeta.dataset.entrega];
-            if (marcador) {
-                mapa.setView(marcador.getLatLng(), 15);
-                marcador.openPopup();
+            enfocarEntrega(tarjeta);
+        });
+        tarjeta.addEventListener("keydown", function (evento) {
+            if (evento.target.closest("a")) {
+                return;
+            }
+            if (evento.key === "Enter" || evento.key === " ") {
+                evento.preventDefault();
+                enfocarEntrega(tarjeta);
             }
         });
     });

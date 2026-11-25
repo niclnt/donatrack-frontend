@@ -14,7 +14,7 @@
       <div class="page-head">
         <div>
           <h1>Necesidades materiales</h1>
-          <p class="page-head__sub">Registrá necesidades concretas para que puedan vincularse con donaciones compatibles.</p>
+          <!-- <p class="page-head__sub">Registrá necesidades concretas para que puedan vincularse con donaciones compatibles.</p> -->
         </div>
         <button class="btn btn--primary" type="button" data-modal-open="modal-necesidad" aria-haspopup="dialog">
           <span aria-hidden="true">+</span> Nueva necesidad
@@ -63,7 +63,7 @@
           <form th:action="@{/ong/necesidades}" method="post">
           <div class="form-grid">
             <div class="field">
-              <label class="field__label" for="tipo-necesidad">Tipo de necesidad</label>
+              <label class="field__label" for="tipoNecesidad">Tipo de necesidad</label>
               <select class="select" id="tipoNecesidad" name="tipoNecesidad" required>
                 <option value="" disabled selected hidden>Seleccionar tipo</option>
                 <option value="RECURRENTE">Recurrente</option>
@@ -99,7 +99,7 @@
               <div id="campoFrecuencia">
                 <label class="field__label" for="cantidadDias">Frecuencia</label>
                 <input class="input" id="cantidadDias" name="cantidadDias" type="number" min="1" placeholder="Ej: 7">
-                <span class="field__hint">Indicá cada cuántos días se repite la necesidad.</span>
+                <!-- <span class="field__hint">Indicá cada cuántos días se repite la necesidad.</span> -->
               </div>
 
               <div id="campoSituacion" hidden>
@@ -129,7 +129,7 @@
         <div class="card__header">
           <div>
             <h2 id="necesidades-registradas-title">Necesidades registradas</h2>
-            <p class="muted" style="font-size: var(--fs-sm);">Estado actual de las necesidades declaradas por la entidad.</p>
+            <!-- <p class="muted" style="font-size: var(--fs-sm);">Estado actual de las necesidades declaradas por la entidad.</p> -->
           </div>
         </div>
 
@@ -191,7 +191,7 @@
   </main>
 </div>
 
-<script src="../assets/js/app.js"></script>
+<script th:src="@{/assets/js/app.js}"></script>
 <script th:inline="javascript">
   const categorias = /*[[${categorias}]]*/ [];
 

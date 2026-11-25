@@ -15,13 +15,13 @@
                 <div class="page-head">
                     <div>
                         <h1>Stock del depósito</h1>
-                        <p class="page-head__sub">Revisá el inventario y marcá como vencidas o descartadas las donaciones que ya no puedan asignarse.</p>
+                        <!-- <p class="page-head__sub">Revisá el inventario y marcá como vencidas o descartadas las donaciones que ya no puedan asignarse.</p> -->
                     </div>
                 </div>
 
                 <!-- Alertas dinámicas -->
-                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 12px; border-radius: 4px;"></div>
-                <div th:if="${param.exito}" class="alert alert-success" style="margin-bottom: 20px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 4px;">Estados actualizados correctamente.</div>
+                <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}"></div>
+                <div th:if="${param.exito}" class="alert alert--success">Estados actualizados correctamente.</div>
 
                 <!-- Filtro por estado: cada pestaña es un link con la cantidad de donaciones -->
                 <nav class="filterbar" aria-label="Filtrar por estado">
@@ -32,7 +32,7 @@
                 </nav>
 
                 <!-- Formulario unificado (engloba la tabla y el motivo) -->
-                <form th:action="@{/admin/deposito/cambiar-estado}" method="post">
+                <form th:action="@{/admin/deposito/cambiar-estado}" method="post" data-loading>
                     <input type="hidden" name="estado" th:value="${estado}">
 
                     <section class="card mt-5" aria-labelledby="tabla-title">
@@ -94,7 +94,7 @@
                         <div class="card__header">
                             <div>
                                 <h2 id="confirmar-title">Cambiar estado de las seleccionadas</h2>
-                                <p class="muted" style="font-size: var(--fs-sm);">Esta acción modifica el estado y agrega una entrada al historial de auditoría.</p>
+                                <!-- <p class="muted" style="font-size: var(--fs-sm);">Esta acción modifica el estado y agrega una entrada al historial de auditoría.</p> -->
                             </div>
                         </div>
                         <div class="field">

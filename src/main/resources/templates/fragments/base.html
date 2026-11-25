@@ -22,6 +22,7 @@
         <a th:href="@{/}" th:attr="aria-current=${paginaActual == 'inicio' ? 'page' : null}">Inicio</a>
         <a th:href="@{/mapa-donaciones}" th:attr="aria-current=${paginaActual == 'mapa-donaciones' ? 'page' : null}">Mapa de donaciones</a>
         <a th:href="@{/legales}" th:attr="aria-current=${paginaActual == 'legales' ? 'page' : null}">Legales</a>
+        <a class="nav-mobile-only" th:href="@{/registro}">Registrarme</a>
     </nav>
 
     <!-- NAVBAR PARA DONANTES (AUTENTICADOS) -->
@@ -51,7 +52,7 @@
     <div class="topbar__actions">
         <th:block sec:authorize="!isAuthenticated()">
             <a class="btn btn--ghost btn--sm" th:href="@{/login}">Iniciar sesión</a>
-            <a class="btn btn--primary btn--sm" th:href="@{/registro}">Registrarme</a>
+            <a class="btn btn--primary btn--sm hide-mobile" th:href="@{/registro}">Registrarme</a>
         </th:block>
 
         <!-- Menú de cuenta: se despliega debajo del avatar -->
@@ -79,6 +80,14 @@
     <a class="brand" th:href="@{/}">◆ DonaTrack</a>
     <button class="nav-toggle" data-nav-toggle aria-controls="adminnav" aria-expanded="false" aria-label="Abrir menú">☰</button>
     <nav class="topbar__nav" id="adminnav" aria-label="Navegación global">
+        <a class="nav-mobile-only" th:href="@{/admin/inicio}">Inicio</a>
+        <a class="nav-mobile-only" th:href="@{/admin/registrar-donacion}">Registrar donación</a>
+        <a class="nav-mobile-only" th:href="@{/admin/deposito-vencidas}">Stock del depósito</a>
+        <a class="nav-mobile-only" th:href="@{/admin/asignar-algoritmo}">Asignación por algoritmo</a>
+        <a class="nav-mobile-only" th:href="@{/admin/donantes}">Gestión de donantes</a>
+        <a class="nav-mobile-only" th:href="@{/admin/importar-csv}">Importar CSV</a>
+        <a class="nav-mobile-only" th:href="@{/admin/camiones}">Camiones</a>
+        <a class="nav-mobile-only" th:href="@{/admin/rankings}">Rankings</a>
         <a th:href="@{/}">Sitio Público</a>
     </nav>
     <div class="topbar__actions">
@@ -123,6 +132,18 @@
     <p class="sidebar__label">Equipo</p>
     <a th:href="@{/admin/administradores}" th:attr="aria-current=${paginaActual == 'administradores' ? 'page' : null}">Administradores</a>
 </aside>
+
+<!-- Pie de página público -->
+<footer th:fragment="footer" class="footer">
+    <div class="container flex justify-between items-center wrap gap-3">
+        <span>© 2026 DonaTrack · UTN Solidaria</span>
+        <nav class="flex gap-4 wrap" aria-label="Enlaces legales y de transparencia">
+            <a th:href="@{/mapa-donaciones}">Fotos de donaciones entregadas</a>
+            <a th:href="@{/legales}">Información Legal</a>
+            <a th:href="@{/privacidad}">Aviso de Privacidad</a>
+        </nav>
+    </div>
+</footer>
 
 </body>
 </html>

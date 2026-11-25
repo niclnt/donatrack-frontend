@@ -21,15 +21,37 @@
 
                 <!-- Botones si NO está logueado -->
                 <div sec:authorize="!isAuthenticated()" style="display: flex; gap: 15px; justify-content: center;">
-                    <a th:href="@{/login}" class="btn btn-primary" style="padding: 12px 25px; font-size: 1.1em;">Iniciar Sesión</a>
-                    <a th:href="@{/registro}" class="btn btn-outline" style="padding: 12px 25px; font-size: 1.1em;">Crear Cuenta</a>
+                    <a th:href="@{/login}" class="btn btn--primary" style="padding: 12px 25px; font-size: 1.1em;">Iniciar Sesión</a>
+                    <a th:href="@{/registro}" class="btn btn--ghost" style="padding: 12px 25px; font-size: 1.1em;">Crear Cuenta</a>
                 </div>
 
                 <!-- Botón si YA está logueado -->
                 <div sec:authorize="isAuthenticated()" style="display: flex; gap: 15px; justify-content: center;">
-                    <a th:href="@{/donante/mis-donaciones}" class="btn btn-primary" style="padding: 12px 25px; font-size: 1.1em;">Ir a Mis Donaciones</a>
+                    <a th:href="@{/donante/mis-donaciones}" class="btn btn--primary" style="padding: 12px 25px; font-size: 1.1em;">Ir a Mis Donaciones</a>
                 </div>
             </div>
+
+            <!-- Cómo funciona -->
+            <section aria-labelledby="como-funciona-title" class="mb-5">
+                <h2 id="como-funciona-title" class="sr-only">Cómo funciona DonaTrack</h2>
+                <div class="grid grid--3">
+                    <article class="card">
+                        <div class="entity__icon" aria-hidden="true">📦</div>
+                        <h3 class="mt-4">Registramos</h3>
+                        <p class="muted mt-2">Cada bien recibido en el depósito queda trazado por categoría y subcategoría.</p>
+                    </article>
+                    <article class="card">
+                        <div class="entity__icon" aria-hidden="true">🤝</div>
+                        <h3 class="mt-4">Asignamos</h3>
+                        <p class="muted mt-2">Vinculamos donaciones con necesidades reales de escuelas, comedores y hogares.</p>
+                    </article>
+                    <article class="card">
+                        <div class="entity__icon" aria-hidden="true">🚚</div>
+                        <h3 class="mt-4">Entregamos</h3>
+                        <p class="muted mt-2">Seguimiento en tiempo real de los camiones hasta la confirmación de recepción.</p>
+                    </article>
+                </div>
+            </section>
 
             <!-- Ejemplos destacados del último mes (donaciones entregadas reales, con las fotos de la recepción) -->
             <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
@@ -37,7 +59,7 @@
                 <a th:href="@{/mapa-donaciones}" class="btn btn--link">Ver todas en el mapa y sus fotos →</a>
             </div>
 
-            <div th:if="${errorRecientes != null}" class="alert alert--error" th:text="${errorRecientes}">
+            <div th:if="${errorRecientes != null}" class="alert alert--error" role="alert" th:text="${errorRecientes}">
                 No pudimos cargar las donaciones recientes.
             </div>
             <div class="card muted text-center" style="padding: 20px;"
@@ -76,15 +98,10 @@
                 </article>
             </div>
 
-            <!-- Información Legal y Accesos Directos -->
-            <div style="text-align: center; margin-top: 50px; border-top: 1px solid #333; padding-top: 25px;">
-                <a th:href="@{/mapa-donaciones}" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Fotos de donaciones entregadas</a>
-                <a th:href="@{/legales}" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Información Legal</a>
-                <a th:href="@{/privacidad}" class="muted" style="margin: 0 15px; text-decoration: none; font-size: 0.9em;">Aviso de Privacidad</a>
-            </div>
-
         </div>
     </main>
+
+    <footer th:replace="~{fragments/base :: footer}"></footer>
 </div>
 <script th:src="@{/assets/js/app.js}"></script>
 </body>
