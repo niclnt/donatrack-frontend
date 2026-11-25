@@ -15,17 +15,17 @@
                 <div class="page-head">
                     <div>
                         <h1>Asignar entidad beneficiaria</h1>
-                        <p class="page-head__sub">Revisá las sugerencias del motor de matchmaking y confirmá el destino final de la donación.</p>
+                        <p class="page-head__sub">Revisá las entidades sugeridas para cada donación y confirmá su destino.</p>
                     </div>
 
                     <!-- Botón para forzar ejecución manual -->
-                    <form th:action="@{/admin/forzar-algoritmo}" method="post">
+                    <form th:action="@{/admin/forzar-algoritmo}" method="post" data-loading>
                         <button type="submit" class="btn btn--ghost btn--sm">Actualizar sugerencias</button>
                     </form>
                 </div>
 
-                <div th:if="${exito}" class="alert alert-success" th:text="${exito}" style="margin-bottom: 20px;">Asignación confirmada.</div>
-                <div th:if="${error}" class="alert alert-danger" th:text="${error}" style="margin-bottom: 20px;"></div>
+                <div th:if="${exito}" class="alert alert--success" th:text="${exito}" style="margin-bottom: 20px;">Asignación confirmada.</div>
+                <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}" style="margin-bottom: 20px;"></div>
 
                 <!-- Una tarjeta por donación con sus necesidades candidatas, en el orden que devuelve el motor -->
                 <section class="card" th:each="grupo : ${propuestasPorDonacion}" style="margin-bottom: var(--sp-6);"
@@ -100,7 +100,7 @@
                             </div>
                         </div>
 
-                        <form th:action="@{/admin/confirmar-asignacion}" method="post" class="mt-4 flex justify-between items-center wrap gap-3">
+                        <form th:action="@{/admin/confirmar-asignacion}" method="post" class="mt-4 flex justify-between items-center wrap gap-3" data-loading>
                             <input type="hidden" name="idDonacionSegmentada" th:value="${propuesta.idDonacionSegmentada()}">
                             <input type="hidden" name="idNecesidad" th:value="${propuesta.idNecesidad()}">
                             <button type="submit" th:class="${it.first} ? 'btn btn--primary' : 'btn btn--ghost'">Asignar a esta necesidad</button>

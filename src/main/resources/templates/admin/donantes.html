@@ -15,7 +15,7 @@
                 <div class="page-head">
                     <div>
                         <h1>Gestión de Donantes</h1>
-                        <p class="page-head__sub">Registrá presencialmente las personas humanas u organizaciones donantes con sus datos completos.</p>
+                        <p class="page-head__sub">Registrá las personas u organizaciones donantes con sus datos completos.</p>
                     </div>
                 </div>
 
@@ -26,9 +26,9 @@
 
                     <!-- Alertas de éxito o error devueltas por el controller -->
                     <div th:if="${exito}" class="alert alert--success mb-4" th:text="${exito}"></div>
-                    <div th:if="${error}" class="alert alert--error mb-4" th:text="${error}"></div>
+                    <div th:if="${error}" class="alert alert--error mb-4" role="alert" th:text="${error}"></div>
 
-                    <form th:action="@{/admin/donantes/crear}" method="post">
+                    <form th:action="@{/admin/donantes/crear}" method="post" data-loading>
 
                         <div class="field">
                             <label class="field__label" for="nuevoTipoPersona">Tipo de persona</label>
@@ -138,13 +138,13 @@
                     </div>
 
                     <div th:if="${exitoRep}" class="alert alert--success mb-4" th:text="${exitoRep}"></div>
-                    <div th:if="${errorRep}" class="alert alert--error mb-4" th:text="${errorRep}"></div>
+                    <div th:if="${errorRep}" class="alert alert--error mb-4" role="alert" th:text="${errorRep}"></div>
 
                     <form th:action="@{/admin/donantes}" method="get">
                         <div class="field">
                             <label class="field__label" for="pjSeleccion">Organización</label>
-                            <div style="display: flex; gap: var(--sp-2);">
-                                <select class="select" id="pjSeleccion" name="pj" required>
+                            <div class="flex gap-2 wrap">
+                                <select class="select" id="pjSeleccion" name="pj" required style="flex: 1 1 200px; min-width: 0;">
                                     <option value="" disabled th:selected="${pjSeleccionada == null}">Seleccionar organización</option>
                                     <option th:each="org : ${organizaciones}"
                                             th:value="${org.id}"

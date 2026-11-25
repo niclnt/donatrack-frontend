@@ -17,7 +17,7 @@
         </div>
       </div>
 
-      <div th:if="${error}" class="alert alert--error" th:text="${error}" style="margin-bottom: 16px;"></div>
+      <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}" style="margin-bottom: 16px;"></div>
       <div th:if="${exito}" class="alert alert--success" th:text="${exito}" style="margin-bottom: 16px;"></div>
 
       <section class="card" th:if="${#lists.isEmpty(rutas)}">
@@ -45,7 +45,8 @@
 
         <form th:if="${ruta.planificada()}" class="flex justify-end mt-4"
               th:action="@{/chofer/rutas/{id}/iniciar(id=${ruta.id()})}" method="post"
-              onsubmit="return confirm('¿Iniciar la ruta? Las entregas pasan a En traslado y se avisa a donantes y entidades.');">
+              data-confirm="¿Iniciar la ruta? Las entregas pasan a En traslado y se avisa a donantes y entidades."
+              data-loading>
           <button class="btn btn--primary" type="submit">Iniciar ruta</button>
         </form>
       </section>

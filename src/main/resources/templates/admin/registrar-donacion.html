@@ -19,7 +19,7 @@
                     </div>
                 </div>
 
-                <form th:action="@{/admin/registrar-donacion}" method="post" id="formRegistrarDonacion">
+                <form th:action="@{/admin/registrar-donacion}" method="post" id="formRegistrarDonacion" data-loading>
 
                     <!-- ID REAL DEL DONANTE (Se llena mediante JS al hacer click en un resultado) -->
                     <input type="hidden" name="donanteId" id="donanteIdInput">
@@ -31,14 +31,14 @@
                                 <h2 id="donante-title">Paso 1 · Persona donante</h2>
                                 <p class="muted" style="font-size: var(--fs-sm);">Buscá un donante existente para vincular a la donación.</p>
                             </div>
-                            <a th:href="@{/admin/donantes}" class="btn btn--sm btn-outline">+ Crear nuevo donante</a>
+                            <a th:href="@{/admin/donantes}" class="btn btn--sm btn--ghost">+ Crear nuevo donante</a>
                         </div>
 
                         <div class="form-grid">
                             <div class="field">
                                 <label class="field__label" for="buscar-donante">Buscar por nombre, DNI, CUIT o email</label>
-                                <div style="display: flex; gap: var(--sp-2);">
-                                    <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez, 44098907...">
+                                <div class="flex gap-2 wrap">
+                                    <input class="input" id="buscar-donante" type="search" placeholder="Ej: Juan Pérez, 44098907..." style="flex: 1 1 180px; min-width: 0;">
                                     <button class="btn btn--primary" type="button" id="btnBuscarDonante">Buscar</button>
                                 </div>
                             </div>
@@ -67,7 +67,7 @@
                                 <p class="stat__value" id="donanteNombre" style="font-size: var(--fs-lg);">—</p>
                                 <p class="muted" id="donanteDetalles" style="font-size: var(--fs-sm);">—</p>
                             </div>
-                            <button class="btn btn--sm btn-outline" type="button" onclick="deseleccionarDonante()">Cambiar donante</button>
+                            <button class="btn btn--sm btn--ghost" type="button" onclick="deseleccionarDonante()">Cambiar donante</button>
                         </article>
 
                         <!-- Solo para personas jurídicas: quién acerca la donación (lo completa app.js) -->
@@ -91,8 +91,8 @@
 
                         <!-- Alertas dinámicas -->
                         <div th:if="${exito}" class="alert alert--success" th:text="${exito}"></div>
-                        <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
-                        <div th:if="${errorCatalogo}" class="alert alert--error" th:text="${errorCatalogo}"></div>
+                        <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}"></div>
+                        <div th:if="${errorCatalogo}" class="alert alert--error" role="alert" th:text="${errorCatalogo}"></div>
 
                         <div class="field">
                             <label class="field__label" for="descripcion">Descripción general</label>
@@ -109,7 +109,7 @@
                         <!-- HEADER DE SECCIÓN DE BIENES Y BOTÓN AGREGAR -->
                         <div class="flex justify-between items-center wrap gap-3 mt-4">
                             <h3>Bienes recibidos</h3>
-                            <button type="button" class="btn btn-outline btn--sm" onclick="agregarNuevoBien()">+ Agregar otro bien</button>
+                            <button type="button" class="btn btn--ghost btn--sm" onclick="agregarNuevoBien()">+ Agregar otro bien</button>
                         </div>
 
                         <!-- CONTENEDOR DINÁMICO DE BIENES -->
@@ -220,15 +220,25 @@
         if (!pideEstado) campoEstado.querySelector('select').value = 'Nuevo';
     }
 
-    // Vincula el select de Categoría con las sugerencias de Subcategoría de un bloque de bien
+    // Vincula el select de Categoría con las sugerencias de Subcategoría y asocia cada label con su control
     function inicializarEventosCategoria(bloque) {
+        const indice = contadorBloques++;
         const catSelect = bloque.querySelector('.select-categoria');
         const subInput = bloque.querySelector('.input-subcategoria');
         const subLista = bloque.querySelector('.lista-subcategorias');
 
-        // Cada bloque necesita su propio datalist (se referencia por id)
-        subLista.id = 'subcategorias-' + (contadorBloques++);
+        // Cada bloque necesita su propio datalist e IDs únicos para accesibilidad
+        subLista.id = 'subcategorias-' + indice;
         subInput.setAttribute('list', subLista.id);
+
+        bloque.querySelectorAll('.field').forEach(function (campo, i) {
+            const label = campo.querySelector('label.field__label');
+            const control = campo.querySelector('input, select, textarea');
+            if (!label || !control) return;
+            const base = control.name || 'campo-' + i;
+            control.id = 'bien-' + indice + '-' + base;
+            label.setAttribute('for', control.id);
+        });
 
         catSelect.addEventListener('change', function () {
             const catEncontrada = catalogoCategorias.find(c => c.nombre === this.value);
