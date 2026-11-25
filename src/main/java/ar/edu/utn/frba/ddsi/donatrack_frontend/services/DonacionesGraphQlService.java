@@ -170,7 +170,9 @@ public class DonacionesGraphQlService {
                     "UNICA",
                     null,
                     null,
-                    fechaCreacion != null ? LocalDate.parse(fechaCreacion) : null
+                    fechaCreacion != null ? LocalDate.parse(fechaCreacion) : null,
+                    null,
+                    null
             );
         }
     }
