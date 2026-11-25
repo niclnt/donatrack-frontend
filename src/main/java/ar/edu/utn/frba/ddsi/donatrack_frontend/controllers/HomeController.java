@@ -7,6 +7,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.representantes.Representante
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.NotFoundException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.services.DonacionesGraphQlService;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.MapaDonacionesApiService;
 import java.util.ArrayList;
@@ -27,17 +28,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class HomeController {
 
     // Manda el token de la sesion en cada llamada (y lo refresca si vencio)
+
     private final WebApiCallerService webApiCallerService;
     private final String donacionesServiceUrl;
     private final MapaDonacionesApiService mapaDonacionesApiService;
+    private final DonacionesGraphQlService donacionesGraphQlService;
 
     public HomeController(
             WebApiCallerService webApiCallerService,
             @Value("${donaciones.service.url}") String donacionesServiceUrl,
-            MapaDonacionesApiService mapaDonacionesApiService) {
+            MapaDonacionesApiService mapaDonacionesApiService,
+            DonacionesGraphQlService donacionesGraphQlService) {
         this.webApiCallerService = webApiCallerService;
         this.donacionesServiceUrl = donacionesServiceUrl;
         this.mapaDonacionesApiService = mapaDonacionesApiService;
+        this.donacionesGraphQlService = donacionesGraphQlService;
     }
 
     @GetMapping("/")
@@ -66,10 +71,7 @@ public class HomeController {
 
         List<EntidadBeneficiariaResponse> entidades;
         try {
-            entidades = webApiCallerService.getList(
-                    donacionesServiceUrl + "/donaciones/entidades-beneficiarias",
-                    EntidadBeneficiariaResponse[].class
-            );
+            entidades = donacionesGraphQlService.listarEntidadesConNecesidades();
         } catch (ApiException | NotFoundException | ServicioNoDisponibleException e) {
             entidades = java.util.List.of();
             model.addAttribute("errorEntidades", "No se pudieron cargar las entidades. Intentá más tarde.");

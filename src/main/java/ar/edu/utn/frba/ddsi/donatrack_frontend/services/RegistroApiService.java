@@ -34,6 +34,7 @@ public class RegistroApiService {
         this.donacionesServiceUrl = donacionesServiceUrl;
     }
 
+    
     public void validar(TipoRegistro tipo, RegistroForm form, Errors errores) {
         switch (tipo) {
             case PERSONA -> validarPersona(form, errores);

@@ -11,6 +11,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.SeguimientoEntrega
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.necesidades.NecesidadResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ServicioNoDisponibleException;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.services.DonacionesGraphQlService;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.services.internal.WebApiCallerService;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,18 +36,21 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class EntidadBeneficiariaController {
-  private final WebApiCallerService webApiCallerService;
-  private final String donacionesServiceUrl;
-  private final String logisticaServiceUrl;
+    private final WebApiCallerService webApiCallerService;
+    private final String donacionesServiceUrl;
+    private final String logisticaServiceUrl;
+    private final DonacionesGraphQlService donacionesGraphQlService;
 
-  public EntidadBeneficiariaController(
-      WebApiCallerService webApiCallerService,
-      @Value("${donaciones.service.url}") String donacionesServiceUrl,
-      @Value("${logistica.service.url}") String logisticaServiceUrl) {
-    this.webApiCallerService = webApiCallerService;
-    this.donacionesServiceUrl = donacionesServiceUrl;
-    this.logisticaServiceUrl = logisticaServiceUrl;
-  }
+    public EntidadBeneficiariaController(
+            WebApiCallerService webApiCallerService,
+            @Value("${donaciones.service.url}") String donacionesServiceUrl,
+            @Value("${logistica.service.url}") String logisticaServiceUrl,
+            DonacionesGraphQlService donacionesGraphQlService) {
+        this.webApiCallerService = webApiCallerService;
+        this.donacionesServiceUrl = donacionesServiceUrl;
+        this.logisticaServiceUrl = logisticaServiceUrl;
+        this.donacionesGraphQlService = donacionesGraphQlService;
+    }
 
   @GetMapping("/ong/asignadas")
   public String asignadas(Model model) {
@@ -78,34 +82,32 @@ public class EntidadBeneficiariaController {
     return "ong/asignadas";
   }
 
-  @GetMapping("ong/necesidades")
-  public String necesidades(Model model){
-    Long usuarioId = SesionUsuario.usuarioId();
+    @GetMapping("ong/necesidades")
+    public String necesidades(Model model){
+        Long usuarioId = SesionUsuario.usuarioId();
 
-    if( usuarioId == null){
-      return "redirect:/login?expired";
+        if( usuarioId == null){
+            return "redirect:/login?expired";
+        }
+
+        EntidadBeneficiariaResponse entidad = obtenerEntidadDelUsuario(usuarioId);
+
+        List<NecesidadResponse> necesidades =
+                donacionesGraphQlService.listarNecesidadesPorEntidad(entidad.id());
+
+        List<CategoriaCatalogoResponse> categorias =
+                webApiCallerService.getList(
+                        donacionesServiceUrl
+                                + "/donaciones/catalogo/categorias",
+                        CategoriaCatalogoResponse[].class
+                );
+
+        model.addAttribute("necesidades", necesidades);
+        model.addAttribute("categorias", categorias);
+        model.addAttribute("entidadId", entidad.id());
+
+        return "ong/necesidades";
     }
-
-    EntidadBeneficiariaResponse entidad = obtenerEntidadDelUsuario(usuarioId);
-
-    List<NecesidadResponse> necesidades = webApiCallerService.getList(
-        donacionesServiceUrl+ "/donaciones/necesidades/entidad/"+entidad.id(),
-        NecesidadResponse[].class
-    );
-
-    List<CategoriaCatalogoResponse> categorias =
-        webApiCallerService.getList(
-            donacionesServiceUrl
-                + "/donaciones/catalogo/categorias",
-            CategoriaCatalogoResponse[].class
-        );
-
-    model.addAttribute("necesidades", necesidades);
-    model.addAttribute("categorias", categorias);
-    model.addAttribute("entidadId", entidad.id());
-
-    return "ong/necesidades";
-  }
 
   @PostMapping("ong/necesidades")
   public String crearNecesidad(
