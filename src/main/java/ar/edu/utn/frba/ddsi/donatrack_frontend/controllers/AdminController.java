@@ -678,19 +678,49 @@ public class AdminController {
         return "redirect:/admin/rankings";
     }
 
+    // Ranking mensual + historial: sin periodo muestra el ultimo; con ?periodo=yyyy-MM, el de ese mes
     @GetMapping("/admin/rankings")
-    public String mostrarRankings(Authentication authentication, Model model) {
+    public String mostrarRankings(@RequestParam(required = false) String periodo,
+                                  Authentication authentication, Model model) {
         if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
 
+        // Meses con ranking guardado, para el selector ("2026-11" -> "Noviembre 2026")
+        Map<String, String> periodos = new LinkedHashMap<>();
         try {
-            String url = incentivosServiceUrl + "/incentivos/donantes/ranking-mensual";
+            String[] lista = webApiCallerService.get(incentivosServiceUrl + "/incentivos/ranking-mensual/periodos", String[].class);
+            for (String p : lista == null ? new String[0] : lista) {
+                periodos.put(p, nombreDelMes(p));
+            }
+        } catch (Exception e) {
+            log.warn("[RANKING] No se pudo cargar el historial de rankings: {}", e.getMessage());
+        }
+
+        String seleccionado = periodo != null && periodos.containsKey(periodo) ? periodo : null;
+        try {
+            String url = incentivosServiceUrl + "/incentivos/donantes/ranking-mensual"
+                    + (seleccionado != null ? "?periodo=" + seleccionado : "");
             model.addAttribute("rankingMensual", webApiCallerService.getList(url, PuestoDTO[].class));
         } catch (Exception e) {
             model.addAttribute("rankingMensual", List.of());
-            System.out.println("Error cargando rankings: " + e.getMessage());
+            log.warn("[RANKING] Error cargando el ranking mensual: {}", e.getMessage());
         }
 
+        // Sin seleccion se muestra el ultimo ranking guardado: el mes mas nuevo del selector
+        String mostrado = seleccionado != null ? seleccionado : periodos.keySet().stream().findFirst().orElse(null);
+        model.addAttribute("periodos", periodos);
+        model.addAttribute("periodoSeleccionado", mostrado);
+        model.addAttribute("nombrePeriodo", mostrado != null ? periodos.get(mostrado) : null);
         return "admin/rankings";
+    }
+
+    private static String nombreDelMes(String periodo) {
+        try {
+            java.time.YearMonth mes = java.time.YearMonth.parse(periodo);
+            String nombre = mes.getMonth().getDisplayName(java.time.format.TextStyle.FULL, Locale.of("es", "AR"));
+            return Character.toUpperCase(nombre.charAt(0)) + nombre.substring(1) + " " + mes.getYear();
+        } catch (RuntimeException e) {
+            return periodo;
+        }
     }
 
     // --- ALTA DE ADMINISTRADORES ---

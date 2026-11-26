@@ -18,6 +18,17 @@
                         <!-- <p class="page-head__sub">Visualizá los donantes más activos del mes actual.</p> -->
                     </div>
                     <div class="flex gap-2 wrap">
+                        <!-- Historial: ranking guardado de cada mes (requerimiento 19) -->
+                        <form th:if="${periodos != null and !periodos.isEmpty()}" th:action="@{/admin/rankings}" method="get"
+                              class="flex gap-2" style="display: inline-flex; align-items: center;">
+                            <label for="periodo" class="sr-only">Mes del ranking</label>
+                            <select class="select" id="periodo" name="periodo" style="width: auto; min-width: 180px;"
+                                    onchange="this.form.submit()">
+                                <option th:each="p : ${periodos}" th:value="${p.key}" th:text="${p.value}"
+                                        th:selected="${p.key == periodoSeleccionado}">Noviembre 2026</option>
+                            </select>
+                            <noscript><button class="btn btn--ghost btn--sm" type="submit">Ver</button></noscript>
+                        </form>
                         <!-- Ranking a demanda: el mismo calculo que el cierre de mes programado -->
                         <form th:action="@{/admin/rankings/generar}" method="post" data-loading style="display: inline;">
                             <button class="btn btn--primary btn--sm" type="submit">Generar ranking ahora</button>
@@ -31,7 +42,7 @@
                 <section class="card mt-5" aria-labelledby="ranking-title">
                     <div class="card__header">
                         <div>
-                            <h2 id="ranking-title">Top donantes del mes</h2>
+                            <h2 id="ranking-title" th:text="${nombrePeriodo != null} ? 'Top donantes de ' + ${nombrePeriodo} : 'Top donantes del mes'">Top donantes del mes</h2>
                             <p class="muted" style="font-size: var(--fs-sm);">Calculado por actividad general durante el período.</p>
                         </div>
                         <span class="badge badge--success">Top Destacado</span>
