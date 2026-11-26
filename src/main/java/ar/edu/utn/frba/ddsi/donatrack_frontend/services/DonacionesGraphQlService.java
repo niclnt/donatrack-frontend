@@ -50,6 +50,12 @@ public class DonacionesGraphQlService {
                       subcategoria {
                         nombre
                       }
+                      categoriaNombre
+                      tipoNecesidad
+                      cantidadDias
+                      situacion
+                      inicioPeriodo
+                      finPeriodo
                     }
                   }
                 }
@@ -89,6 +95,12 @@ public class DonacionesGraphQlService {
                       id
                       razonSocial
                     }
+                    categoriaNombre
+                    tipoNecesidad
+                    cantidadDias
+                    situacion
+                    inicioPeriodo
+                    finPeriodo
                   }
                 }
                 """;
@@ -154,12 +166,18 @@ public class DonacionesGraphQlService {
             Boolean satisfecha,
             String fechaCreacion,
             SubcategoriaGql subcategoria,
-            EntidadRefGql entidad
+            EntidadRefGql entidad,
+            String categoriaNombre,
+            String tipoNecesidad,
+            Integer cantidadDias,
+            String situacion,
+            String inicioPeriodo,
+            String finPeriodo
     ) {
         NecesidadResponse toResponse() {
             return new NecesidadResponse(
                     id,
-                    "",
+                    categoriaNombre != null ? categoriaNombre : "",
                     subcategoria != null ? subcategoria.nombre() : "",
                     entidad != null ? entidad.id() : null,
                     entidad != null ? entidad.razonSocial() : "",
@@ -167,13 +185,17 @@ public class DonacionesGraphQlService {
                     cantidadSolicitada != null ? cantidadSolicitada : 0,
                     cantidadRecibida != null ? cantidadRecibida : 0,
                     Boolean.TRUE.equals(satisfecha),
-                    "UNICA",
-                    null,
-                    null,
-                    fechaCreacion != null ? LocalDate.parse(fechaCreacion) : null,
-                    null,
-                    null
+                    tipoNecesidad,
+                    cantidadDias,
+                    situacion,
+                    fecha(fechaCreacion),
+                    fecha(inicioPeriodo),
+                    fecha(finPeriodo)
             );
+        }
+
+        private static LocalDate fecha(String texto) {
+            return texto != null && !texto.isBlank() ? LocalDate.parse(texto) : null;
         }
     }
 
