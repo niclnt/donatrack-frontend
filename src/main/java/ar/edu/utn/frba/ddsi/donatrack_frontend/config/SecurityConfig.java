@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -66,8 +67,17 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         // No autenticado -> login
                         .authenticationEntryPoint((request, response, e) -> response.sendRedirect("/login?unauthorized"))
-                        // Autenticado pero sin permisos -> 403
-                        .accessDeniedHandler((request, response, e) -> response.sendRedirect("/403"))
+                        // Autenticado pero sin permisos -> 403. Si el rechazo es por el token CSRF (formulario de
+                        // una pagina vieja: la sesion vencio), no es falta de permisos: al cerrar sesion se
+                        // muestra el logout normal, y en cualquier otro formulario se avisa que la sesion expiro
+                        .accessDeniedHandler((request, response, e) -> {
+                            if (e instanceof CsrfException) {
+                                boolean cerrandoSesion = "/logout".equals(request.getRequestURI());
+                                response.sendRedirect(cerrandoSesion ? "/login?logout" : "/login?expired");
+                                return;
+                            }
+                            response.sendRedirect("/403");
+                        })
                 );
 
         return http.build();
