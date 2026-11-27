@@ -9,6 +9,7 @@ import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.importacion.ResultadoImporta
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.incentivos.PuestoDTO;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionCreateRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.CamionResponse;
+import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.logistica.EntregaResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.representantes.RepresentanteRequest;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.dtos.representantes.RepresentanteResponse;
 import ar.edu.utn.frba.ddsi.donatrack_frontend.exceptions.ApiException;
@@ -389,7 +390,7 @@ public class AdminController {
 
     // --- REQ 16: STOCK DEL DEPÓSITO ---
 
-    private static final List<String> ESTADOS_DEPOSITO = List.of("EN_DEPOSITO", "VENCIDA", "DESCARTADA");
+    private static final List<String> ESTADOS_DEPOSITO = List.of("EN_DEPOSITO", "ENTREGA_FALLIDA", "VENCIDA", "DESCARTADA");
 
     @GetMapping("/admin/deposito-vencidas")
     public String mostrarDeposito(@RequestParam(defaultValue = "EN_DEPOSITO") String estado,
@@ -468,6 +469,45 @@ public class AdminController {
             return mostrarDeposito(estado, authentication, model);
         }
         return "redirect:/admin/deposito-vencidas?estado=" + estado + "&exito=true";
+    }
+
+    // Entregas fallidas: el admin confirma que la caja volvio al galpon. Lo registra logistica (la entrega
+    // vuelve a PENDIENTE) y avisa por RabbitMQ a donaciones, que pasa la donacion a EN_DEPOSITO para reasignarla.
+    @PostMapping("/admin/deposito/regresar")
+    public String regresarADeposito(@RequestParam(required = false) List<String> segmentosIds,
+                                    Authentication authentication, Model model) {
+        if (authentication == null || !authentication.isAuthenticated()) return "redirect:/login";
+
+        if (segmentosIds == null || segmentosIds.isEmpty()) {
+            model.addAttribute("error", "Seleccioná al menos una donación.");
+            return mostrarDeposito("ENTREGA_FALLIDA", authentication, model);
+        }
+
+        // Una entrega puede llevar varias donaciones: al regresarla vuelven todas, asi que no se repite el pedido
+        Set<Long> yaRegresadas = new HashSet<>();
+        int fallidos = 0;
+        for (String parIds : segmentosIds) {
+            Long segmentadaId = Long.valueOf(parIds.split("-")[1]);
+            if (yaRegresadas.contains(segmentadaId)) continue;
+            try {
+                EntregaResponse entrega = webApiCallerService.post(
+                        logisticaServiceUrl + "/logistica/trazabilidad/donaciones/" + segmentadaId + "/regresar",
+                        null, EntregaResponse.class);
+                yaRegresadas.add(segmentadaId);
+                if (entrega != null && entrega.donacionesSegmentadas() != null) {
+                    entrega.donacionesSegmentadas().forEach(d -> yaRegresadas.add(d.id()));
+                }
+            } catch (Exception e) {
+                fallidos++;
+                System.out.println("Error al regresar al depósito la donación " + segmentadaId + ": " + e.getMessage());
+            }
+        }
+
+        if (fallidos > 0) {
+            model.addAttribute("error", "No se pudieron regresar al depósito " + fallidos + " de " + segmentosIds.size() + " donaciones.");
+            return mostrarDeposito("ENTREGA_FALLIDA", authentication, model);
+        }
+        return "redirect:/admin/deposito-vencidas?estado=ENTREGA_FALLIDA&regresadas=true";
     }
 
     // --- REQ 17: ASIGNACIÓN POR ALGORITMO ---

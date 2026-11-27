@@ -22,6 +22,7 @@
                 <!-- Alertas dinámicas -->
                 <div th:if="${error}" class="alert alert--error" role="alert" th:text="${error}"></div>
                 <div th:if="${param.exito}" class="alert alert--success">Estados actualizados correctamente.</div>
+                <div th:if="${param.regresadas}" class="alert alert--success">Regreso al depósito registrado. En unos segundos las donaciones aparecen en "En depósito", listas para volver a asignarse.</div>
 
                 <!-- Filtro por estado: cada pestaña es un link con la cantidad de donaciones -->
                 <nav class="filterbar" aria-label="Filtrar por estado">
@@ -90,7 +91,21 @@
                     </section>
 
                     <!-- Las descartadas son de solo lectura -->
-                    <section class="card mt-5" aria-labelledby="confirmar-title" th:if="${estado != 'DESCARTADA'}">
+                    <!-- Entregas fallidas: solo pueden volver al deposito (despues el motor las reasigna) -->
+                    <section class="card mt-5" aria-labelledby="regresar-title" th:if="${estado == 'ENTREGA_FALLIDA'}">
+                        <div class="card__header">
+                            <div>
+                                <h2 id="regresar-title">Regresar al depósito</h2>
+                                <p class="muted" style="font-size: var(--fs-sm);">Confirmá que las cajas volvieron al galpón. Quedan en depósito para volver a asignarse; si una entrega llevaba varias donaciones, vuelven todas.</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2 wrap">
+                            <button class="btn btn--ghost" type="reset">Limpiar selección</button>
+                            <button class="btn btn--primary" type="submit" th:formaction="@{/admin/deposito/regresar}">Regresar al depósito</button>
+                        </div>
+                    </section>
+
+                    <section class="card mt-5" aria-labelledby="confirmar-title" th:if="${estado != 'DESCARTADA' and estado != 'ENTREGA_FALLIDA'}">
                         <div class="card__header">
                             <div>
                                 <h2 id="confirmar-title">Cambiar estado de las seleccionadas</h2>
